@@ -1,0 +1,14 @@
+{
+  "name": "@hopnet/shared/graph-engine",
+  "version": "2.0.0",
+  "description": "HOPNet shared graph algorithms — provider-agnostic, zero runtime dependencies",
+  "main": "index.js",
+  "types": "src/index.ts",
+  "private": true,
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5"
+  }
+}
