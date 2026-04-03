@@ -83,3 +83,93 @@ function computeScores(nodes, edges, realEdgePredicate = (e) => e.kind === 'REAL
 function rankNodes(scores) {
   return Array.from(scores.values())
     .sort((a, b) => b.influenceScore - a.influenceScore)
+    .map((s, i) => ({ ...s, rank: i + 1 }));
+}
+
+// ── BFS Subgraph ─────────────────────────────────────────────────────────────
+
+/**
+ * BFS subgraph expansion from a root node.
+ * @param {string} rootId
+ * @param {number} maxDepth
+ * @param {boolean} includeDemo
+ * @param {Array<{id: string, kind: string}>} allNodes
+ * @param {Array<{id: string, sourceId: string, targetId: string}>} allEdges
+ * @param {Function} constraint - (from, to) => boolean
+ * @param {string[]} demoKinds
+ * @returns {{ visitedNodeIds: Set<string>, visitedEdgeIds: Set<string>, hopMap: Map<string, number> }}
+ */
+function bfsSubgraph(
+  rootId,
+  maxDepth,
+  includeDemo,
+  allNodes,
+  allEdges,
+  constraint = () => true,
+  demoKinds = ['DEMO']
+) {
+  const nodeMap = new Map(allNodes.map(n => [n.id, n]));
+  const adj = new Map();
+
+  for (const edge of allEdges) {
+    if (!adj.has(edge.sourceId)) adj.set(edge.sourceId, []);
+    if (!adj.has(edge.targetId)) adj.set(edge.targetId, []);
+    adj.get(edge.sourceId).push({ neighborId: edge.targetId, edgeId: edge.id });
+    adj.get(edge.targetId).push({ neighborId: edge.sourceId, edgeId: edge.id });
+  }
+
+  const visitedNodes = new Set([rootId]);
+  const visitedEdges = new Set();
+  const hopMap = new Map([[rootId, 0]]);
+  const queue = [{ nodeId: rootId, hop: 0 }];
+
+  while (queue.length > 0) {
+    const { nodeId, hop } = queue.shift();
+    if (hop >= maxDepth) continue;
+
+    const currentNode = nodeMap.get(nodeId);
+    if (!currentNode) continue;
+
+    for (const { neighborId, edgeId } of adj.get(nodeId) ?? []) {
+      const neighborNode = nodeMap.get(neighborId);
+      if (!neighborNode) continue;
+      if (!constraint(currentNode, neighborNode)) continue;
+      if (!includeDemo && demoKinds.includes(neighborNode.kind)) continue;
+
+      visitedEdges.add(edgeId);
+
+      if (!visitedNodes.has(neighborId)) {
+        visitedNodes.add(neighborId);
+        hopMap.set(neighborId, hop + 1);
+        queue.push({ nodeId: neighborId, hop: hop + 1 });
+      }
+    }
+  }
+
+  return { visitedNodeIds: visitedNodes, visitedEdgeIds: visitedEdges, hopMap };
+}
+
+// ── Constraints ───────────────────────────────────────────────────────────────
+
+/** IMDb: no traversal constraints */
+const imdbConstraint = () => true;
+
+/** College: block DEMO → REAL traversal */
+const collegeConstraint = (from, to) => {
+  if (from.kind === 'DEMO' && to.kind === 'REAL') return false;
+  return true;
+};
+
+/** No constraints */
+const noConstraint = () => true;
+
+// ── Exports ───────────────────────────────────────────────────────────────────
+
+module.exports = {
+  computeScores,
+  rankNodes,
+  bfsSubgraph,
+  imdbConstraint,
+  collegeConstraint,
+  noConstraint,
+};
