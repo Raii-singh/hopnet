@@ -1,0 +1,52 @@
+{
+  "name": "hopnet-backend",
+  "version": "2.0.0",
+  "description": "HOPNet Graph Intelligence API — Neo4j + PostgreSQL hybrid",
+  "main": "dist/backend/src/server.js",
+  "scripts": {
+    "dev": "ts-node-dev -r tsconfig-paths/register --respawn --transpile-only src/server.ts",
+    "build": "tsc",
+    "start": "node dist/backend/src/server.js",
+    "db:setup": "ts-node -r tsconfig-paths/register --transpile-only scripts/setup_neo4j.ts",
+    "seed:demo": "ts-node seeds/demo_seed.ts",
+    "seed:pg": "ts-node prisma/seed.ts",
+    "db:migrate": "prisma migrate dev",
+    "db:generate": "prisma generate",
+    "db:studio": "prisma studio",
+    "db:empty": "ts-node -r tsconfig-paths/register --transpile-only scripts/empty_neo4j.ts"
+  },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
+  },
+  "keywords": [],
+  "author": "Raii-singh",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@prisma/client": "^6.19.3",
+    "bcrypt": "^6.0.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "neo4j-driver": "^5.28.3",
+    "prisma": "^6.19.3",
+    "uuid": "^14.0.2"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "@types/cookie-parser": "^1.4.10",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^25.9.1",
+    "@types/supertest": "^7.2.1",
+    "@types/uuid": "^10.0.0",
+    "supertest": "^7.2.2",
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^6.0.3"
+  }
+}
