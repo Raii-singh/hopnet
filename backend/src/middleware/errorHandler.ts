@@ -83,3 +83,36 @@ export interface ErrorResponse {
 // ── Express error handler ─────────────────────────────────────────────────
 
 /**
+ * Express error-handling middleware (4-parameter signature required by Express).
+ * Mount this AFTER all routes in app.ts:
+ *   app.use(hopnetErrorHandler);
+ */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function hopnetErrorHandler(
+  err: unknown,
+  _req: Request,
+  res: Response,
+  _next: NextFunction
+): void {
+  if (err instanceof HOPNetError) {
+    const status = STATUS_MAP[err.code] ?? 500;
+    const body: ErrorResponse = {
+      error: {
+        code: err.code,
+        message: err.message,
+        ...(err.details ? { details: err.details } : {}),
+      },
+    };
+    res.status(status).json(body);
+    return;
+  }
+
+  // Infrastructure / unexpected error — do not leak internal details
+  console.error('[HOPNet] Unhandled error:', err);
+  res.status(500).json({
+    error: {
+      code: 'INTERNAL_SERVER_ERROR',
+      message: 'An unexpected error occurred. Please try again.',
+    },
+  });
+}
