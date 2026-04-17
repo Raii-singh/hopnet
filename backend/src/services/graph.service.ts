@@ -253,3 +253,88 @@ export async function getNodeById(id: string): Promise<GraphNodeOut | null> {
     tags: user.tags,
     sourceConnectors: user.sourceConnectors,
     metadata: user.metadata,
+    nodeType: user.nodeType,
+  };
+}
+
+// ── GET /api/users ────────────────────────────────────────────
+export async function getAllNodes(): Promise<GraphNodeOut[]> {
+  const [users, connMap] = await Promise.all([
+    prisma.user.findMany({ where: { deletedAt: null }, orderBy: { influenceScore: 'desc' } }),
+    buildConnectionMap(),
+  ]);
+  return users.map(u => {
+    const conn = connMap.get(u.id) ?? { total: 0, real: 0, demo: 0 };
+    return {
+      id: u.id,
+      publicId: u.publicId,
+      fullName: u.fullName,
+      username: u.username,
+      email: u.email,
+      phone: u.phone,
+      linkedinUrl: u.linkedinUrl,
+      instagramHandle: u.instagramHandle,
+      twitterHandle: u.twitterHandle,
+      company: u.company,
+      cluster: u.cluster,
+      influenceScore: u.influenceScore,
+      connectionCount: conn.total,
+      realConnections: conn.real,
+      demoConnections: conn.demo,
+      tags: u.tags,
+      sourceConnectors: u.sourceConnectors,
+      metadata: u.metadata,
+      nodeType: u.nodeType,
+    };
+  });
+}
+
+// ── GET /api/users/rankings ───────────────────────────────────
+export async function getRankings(): Promise<(GraphNodeOut & { rankScore: number; rank: number })[]> {
+  const nodes = await getAllNodes();
+  return nodes
+    .map(n => ({
+      ...n,
+      rankScore: Math.round(n.realConnections * 4 + n.influenceScore * 0.35),
+    }))
+    .sort((a, b) => b.rankScore - a.rankScore)
+    .map((n, i) => ({ ...n, rank: i + 1 }));
+}
+
+// ── GET /api/graph/path?from=x&to=y ──────────────────────────
+export async function getShortestPath(
+  fromId: string,
+  toId: string
+): Promise<{ path: string[]; totalCost: number } | null> {
+  const { nodes, edges } = await loadRawGraph();
+  const rawEdges = await prisma.edge.findMany({
+    where: {
+      source: { deletedAt: null },
+      target: { deletedAt: null },
+    },
+  });
+  const dijkstraEdges = rawEdges.map(e => ({
+    id: e.id, sourceId: e.sourceId, targetId: e.targetId, weight: e.weight,
+  }));
+
+  const { distance, previous } = dijkstra(fromId, nodes, dijkstraEdges);
+  const cost = distance.get(toId);
+  if (cost === undefined || cost === Infinity) return null;
+
+  const path = reconstructPath(toId, previous);
+  return { path, totalCost: Math.round(cost * 100) / 100 };
+}
+
+// ── WORKSPACE: User Node CRUD ─────────────────────────────────
+export async function createUser(data: {
+  fullName: string;
+  username?: string;
+  email?: string;
+  phone?: string;
+  linkedinUrl?: string;
+  instagramHandle?: string;
+  twitterHandle?: string;
+  company?: string;
+  cluster?: string;
+  influenceScore?: number;
+  tags?: string[];
