@@ -338,3 +338,88 @@ export async function createUser(data: {
   cluster?: string;
   influenceScore?: number;
   tags?: string[];
+  sourceConnectors?: string[];
+  metadata?: any;
+  nodeType: NodeType;
+  createdBy?: string;
+}) {
+  const count = await prisma.user.count({ where: { nodeType: data.nodeType } });
+  const padStr = (num: number, size: number) => {
+    let s = num + '';
+    while (s.length < size) s = '0' + s;
+    return s;
+  };
+  const seq = padStr(count + 1, 6);
+  const publicId = data.nodeType === NodeType.REAL ? `HNP-${seq}` : `DNP-${seq}`;
+  const username = data.username || data.fullName.toLowerCase().replace(/\s+/g, '_');
+
+  return prisma.user.create({
+    data: {
+      publicId,
+      fullName: data.fullName,
+      username,
+      email: data.email || `${username}@hopnet.io`,
+      phone: data.phone,
+      linkedinUrl: data.linkedinUrl,
+      instagramHandle: data.instagramHandle,
+      twitterHandle: data.twitterHandle,
+      company: data.company,
+      cluster: data.cluster,
+      influenceScore: data.influenceScore ?? 10,
+      tags: data.tags || [],
+      sourceConnectors: data.sourceConnectors || ['Manual Workspace'],
+      metadata: data.metadata || {},
+      nodeType: data.nodeType,
+      createdBy: data.createdBy || 'Manual Editor',
+    },
+  });
+}
+
+export async function updateUser(id: string, data: {
+  fullName?: string;
+  username?: string;
+  email?: string;
+  phone?: string;
+  linkedinUrl?: string;
+  instagramHandle?: string;
+  twitterHandle?: string;
+  company?: string;
+  cluster?: string;
+  influenceScore?: number;
+  tags?: string[];
+  sourceConnectors?: string[];
+  metadata?: any;
+  nodeType?: NodeType;
+}) {
+  return prisma.user.update({
+    where: { id },
+    data,
+  });
+}
+
+export async function softDeleteUser(id: string) {
+  // Soft delete user
+  await prisma.user.update({
+    where: { id },
+    data: { deletedAt: new Date() },
+  });
+
+  // Automatically delete all edges associated with the deleted user
+  await prisma.edge.deleteMany({
+    where: {
+      OR: [{ sourceId: id }, { targetId: id }],
+    },
+  });
+}
+
+// ── WORKSPACE: Edge Relationship CRUD ─────────────────────────
+export async function createEdge(data: {
+  sourceId: string;
+  targetId: string;
+  relationshipType?: string;
+  trustScore?: number;
+  interactionFrequency?: number;
+  connectorSource?: string;
+  inferred?: boolean;
+  createdBy?: string;
+}) {
