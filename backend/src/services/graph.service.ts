@@ -593,3 +593,47 @@ export async function mergeUsers(sourceId: string, targetId: string) {
 
 export async function detectDuplicates() {
   const activeUsers = await prisma.user.findMany({
+    where: { deletedAt: null },
+    orderBy: { fullName: 'asc' }
+  });
+  const suggestions: { userA: any; userB: any; reason: string; similarity: number }[] = [];
+
+  for (let i = 0; i < activeUsers.length; i++) {
+    for (let j = i + 1; j < activeUsers.length; j++) {
+      const uA = activeUsers[i]!;
+      const uB = activeUsers[j]!;
+
+      // Check 1: Shared company and partial name match
+      const sharedCompany = uA.company && uB.company && uA.company.toLowerCase() === uB.company.toLowerCase();
+      
+      const namePartsA = uA.fullName.toLowerCase().split(/\s+/);
+      const namePartsB = uB.fullName.toLowerCase().split(/\s+/);
+      const nameIntersection = namePartsA.filter(p => namePartsB.includes(p) && p.length > 2);
+      
+      if (sharedCompany && nameIntersection.length > 0) {
+        suggestions.push({
+          userA: { id: uA.id, publicId: uA.publicId, fullName: uA.fullName, company: uA.company },
+          userB: { id: uB.id, publicId: uB.publicId, fullName: uB.fullName, company: uB.company },
+          reason: `Shared company (${uA.company}) and name similarity ('${nameIntersection.join(', ')}')`,
+          similarity: 85,
+        });
+        continue;
+      }
+
+      // Check 2: Emails with same prefix
+      if (uA.email && uB.email) {
+        const prefixA = uA.email.split('@')[0];
+        const prefixB = uB.email.split('@')[0];
+        if (prefixA === prefixB && prefixA && prefixA.length > 3) {
+          suggestions.push({
+            userA: { id: uA.id, publicId: uA.publicId, fullName: uA.fullName, email: uA.email },
+            userB: { id: uB.id, publicId: uB.publicId, fullName: uB.fullName, email: uB.email },
+            reason: `Identical email username prefix ('${prefixA}')`,
+            similarity: 90,
+          });
+        }
+      }
+    }
+  }
+  return suggestions;
+}
