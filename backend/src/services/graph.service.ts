@@ -423,3 +423,88 @@ export async function createEdge(data: {
   inferred?: boolean;
   createdBy?: string;
 }) {
+  const sourceId = data.sourceId;
+  const targetId = data.targetId;
+
+  // 1. Self-loop verification
+  if (sourceId === targetId) {
+    throw new Error('Self-loops are forbidden. A node cannot create a connection to itself.');
+  }
+
+  // Fetch nodes
+  const [sourceNode, targetNode] = await Promise.all([
+    prisma.user.findFirst({ where: { id: sourceId, deletedAt: null } }),
+    prisma.user.findFirst({ where: { id: targetId, deletedAt: null } }),
+  ]);
+  if (!sourceNode || !targetNode) {
+    throw new Error('One or both nodes do not exist or are soft-deleted.');
+  }
+
+  // 2. Traversal constraints (DEMO → REAL is strictly blocked)
+  if (sourceNode.nodeType === NodeType.DEMO && targetNode.nodeType === NodeType.REAL) {
+    throw new Error('Graph Traversal Integrity Violation:traversing from DEMO nodes to REAL nodes is blocked.');
+  }
+
+  // 3. Duplicate edge check
+  const existingEdge = await prisma.edge.findFirst({
+    where: {
+      OR: [
+        { sourceId, targetId },
+        { sourceId: targetId, targetId: sourceId }
+      ]
+    }
+  });
+  if (existingEdge) {
+    throw new Error('A connection path already exists between these two users.');
+  }
+
+  const trust = data.trustScore !== undefined ? data.trustScore : 0.5;
+  const freq = data.interactionFrequency !== undefined ? data.interactionFrequency : 0.5;
+  const weight = Math.round((trust * 0.6 + freq * 0.4) * 100) / 100;
+
+  const isRealEdge = sourceNode.nodeType === NodeType.REAL && targetNode.nodeType === NodeType.REAL;
+
+  return prisma.edge.create({
+    data: {
+      sourceId,
+      targetId,
+      relationshipType: data.relationshipType || 'acquaintance',
+      trustScore: trust,
+      interactionFrequency: freq,
+      connectorSource: data.connectorSource || 'Manual Editor',
+      inferred: data.inferred ?? false,
+      createdBy: data.createdBy || 'Manual Editor',
+      edgeType: isRealEdge ? EdgeType.REAL_EDGE : EdgeType.DEMO_EDGE,
+      weight,
+    },
+  });
+}
+
+export async function updateEdge(id: string, data: {
+  relationshipType?: string;
+  trustScore?: number;
+  interactionFrequency?: number;
+  createdBy?: string;
+}) {
+  const edge = await prisma.edge.findUnique({ where: { id } });
+  if (!edge) throw new Error('Edge not found.');
+
+  const trust = data.trustScore !== undefined ? data.trustScore : edge.trustScore;
+  const freq = data.interactionFrequency !== undefined ? data.interactionFrequency : edge.interactionFrequency;
+  const weight = Math.round((trust * 0.6 + freq * 0.4) * 100) / 100;
+
+  return prisma.edge.update({
+    where: { id },
+    data: {
+      relationshipType: data.relationshipType,
+      trustScore: trust,
+      interactionFrequency: freq,
+      weight,
+      createdBy: data.createdBy || 'Manual Editor',
+    },
+  });
+}
+
+export async function deleteEdge(id: string) {
+  return prisma.edge.delete({
+    where: { id },
