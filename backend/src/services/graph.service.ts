@@ -508,3 +508,88 @@ export async function updateEdge(id: string, data: {
 export async function deleteEdge(id: string) {
   return prisma.edge.delete({
     where: { id },
+  });
+}
+
+// ── WORKSPACE: Identity Merge & Duplicates ────────────────────
+export async function mergeUsers(sourceId: string, targetId: string) {
+  if (sourceId === targetId) throw new Error('Cannot merge a user into themselves.');
+
+  const [sourceUser, targetUser] = await Promise.all([
+    prisma.user.findFirst({ where: { id: sourceId, deletedAt: null } }),
+    prisma.user.findFirst({ where: { id: targetId, deletedAt: null } }),
+  ]);
+  if (!sourceUser || !targetUser) throw new Error('Source or target user does not exist.');
+
+  // 1. Move all outgoing edges of source to target
+  const outgoing = await prisma.edge.findMany({ where: { sourceId } });
+  for (const edge of outgoing) {
+    const exists = await prisma.edge.findFirst({
+      where: {
+        OR: [
+          { sourceId: targetId, targetId: edge.targetId },
+          { sourceId: edge.targetId, targetId: targetId }
+        ]
+      }
+    });
+    if (!exists && edge.targetId !== targetId) {
+      await prisma.edge.update({
+        where: { id: edge.id },
+        data: { sourceId: targetId },
+      });
+    } else {
+      await prisma.edge.delete({ where: { id: edge.id } });
+    }
+  }
+
+  // 2. Move all incoming edges of source to target
+  const incoming = await prisma.edge.findMany({ where: { targetId: sourceId } });
+  for (const edge of incoming) {
+    const exists = await prisma.edge.findFirst({
+      where: {
+        OR: [
+          { sourceId: edge.sourceId, targetId },
+          { sourceId: targetId, targetId: edge.sourceId }
+        ]
+      }
+    });
+    if (!exists && edge.sourceId !== targetId) {
+      await prisma.edge.update({
+        where: { id: edge.id },
+        data: { targetId },
+      });
+    } else {
+      await prisma.edge.delete({ where: { id: edge.id } });
+    }
+  }
+
+  // 3. Combine fields
+  const combinedTags = Array.from(new Set([...(sourceUser.tags || []), ...(targetUser.tags || [])]));
+  const combinedConnectors = Array.from(new Set([...(sourceUser.sourceConnectors || []), ...(targetUser.sourceConnectors || [])]));
+  const sourceMeta = (sourceUser.metadata as any) || {};
+  const targetMeta = (targetUser.metadata as any) || {};
+  const combinedMeta = {
+    ...sourceMeta,
+    ...targetMeta,
+    mergedFrom: sourceUser.publicId,
+    mergedAt: new Date().toISOString(),
+  };
+
+  await prisma.user.update({
+    where: { id: targetId },
+    data: {
+      tags: combinedTags,
+      sourceConnectors: combinedConnectors,
+      metadata: combinedMeta,
+    },
+  });
+
+  // 4. Soft delete the source user
+  return prisma.user.update({
+    where: { id: sourceId },
+    data: { deletedAt: new Date() },
+  });
+}
+
+export async function detectDuplicates() {
+  const activeUsers = await prisma.user.findMany({
