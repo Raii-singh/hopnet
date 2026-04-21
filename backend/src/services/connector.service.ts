@@ -253,3 +253,88 @@ function parseTwitterExport(rawText: string): ParsedContact[] {
         trustScore: 0.3,
         interactionFrequency: 0.2,
       };
+    });
+  } catch (err) {
+    console.warn('Fallback: line by line Twitter parse', err);
+    // Simple line by line fallback
+    const handles = Array.from(rawText.matchAll(/@([a-zA-Z0-9_]{1,15})/g)).map(m => m[1]);
+    return Array.from(new Set(handles)).map(h => ({
+      fullName: h.charAt(0).toUpperCase() + h.slice(1).replace(/_/g, ' '),
+      twitterHandle: `@${h}`,
+      tags: ['Twitter Expanders', 'Following'],
+      relationshipType: 'acquaintance',
+      trustScore: 0.3,
+      interactionFrequency: 0.2,
+    }));
+  }
+}
+
+// 5. Gmail Header Log Parser
+function parseGmailHeaders(rawText: string): { contacts: ParsedContact[]; edges: any[] } {
+  // Regex to match header sequences
+  const fromRegex = /From:\s*([^<]*?)(?:<([^>]+)>)?\r?\n/gi;
+  const toRegex = /To:\s*([^<]*?)(?:<([^>]+)>)?\r?\n/gi;
+  
+  const fromMatches = Array.from(rawText.matchAll(fromRegex));
+  const toMatches = Array.from(rawText.matchAll(toRegex));
+
+  const contactMap = new Map<string, { fullName: string; count: number }>();
+
+  function registerEmail(name: string, email: string) {
+    const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail || cleanEmail.includes('noreply') || cleanEmail.includes('notification')) return;
+    
+    let cleanName = name.trim().replace(/^["']|["']$/g, '');
+    if (!cleanName || cleanName.includes('@')) {
+      cleanName = cleanEmail.split('@')[0].replace(/[^a-zA-Z0-9]/g, ' ');
+      cleanName = cleanName.charAt(0).toUpperCase() + cleanName.slice(1);
+    }
+    
+    if (!contactMap.has(cleanEmail)) {
+      contactMap.set(cleanEmail, { fullName: cleanName, count: 0 });
+    }
+    contactMap.get(cleanEmail)!.count++;
+  }
+
+  for (const m of fromMatches) {
+    const name = m[1] || '';
+    const email = m[2] || m[1] || '';
+    if (email.includes('@')) registerEmail(name, email);
+  }
+
+  for (const m of toMatches) {
+    const name = m[1] || '';
+    const email = m[2] || m[1] || '';
+    if (email.includes('@')) registerEmail(name, email);
+  }
+
+  const contacts: ParsedContact[] = [];
+  const edges: any[] = [];
+
+  const list = Array.from(contactMap.entries());
+  for (const [email, entry] of list) {
+    // Determine interaction strength based on conversation volume
+    const interactionFreq = Math.min(1.0, 0.1 + (entry.count * 0.15));
+    const trust = Math.min(0.9, 0.3 + (entry.count * 0.1));
+
+    contacts.push({
+      fullName: entry.fullName,
+      email,
+      tags: ['Gmail Communications', `Count: ${entry.count}`],
+      relationshipType: entry.count > 5 ? 'colleague' : 'acquaintance',
+      trustScore: Math.round(trust * 10) / 10,
+      interactionFrequency: Math.round(interactionFreq * 10) / 10,
+    });
+  }
+
+  // Create mock star edges between all parsed Gmail contacts if they are in the same threads
+  if (contacts.length > 1) {
+    const primary = contacts.sort((a,b) => b.trustScore! - a.trustScore!)[0];
+    for (const c of contacts) {
+      if (c.email !== primary.email) {
+        edges.push({
+          sourceName: primary.fullName,
+          targetName: c.fullName,
+          relationshipType: c.relationshipType || 'acquaintance',
+          trustScore: c.trustScore || 0.5,
+          interactionFrequency: c.interactionFrequency || 0.4,
