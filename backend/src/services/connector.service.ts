@@ -168,3 +168,88 @@ function parseGoogleContactsCSV(rawText: string): ParsedContact[] {
     if (!fullName) continue;
 
     const email = emailIdx !== -1 ? row[emailIdx] : '';
+    const phone = phoneIdx !== -1 ? row[phoneIdx] : '';
+    const company = orgIdx !== -1 ? row[orgIdx] : '';
+
+    contacts.push({
+      fullName,
+      email: email || undefined,
+      phone: phone || undefined,
+      company: company || undefined,
+      tags: ['Google Contact', company].filter(Boolean) as string[],
+      relationshipType: 'acquaintance',
+      trustScore: 0.5,
+      interactionFrequency: 0.3,
+    });
+  }
+
+  return contacts;
+}
+
+// 3. Outlook Contacts CSV Parser
+function parseOutlookCSV(rawText: string): ParsedContact[] {
+  const rows = parseCSV(rawText);
+  if (rows.length < 2) return [];
+
+  const header = rows[0].map(h => h.toLowerCase().replace(/[^a-z0-9]/g, ''));
+  const firstNameIdx = header.indexOf('firstname');
+  const lastNameIdx = header.indexOf('lastname');
+  const emailIdx = header.indexOf('emailaddress');
+  const phoneIdx = header.indexOf('mobilephone');
+  const companyIdx = header.indexOf('company');
+
+  const contacts: ParsedContact[] = [];
+
+  for (let i = 1; i < rows.length; i++) {
+    const row = rows[i];
+    if (row.length < 2) continue;
+
+    const fName = firstNameIdx !== -1 ? row[firstNameIdx] : '';
+    const lName = lastNameIdx !== -1 ? row[lastNameIdx] : '';
+    const fullName = `${fName} ${lName}`.trim();
+    if (!fullName) continue;
+
+    const email = emailIdx !== -1 ? row[emailIdx] : '';
+    const phone = phoneIdx !== -1 ? row[phoneIdx] : '';
+    const company = companyIdx !== -1 ? row[companyIdx] : '';
+
+    contacts.push({
+      fullName,
+      email: email || undefined,
+      phone: phone || undefined,
+      company: company || undefined,
+      tags: ['Outlook Contact', company].filter(Boolean) as string[],
+      relationshipType: 'colleague',
+      trustScore: 0.5,
+      interactionFrequency: 0.4,
+    });
+  }
+
+  return contacts;
+}
+
+// 4. Twitter Follower List JS/JSON Parser
+function parseTwitterExport(rawText: string): ParsedContact[] {
+  try {
+    let cleanText = rawText.trim();
+    if (cleanText.startsWith('window.YTD.following.part0 =')) {
+      cleanText = cleanText.substring(cleanText.indexOf('=') + 1).trim();
+    }
+    if (cleanText.endsWith(';')) cleanText = cleanText.slice(0, -1);
+
+    const json = JSON.parse(cleanText);
+    const list = Array.isArray(json) ? json : json.following || [];
+    
+    return list.map((item: any) => {
+      const uLink = item.following?.userLink || item.userLink || '';
+      const handle = uLink.substring(uLink.lastIndexOf('/') + 1) || 'twitter_user';
+      const name = handle.replace(/_/g, ' ');
+      
+      return {
+        fullName: name.charAt(0).toUpperCase() + name.slice(1),
+        twitterHandle: `@${handle}`,
+        tags: ['Twitter Expanders', 'Following'],
+        relationshipType: 'acquaintance',
+        trustScore: 0.3,
+        interactionFrequency: 0.2,
+      };
