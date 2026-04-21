@@ -83,3 +83,88 @@ function parseCSV(text: string): string[][] {
       col = "";
     } else {
       col += char;
+    }
+  }
+  if (col || row.length > 0) {
+    row.push(col.trim());
+    lines.push(row);
+  }
+  return lines;
+}
+
+// ── Specific Connector Parsers ──────────────────────────────────
+
+// 1. LinkedIn Connections.csv Parser
+function parseLinkedInCSV(rawText: string): ParsedContact[] {
+  const rows = parseCSV(rawText);
+  if (rows.length < 2) return [];
+
+  // Find header index
+  const header = rows[0].map(h => h.toLowerCase().replace(/[^a-z0-9]/g, ''));
+  const firstNameIdx = header.indexOf('firstname');
+  const lastNameIdx = header.indexOf('lastname');
+  const emailIdx = header.indexOf('emailaddress');
+  const companyIdx = header.indexOf('company');
+  const positionIdx = header.indexOf('position');
+
+  const contacts: ParsedContact[] = [];
+
+  for (let i = 1; i < rows.length; i++) {
+    const row = rows[i];
+    if (row.length < 2) continue;
+
+    const fName = firstNameIdx !== -1 ? row[firstNameIdx] : '';
+    const lName = lastNameIdx !== -1 ? row[lastNameIdx] : '';
+    const fullName = `${fName} ${lName}`.trim();
+    if (!fullName) continue;
+
+    const email = emailIdx !== -1 ? row[emailIdx] : '';
+    const company = companyIdx !== -1 ? row[companyIdx] : '';
+    const position = positionIdx !== -1 ? row[positionIdx] : '';
+
+    contacts.push({
+      fullName,
+      email: email || undefined,
+      company: company || undefined,
+      position: position || undefined,
+      linkedinUrl: `https://linkedin.com/in/${fullName.toLowerCase().replace(/\s+/g, '-')}`,
+      tags: ['LinkedIn Connection', company].filter(Boolean) as string[],
+      relationshipType: 'colleague',
+      trustScore: 0.6,
+      interactionFrequency: 0.4,
+    });
+  }
+
+  return contacts;
+}
+
+// 2. Google Contacts CSV Parser
+function parseGoogleContactsCSV(rawText: string): ParsedContact[] {
+  const rows = parseCSV(rawText);
+  if (rows.length < 2) return [];
+
+  const header = rows[0].map(h => h.toLowerCase());
+  const nameIdx = header.findIndex(h => h.includes('name') && !h.includes('given') && !h.includes('family'));
+  const givenNameIdx = header.indexOf('given name');
+  const familyNameIdx = header.indexOf('family name');
+  const emailIdx = header.findIndex(h => h.includes('e-mail') && h.includes('value'));
+  const phoneIdx = header.findIndex(h => h.includes('phone') && h.includes('value'));
+  const orgIdx = header.findIndex(h => h.includes('organization') && h.includes('name'));
+
+  const contacts: ParsedContact[] = [];
+
+  for (let i = 1; i < rows.length; i++) {
+    const row = rows[i];
+    if (row.length < 2) continue;
+
+    let fullName = '';
+    if (nameIdx !== -1 && row[nameIdx]) {
+      fullName = row[nameIdx];
+    } else {
+      const gName = givenNameIdx !== -1 ? row[givenNameIdx] : '';
+      const fName = familyNameIdx !== -1 ? row[familyNameIdx] : '';
+      fullName = `${gName} ${fName}`.trim();
+    }
+    if (!fullName) continue;
+
+    const email = emailIdx !== -1 ? row[emailIdx] : '';
