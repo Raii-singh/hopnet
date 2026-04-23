@@ -508,3 +508,88 @@ export async function commitIngestion(
         nodeType: 'REAL',
         createdBy: `${connectorType} Connector`,
         metadata: JSON.stringify({
+          inferredPosition: node.position,
+          confidence: 0.9,
+        })
+      });
+      
+      idMap.set(node.fullName, createdNode.id);
+      nodesCreated++;
+      logs.push(`Successfully established node for "${node.fullName}" as ${publicId}.`);
+    } catch (err: any) {
+      logs.push(`Error building node "${node.fullName}": ${err.message}`);
+    }
+  }
+
+  // 2. Process Duplicate Resolvers
+  for (const dup of previewData.duplicateMatches) {
+    try {
+      const uId = dup.existing.id;
+      if (dup.survivingOption === 'OVERWRITE_WITH_IMPORTED') {
+        const u = await updatePerson(uId, {
+          email: dup.imported.email || undefined,
+          phone: dup.imported.phone || undefined,
+          linkedinUrl: dup.imported.linkedinUrl || undefined,
+          twitterHandle: dup.imported.twitterHandle || undefined,
+          company: dup.imported.company || undefined,
+          sourceConnectors: [connectorType] // updatePerson handles array fields differently or we can append
+        });
+        idMap.set(dup.imported.fullName, uId);
+        logs.push(`Overwrote duplicate profile "${dup.imported.fullName}" in active ledger.`);
+      } else {
+        idMap.set(dup.imported.fullName, uId);
+        logs.push(`Retained primary unique node "${dup.existing.fullName}" and logged ${connectorType} connector.`);
+      }
+    } catch (err: any) {
+      logs.push(`Failed to merge metadata for "${dup.imported.fullName}": ${err.message}`);
+    }
+  }
+
+  // 3. Process Inferred Relationship Edges
+  for (const edge of previewData.inferredEdges) {
+    try {
+      const srcId = idMap.get(edge.sourceName);
+      const tgtId = idMap.get(edge.targetName);
+
+      if (srcId && tgtId && srcId !== tgtId) {
+        try {
+          const trust = edge.trustScore || 0.5;
+          const freq = edge.interactionFrequency || 0.5;
+          await createRelationship({
+            sourceId: srcId,
+            targetId: tgtId,
+            relationshipType: edge.relationshipType || 'colleague',
+            trustScore: trust,
+            interactionFrequency: freq,
+            connectorSource: connectorType,
+            inferred: true,
+            inferredFrom: filename
+          });
+          edgesCreated++;
+          logs.push(`Generated relationship link: "${edge.sourceName}" ─── [${edge.relationshipType}] ───> "${edge.targetName}"`);
+        } catch (edgeErr: any) {
+          // Valid constraint fails like DEMO->REAL will throw, which is fine to swallow in bulk
+          logs.push(`Skipped edge "${edge.sourceName}" -> "${edge.targetName}": ${edgeErr.message}`);
+        }
+      }
+    } catch (err: any) {
+      logs.push(`Failed to establish inferred relationship edge: ${err.message}`);
+    }
+  }
+
+  // 4. Default star layout generation for non-Gmail connectors
+  // If importing LinkedIn or Google contacts, automatically connect new nodes to the active root user!
+  if (connectorType.toLowerCase() !== 'gmail' && nodesCreated > 0) {
+    try {
+      if (sourceNodeId) {
+        for (const [name, newId] of idMap.entries()) {
+          const isNewNode = previewData.detectedNodes.some(n => n.fullName === name);
+          if (isNewNode) {
+            const trust = 0.5;
+            const freq = 0.4;
+
+            try {
+              await createRelationship({
+                sourceId: sourceNodeId,
+                targetId: newId,
+                relationshipType: 'colleague',
