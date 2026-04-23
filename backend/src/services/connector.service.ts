@@ -593,3 +593,52 @@ export async function commitIngestion(
                 sourceId: sourceNodeId,
                 targetId: newId,
                 relationshipType: 'colleague',
+                trustScore: trust,
+                interactionFrequency: freq,
+                connectorSource: connectorType,
+                inferred: true,
+                inferredFrom: filename
+              });
+              edgesCreated++;
+            } catch (edgeErr: any) {
+              logs.push(`Skipped default edge to "${name}": ${edgeErr.message}`);
+            }
+          }
+        }
+        logs.push(`Automatically bridged ${nodesCreated} new relationships to source node "${sourceNodeId}".`);
+      }
+    } catch (err: any) {
+      logs.push(`Warning on bridging central edges: ${err.message}`);
+    }
+  }
+
+  // 5. Recalculate Centralities
+  logs.push(`Triggering full-graph scoring recalculation engines...`);
+  try {
+    await recalculateCentrality();
+    logs.push(`Centralities and node influence power values recalculated successfully.`);
+  } catch (err: any) {
+    logs.push(`Error during scoring computation: ${err.message}`);
+  }
+
+  // 6. Save Import Log History
+  const logEntry = await prisma.importLog.create({
+    data: {
+      connectorSource: connectorType,
+      filename,
+      status: 'SUCCESS',
+      nodesCreated,
+      edgesCreated,
+      inferredEdgesCount: previewData.inferredEdges.length,
+      confidenceScore: 0.95,
+      importLogs: logs,
+    }
+  });
+
+  return {
+    logId: logEntry.id,
+    nodesCreated,
+    edgesCreated,
+    logs,
+  };
+}
