@@ -338,3 +338,88 @@ function parseGmailHeaders(rawText: string): { contacts: ParsedContact[]; edges:
           relationshipType: c.relationshipType || 'acquaintance',
           trustScore: c.trustScore || 0.5,
           interactionFrequency: c.interactionFrequency || 0.4,
+        });
+      }
+    }
+  }
+
+  return { contacts, edges };
+}
+
+// ── Recalculate Centrality ──────────────────────────────────────
+export async function recalculateCentrality() {
+  const [users, edges] = await Promise.all([
+    prisma.user.findMany({ where: { deletedAt: null } }),
+    prisma.edge.findMany({
+      where: {
+        source: { deletedAt: null },
+        target: { deletedAt: null },
+      },
+    }),
+  ]);
+
+  // Centrality recalculation needs to be ported to Neo4j.
+  // For now, this is disabled as Prisma edges are deprecated.
+  /*
+  const scoringNodes = users.map(u => ({ id: u.id, nodeType: u.nodeType }));
+  const scoringEdges = edges.map(e => ({
+    sourceId: e.sourceId,
+    targetId: e.targetId,
+    weight: e.weight,
+    edgeType: e.edgeType,
+  }));
+  */
+  const scores = new Map(); // computeScores(scoringNodes, scoringEdges);
+
+  for (const user of users) {
+    const scoreEntry = scores.get(user.id);
+    if (scoreEntry) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          influenceScore: scoreEntry.influenceScore,
+          metadata: {
+            ...((user.metadata as any) || {}),
+            centrality: scoreEntry.degreeCentrality,
+            weightedDegree: scoreEntry.weightedDegree,
+          }
+        },
+      });
+    }
+  }
+}
+
+// ── GET PREVIEW ─────────────────────────────────────────────────
+export async function generateImportPreview(
+  connectorType: string,
+  rawText: string
+): Promise<ImportPreviewResponse> {
+  let contacts: ParsedContact[] = [];
+  let inferredEdges: any[] = [];
+
+  switch (connectorType.toLowerCase()) {
+    case 'linkedin':
+      contacts = parseLinkedInCSV(rawText);
+      break;
+    case 'google':
+      contacts = parseGoogleContactsCSV(rawText);
+      break;
+    case 'outlook':
+      contacts = parseOutlookCSV(rawText);
+      break;
+    case 'twitter':
+      contacts = parseTwitterExport(rawText);
+      break;
+    case 'gmail': {
+      const res = parseGmailHeaders(rawText);
+      contacts = res.contacts;
+      inferredEdges = res.edges;
+      break;
+    }
+    default:
+      throw new Error(`Unsupported connector classification: ${connectorType}`);
+  }
+
+  const activeUsers = await getAllActiveRealNodes();
+  const duplicateMatches: any[] = [];
+  const detectedNodes: ParsedContact[] = [];
