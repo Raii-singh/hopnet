@@ -423,3 +423,88 @@ export async function generateImportPreview(
   const activeUsers = await getAllActiveRealNodes();
   const duplicateMatches: any[] = [];
   const detectedNodes: ParsedContact[] = [];
+
+  for (const contact of contacts) {
+    let matchFound = false;
+
+    for (const u of activeUsers) {
+      const emailMatch = contact.email && u.email && contact.email.toLowerCase() === u.email.toLowerCase();
+      const linkedinMatch = contact.linkedinUrl && u.linkedinUrl && contact.linkedinUrl.toLowerCase() === u.linkedinUrl.toLowerCase();
+      const phoneMatch = contact.phone && u.phone && contact.phone.replace(/[^0-9]/g, '') === u.phone.replace(/[^0-9]/g, '');
+
+      if (emailMatch || linkedinMatch || phoneMatch) {
+        duplicateMatches.push({
+          imported: contact,
+          existing: {
+            id: u.id,
+            publicId: u.publicId,
+            fullName: u.fullName,
+            email: u.email,
+            phone: u.phone,
+            company: u.company,
+            nodeType: u.nodeType,
+          },
+          reason: emailMatch ? 'Matches identical E-mail' : linkedinMatch ? 'Matches identical LinkedIn URL' : 'Matches identical mobile number',
+          similarity: 98,
+          survivingOption: 'KEEP_EXISTING',
+        });
+        matchFound = true;
+        break;
+      }
+    }
+
+    if (!matchFound) {
+      detectedNodes.push(contact);
+    }
+  }
+
+  return {
+    detectedNodes,
+    duplicateMatches,
+    inferredEdges,
+    summary: {
+      totalContacts: contacts.length,
+      newNodesCount: detectedNodes.length,
+      duplicateMatchesCount: duplicateMatches.length,
+      inferredEdgesCount: inferredEdges.length,
+    },
+  };
+}
+
+// ── COMMIT INGESTION ────────────────────────────────────────────
+export async function commitIngestion(
+  connectorType: string,
+  filename: string,
+  previewData: ImportPreviewResponse,
+  sourceNodeId: string
+) {
+  const logs: string[] = [`Initial security checks triggered for ${connectorType} archive.`];
+  let nodesCreated = 0;
+  let edgesCreated = 0;
+
+  const idMap = new Map<string, string>(); // Maps name to node ID for link bindings
+
+  // 1. Process New Nodes
+  const activeUsers = await getAllActiveRealNodes();
+  let nextPublicIdNum = activeUsers.length + 1;
+
+  for (const node of previewData.detectedNodes) {
+    try {
+      const publicId = `HNP-${nextPublicIdNum.toString().padStart(6, '0')}`;
+      nextPublicIdNum++;
+
+      const username = node.email?.split('@')[0] || node.fullName.toLowerCase().replace(/\s+/g, '_');
+
+      const createdNode = await createPerson(publicId, {
+        fullName: node.fullName,
+        username,
+        email: node.email,
+        phone: node.phone,
+        linkedinUrl: node.linkedinUrl,
+        twitterHandle: node.twitterHandle,
+        company: node.company,
+        tags: node.tags,
+        sourceConnectors: [connectorType],
+        nodeType: 'REAL',
+        createdBy: `${connectorType} Connector`,
+        metadata: JSON.stringify({
