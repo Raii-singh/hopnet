@@ -83,3 +83,59 @@ async function main() {
           phone: `+1 555 019 ${pad(u.seq, 3)}`,
           linkedinUrl: `https://linkedin.com/in/demo-${username}`,
           twitterHandle: `@demo_${username}`,
+          instagramHandle: `@demo_${username}_ig`,
+          company: u.company,
+          cluster: u.cluster,
+          influenceScore: u.influenceScore,
+          tags: u.tags,
+          sourceConnectors: ['DemoGenerator'],
+          metadata: { demoNode: true, simulated: true },
+          nodeType: NodeType.DEMO,
+        },
+      });
+      publicIdToUuidMap.set(u.publicId, user.id);
+      return user;
+    })
+  );
+
+  console.log(`✅ Created ${seededRealUsers.length} REAL nodes + ${seededDemoUsers.length} DEMO nodes`);
+
+  // 5. Seed EDGES with dynamic weighted scoring
+  console.log(`Seeding ${edges.length} edges...`);
+  const seededEdges = await Promise.all(
+    edges.map(async (e: any) => {
+      const sourceId = publicIdToUuidMap.get(e.source);
+      const targetId = publicIdToUuidMap.get(e.target);
+
+      if (!sourceId || !targetId) {
+        throw new Error(`Failed to find generated UUID for edge: ${e.source} -> ${e.target}`);
+      }
+
+      // Calculate weight based on formula: weight = trustScore * 0.6 + interactionFrequency * 0.4
+      const weight = Math.round((e.trustScore * 0.6 + e.interactionFrequency * 0.4) * 100) / 100;
+
+      return prisma.edge.create({
+        data: {
+          sourceId,
+          targetId,
+          relationshipType: e.relationshipType,
+          trustScore: e.trustScore,
+          interactionFrequency: e.interactionFrequency,
+          connectorSource: e.connectorSource,
+          edgeType: e.edgeType as EdgeType,
+          weight,
+        },
+      });
+    })
+  );
+
+  console.log(`✅ Created ${seededEdges.length} edges`);
+  console.log('\n🎉 Seed complete!\n');
+}
+
+main()
+  .catch(e => {
+    console.error('❌ Seed failed:', e);
+    process.exit(1);
+  })
+  .finally(() => prisma.$disconnect());
