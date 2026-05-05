@@ -1,0 +1,272 @@
+# 🧠 Project Structure — Graph-Based Social Connection System
+
+# =========================================================
+
+# 🧱 TECH STACK (Suggested)
+
+# =========================================================
+
+Backend     : Node.js (TypeScript) OR Python (FastAPI)
+Frontend    : React (Next.js + TypeScript)
+Database    : Neo4j (Graph DB) OR PostgreSQL + Redis
+Realtime    : WebSockets / Socket.io
+Auth        : JWT / OAuth (Google, etc.)
+DevOps      : Docker + Nginx
+
+---
+
+# =========================================================
+
+# 📂 ROOT STRUCTURE
+
+# =========================================================
+
+project-root/
+│
+├── backend/              # Core logic, APIs, graph processing
+├── frontend/             # UI, visualization, user interaction
+├── database/             # Schema, seeds, graph configs
+├── scripts/              # Data generation (demo graph)
+├── docs/                 # Notes, architecture, ideas (your md files)
+├── docker/               # Docker configs
+├── .env                  # Environment variables
+└── README.md             # Project overview
+
+---
+
+# =========================================================
+
+# ⚙️ BACKEND STRUCTURE
+
+# =========================================================
+
+backend/
+│
+├── src/
+│   ├── controllers/      # Handle API requests (user, graph, path)
+│   ├── services/         # Business logic (pathfinding, scoring)
+│   ├── models/           # Data models (User, Edge)
+│   ├── routes/           # API route definitions
+│   ├── middleware/       # Auth, validation, logging
+│   ├── graph/            # Graph algorithms (BFS, Dijkstra)
+│   ├── utils/            # Helper functions
+│   ├── config/           # DB, env configs
+│   └── app.ts            # App entry point
+│
+├── tests/                # Unit + integration tests
+├── package.json          # Dependencies
+└── tsconfig.json         # TypeScript config
+
+---
+
+# =========================================================
+
+# 🔥 BACKEND KEY MODULES
+
+# =========================================================
+
+graph/
+│
+├── bfs.ts                # Shortest path (exploration)
+├── dijkstra.ts           # Weighted path (best intro)
+├── constraints.ts        # REAL→DEMO→REAL restriction logic
+└── scoring.ts            # Confidence + trust scoring
+
+services/
+│
+├── path.service.ts       # Core path query logic
+├── user.service.ts       # User creation + linking
+├── graph.service.ts      # Graph operations (add/remove edges)
+└── demo.service.ts       # Demo graph handling
+
+---
+
+# =========================================================
+
+# 🎨 FRONTEND STRUCTURE
+
+# =========================================================
+
+frontend/
+│
+├── src/
+│   ├── components/       # Reusable UI (cards, graph nodes)
+│   ├── pages/            # Routes (home, profile, graph view)
+│   ├── features/         # Feature modules (path finder, intro system)
+│   ├── hooks/            # Custom React hooks
+│   ├── services/         # API calls
+│   ├── store/            # State management (Redux/Zustand)
+│   ├── styles/           # CSS / Tailwind
+│   └── utils/            # Helper functions
+│
+├── public/               # Static assets
+├── next.config.js        # Next.js config
+└── package.json          # Dependencies
+
+---
+
+# =========================================================
+
+# 🎯 FRONTEND KEY FEATURES
+
+# =========================================================
+
+Graph UI:
+
+* Visual network (nodes + edges)
+* Grey edges = demo
+* Highlighted edges = real
+
+Modes:
+
+* Exploration Mode (mixed graph)
+* Action Mode (real only)
+
+Path Display:
+
+* Step-by-step connection
+* Confidence score
+* Labels for simulated edges
+
+---
+
+# =========================================================
+
+# 🗄️ DATABASE STRUCTURE
+
+# =========================================================
+
+database/
+│
+├── schema/
+│   ├── user.schema       # User node definition
+│   ├── edge.schema       # Edge definition (real/demo)
+│   └── graph.schema      # Graph constraints
+│
+├── seeds/
+│   ├── demo_users.json   # Generated demo users
+│   ├── demo_edges.json   # Demo connections
+│   └── seed.ts           # Seeder script
+│
+├── migrations/           # DB version control
+└── config/              # DB connection config
+
+---
+
+# =========================================================
+
+# 🧩 DATA MODEL (SIMPLIFIED)
+
+# =========================================================
+
+User:
+
+* id
+* name
+* type (REAL / DEMO)
+* metadata (branch, year, etc.)
+
+Edge:
+
+* from
+* to
+* isReal (true/false)
+* weight (optional)
+
+---
+
+# =========================================================
+
+# 📜 SCRIPTS (DATA GENERATION)
+
+# =========================================================
+
+scripts/
+│
+├── generateGraph.cpp     # C++ fast generator for demo dataset
+├── generateGraph.py      # Python alternative
+├── importToDB.ts         # Push data into DB
+└── cleanup.ts            # Remove invalid demo edges
+
+---
+
+# =========================================================
+
+# 🐳 DEVOPS
+
+# =========================================================
+
+docker/
+│
+├── backend.Dockerfile    # Backend container
+├── frontend.Dockerfile   # Frontend container
+├── docker-compose.yml    # Full stack orchestration
+
+---
+
+# =========================================================
+
+# 🔐 AUTH + SECURITY
+
+# =========================================================
+
+* JWT authentication
+* OAuth (Google login)
+* Rate limiting (prevent spam)
+* Permission-based intro requests
+
+---
+
+# =========================================================
+
+# ⚡ EXTRA SYSTEMS (IMPORTANT)
+
+# =========================================================
+
+1. Intro Request System
+
+   * User requests introduction via path
+   * Intermediate users approve/deny
+
+2. Notification System
+
+   * Alerts for intro requests
+
+3. Logging
+
+   * Track graph queries
+   * Monitor performance
+
+4. Caching (Redis)
+
+   * Store frequent path queries
+
+---
+
+# =========================================================
+
+# 🧠 VIBECODE PROMPT IDEAS (FOR LATER)
+
+# =========================================================
+
+* "Generate BFS with constraint REAL→DEMO→REAL forbidden"
+* "Design Neo4j schema for hybrid graph system"
+* "Create React graph visualization with D3.js"
+* "Implement weighted shortest path with confidence score"
+* "Build intro request workflow with approval chain"
+
+---
+
+# =========================================================
+
+# 🧾 TL;DR
+
+# =========================================================
+
+* Backend = graph logic + APIs
+* Frontend = visualization + UX
+* Database = graph storage
+* Scripts = demo data generation
+* Core challenge = constraints + trust
+
+---
