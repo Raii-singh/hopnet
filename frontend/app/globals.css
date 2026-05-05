@@ -1,0 +1,85 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import "tailwindcss";
+
+/* ============================================================
+   HOPNET V3 — Premium Spatial OS Design System
+   Obsidian Glassmorphism · Silver Outlines · Apple-Grade Spatial
+   ============================================================ */
+
+:root {
+  /* Core Palette (Premium Obsidian Pitch Black) */
+  --bg-void: #020202;
+  --bg-deep: #060606;
+  --bg-surface: #0a0a0a;
+  --bg-panel: rgba(8, 8, 8, 0.65);
+  --bg-glass: rgba(255, 255, 255, 0.015);
+  --bg-glass-hover: rgba(255, 255, 255, 0.035);
+
+  /* Silver & Platinum Scale (Pure Monochromatic Spectrum) */
+  --silver-100: #ffffff;
+  --silver-200: #f8fafc;
+  --silver-300: #f1f5f9;
+  --silver-400: #e2e8f0;
+  --silver-500: #cbd5e1;
+  --silver-600: #94a3b8;
+  --silver-700: #64748b;
+  --silver-800: #475569;
+  --silver-900: #334155;
+
+  /* Premium Muted Spatial Highlights */
+  --neon-blue: #ffffff;      /* Pure Silver White */
+  --neon-cyan: #f1f5f9;      /* Platinum Accent */
+  --neon-violet: #94a3b8;    /* Muted Steel Grey */
+  --neon-emerald: #e2e8f0;   /* Bright Titanium */
+  --neon-amber: #cbd5e1;     /* Soft Platinum */
+  --neon-rose: #64748b;      /* Cool Charcoal */
+
+  /* Muted Monochromatic Node & Edge Visuals */
+  --color-real-node: #e2e8f0;
+  --color-demo-node: #334155;
+  --color-real-edge: rgba(255, 255, 255, 0.15);
+  --color-demo-edge: rgba(255, 255, 255, 0.04);
+  --color-selected: #ffffff;
+
+  /* Spatial Glass Borders & Shadows */
+  --glass-border: rgba(255, 255, 255, 0.07);
+  --glass-border-strong: rgba(255, 255, 255, 0.18);
+  --glass-glow: rgba(255, 255, 255, 0.02);
+
+  /* Apple-Grade Spatial Typography */
+  --font-sans: 'Outfit', 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Spacing */
+  --navbar-height: 60px;
+  --controls-width: 280px;
+}
+
+/* ============================================================
+   BASE RESET
+   ============================================================ */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  background: #020202;
+}
+
+body {
+  background: #020202;
+  color: var(--silver-300);
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============================================================
+   SCROLLBAR
