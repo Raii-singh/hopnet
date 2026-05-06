@@ -1,0 +1,36 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String   @id @default(uuid())
+  name             String
+  type             String
+  cluster          String?
+  influenceScore   Float    @default(0)
+
+  outgoingEdges    Edge[] @relation("SourceEdges")
+  incomingEdges    Edge[] @relation("TargetEdges")
+
+  createdAt        DateTime @default(now())
+}
+
+model Edge {
+  id          String   @id @default(uuid())
+
+  sourceId    String
+  targetId    String
+
+  edgeType    String
+  weight      Float    @default(1)
+
+  source      User @relation("SourceEdges", fields: [sourceId], references: [id])
+  target      User @relation("TargetEdges", fields: [targetId], references: [id])
+
+  createdAt   DateTime @default(now())
+}
