@@ -168,3 +168,88 @@ body {
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 9px;
+  color: var(--silver-100);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  outline: none;
+  padding: 8px 12px;
+  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+  width: 100%;
+}
+
+.glass-input:focus {
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.04);
+}
+
+.glass-input::placeholder {
+  color: var(--silver-700);
+}
+
+/* ============================================================
+   SUBTLE ATMOSPHERIC HINTS
+   ============================================================ */
+
+.glow-blue, .glow-cyan, .glow-violet {
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4), 0 0 1px 1px rgba(255, 255, 255, 0.08);
+}
+
+.text-glow {
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
+}
+
+/* ============================================================
+   SPATIAL TYPOGRAPHY
+   ============================================================ */
+
+.text-label {
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--silver-600);
+}
+
+.text-value {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--silver-300);
+}
+
+.text-mono {
+  font-family: var(--font-mono);
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, #ffffff 0%, #e2e8f0 40%, #cbd5e1 70%, #94a3b8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ============================================================
+   SPATIAL BADGES (Apple Platinum Style)
+   ============================================================ */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2.5px 8px;
+  border-radius: 100px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.badge-real {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+.badge-demo {
+  background: rgba(255, 255, 255, 0.015);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: var(--silver-600);
+}
