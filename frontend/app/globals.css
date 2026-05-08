@@ -423,3 +423,50 @@ body {
   position: fixed;
   inset: 0;
   background: rgba(2, 2, 2, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ============================================================
+   SPATIAL NAVBAR
+   ============================================================ */
+
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--navbar-height);
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  gap: 8px;
+  background: rgba(2, 2, 2, 0.6);
+  backdrop-filter: blur(24px) saturate(140%);
+  -webkit-backdrop-filter: blur(24px) saturate(140%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+/* ============================================================
+   PAGE LAYOUTS (Obsidian Base)
+   ============================================================ */
+
+.page-layout {
+  position: fixed;
+  inset: 0;
+  padding-top: var(--navbar-height);
+  overflow-y: auto;
+  background: transparent;
+  z-index: 10;
+}
+
+.page-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 32px 24px;
+}
