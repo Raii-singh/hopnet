@@ -83,3 +83,46 @@ export const PROVIDER_REGISTRY: Record<ProviderId, ProviderCapabilities> = {
     hasClustering: true,
     hasPathfinding: true,
     hasCentrality: true,
+    hasDemoNodes: false,
+    nodeLabel: 'Historical Figure',
+    edgeLabel: 'Influence',
+    displayName: 'Pantheon Graph',
+    icon: '🏛️',
+    description: 'Historical influence network — centrality exploration, read-only',
+    accentColor: '#a78bfa',
+    available: false,
+  },
+};
+
+export const DEFAULT_PROVIDER: ProviderId = 'college';
+
+export function getCapabilities(providerId: ProviderId): ProviderCapabilities {
+  return PROVIDER_REGISTRY[providerId];
+}
+
+export function getAllProviders(): ProviderId[] {
+  return Object.keys(PROVIDER_REGISTRY) as ProviderId[];
+}
+
+/** Navigation items per-provider capability */
+export interface NavItem {
+  href: string;
+  label: string;
+  requiredCapability?: keyof ProviderCapabilities;
+}
+
+export const ALL_NAV_ITEMS: NavItem[] = [
+  { href: '/', label: 'Graph View' },
+  { href: '/personal', label: 'Personal Database', requiredCapability: 'hasPersonalProfiles' },
+  { href: '/database', label: 'Universal Database' },
+  { href: '/connectors', label: 'Integrations', requiredCapability: 'hasConnectors' },
+];
+
+/** Returns nav items visible for the given provider */
+export function getNavItemsForProvider(providerId: ProviderId): NavItem[] {
+  const caps = getCapabilities(providerId);
+  return ALL_NAV_ITEMS.filter(item => {
+    if (!item.requiredCapability) return true;
+    return !!caps[item.requiredCapability];
+  });
+}
