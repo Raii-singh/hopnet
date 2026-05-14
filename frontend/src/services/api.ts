@@ -168,3 +168,88 @@ export async function createRelationship(data: any): Promise<ApiEdge> {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
+  if (!res.ok) {
+    const errorJson = await res.json().catch(() => ({}));
+    throw new Error(errorJson.error || 'Failed to create connection');
+  }
+  return res.json();
+}
+
+export async function updateRelationship(id: string, data: any): Promise<ApiEdge> {
+  const res = await fetch(`${BASE_URL}/v2/relationships/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const errorJson = await res.json().catch(() => ({}));
+    throw new Error(errorJson.error || 'Failed to update connection');
+  }
+  return res.json();
+}
+
+export async function deleteRelationship(id: string): Promise<{ success: boolean }> {
+  const res = await fetch(`${BASE_URL}/v2/relationships/${id}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) {
+    const errorJson = await res.json().catch(() => ({}));
+    throw new Error(errorJson.error || 'Failed to delete connection');
+  }
+  return res.json();
+}
+
+// ── WORKSPACE: Duplicate Suggestions & Merges ──────────────────
+export async function fetchDuplicates(): Promise<{ suggestions: any[] }> {
+  return apiFetch<{ suggestions: any[] }>('/v2/persons/duplicates/all');
+}
+
+export async function mergeIdentities(sourceId: string, targetId: string): Promise<{ success: boolean }> {
+  const res = await fetch(`${BASE_URL}/v2/persons/merge`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sourceId, targetId }),
+  });
+  if (!res.ok) {
+    const errorJson = await res.json().catch(() => ({}));
+    throw new Error(errorJson.error || 'Failed to merge users');
+  }
+  return res.json();
+}
+
+// ── Health check ──────────────────────────────────────────────
+export async function checkHealth(): Promise<boolean> {
+  try {
+    await apiFetch<{ status: string }>('/health', 2000);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// ── CONNECTORS: Import Integrations (V2.5) ────────────────────
+export interface ApiImportLog {
+  id: string;
+  connectorSource: string;
+  filename: string;
+  status: string;
+  nodesCreated: number;
+  edgesCreated: number;
+  inferredEdgesCount: number;
+  confidenceScore: number;
+  importLogs: string[];
+  createdAt: string;
+}
+
+export async function fetchImportHistory(): Promise<{ logs: ApiImportLog[] }> {
+  return apiFetch<{ logs: ApiImportLog[] }>('/connectors/history');
+}
+
+export async function previewConnectorImport(connectorType: string, rawText: string): Promise<any> {
+  const res = await fetch(`${BASE_URL}/connectors/preview`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ connectorType, rawText }),
+  });
+  if (!res.ok) {
+    const errorJson = await res.json().catch(() => ({}));
