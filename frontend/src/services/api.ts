@@ -83,3 +83,88 @@ export async function fetchGraph(
   const params = new URLSearchParams({
     nodeId,
     depth: String(depth),
+    includeDemo: String(includeDemo),
+  });
+  return apiFetch<ApiGraphData>(`/graph?${params}`);
+}
+
+// ── Single node ───────────────────────────────────────────────
+export async function fetchNode(id: string): Promise<ApiNode> {
+  return apiFetch<ApiNode>(`/graph/node/${id}`);
+}
+
+// ── User profile by public ID ─────────────────────────────────
+export async function fetchUserProfile(publicId: string): Promise<ApiNode> {
+  return apiFetch<ApiNode>(`/users/profile/${publicId}`);
+}
+
+// ── All users ─────────────────────────────────────────────────
+export async function fetchUsers(): Promise<{ users: ApiNode[]; total: number }> {
+  return apiFetch<{ users: ApiNode[]; total: number }>('/users');
+}
+
+// ── Rankings ──────────────────────────────────────────────────
+export async function fetchRankings(): Promise<{
+  rankings: (ApiNode & { rankScore: number; rank: number })[];
+  total: number;
+}> {
+  return apiFetch('/users/rankings');
+}
+
+// ── Shortest path ─────────────────────────────────────────────
+export async function fetchPath(
+  fromId: string,
+  toId: string
+): Promise<{ path: string[]; totalCost: number } | null> {
+  try {
+    return await apiFetch(`/v2/graph/path?from=${fromId}&to=${toId}`);
+  } catch {
+    return null;
+  }
+}
+
+// ── WORKSPACE: User Node CRUD ──────────────────────────────────
+export async function createUserNode(data: any): Promise<ApiNode> {
+  const res = await fetch(`${BASE_URL}/v2/persons`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const errorJson = await res.json().catch(() => ({}));
+    throw new Error(errorJson.error || 'Failed to create user node');
+  }
+  return res.json();
+}
+
+export async function updateUserNode(id: string, data: any): Promise<ApiNode> {
+  const res = await fetch(`${BASE_URL}/v2/persons/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const errorJson = await res.json().catch(() => ({}));
+    throw new Error(errorJson.error || 'Failed to update user node');
+  }
+  return res.json();
+}
+
+export async function deleteUserNode(id: string): Promise<{ success: boolean }> {
+  const res = await fetch(`${BASE_URL}/v2/persons/${id}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) {
+    const errorJson = await res.json().catch(() => ({}));
+    throw new Error(errorJson.error || 'Failed to delete user node');
+  }
+  return res.json();
+}
+
+// ── WORKSPACE: Edge Relationship CRUD ──────────────────────────
+export async function createRelationship(data: any): Promise<ApiEdge> {
+  const res = await fetch(`${BASE_URL}/v2/relationships`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
