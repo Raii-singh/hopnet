@@ -338,3 +338,88 @@ export async function fetchImdbGraph(): Promise<ApiGraphData> {
 // ═══════════════════════════════════════════════════════════════════════════
 // HOPNet v2 API Client (Step 14)
 // ═══════════════════════════════════════════════════════════════════════════
+//
+// These functions call the v2 Neo4j-backed API (/api/v2/*).
+// They are the PRIMARY data path for the College graph provider.
+//
+// MIGRATION NOTE:
+//   v1 functions above (fetchGraph, fetchUsers, etc.) are a TEMPORARY migration
+//   safety net. They exist only during the transition from Prisma → Neo4j.
+//   Once the v2 path is validated in production:
+//     - Remove v1 fallback from graphStore.initGraph
+//     - Delete v1 functions from this file (or keep only for legacy routes)
+//   Do NOT add new product features to the v1 client.
+//
+// DATA PRIORITY ORDER (enforced in graphStore):
+//   1. v2 / Neo4j  ← primary
+//   2. dummy       ← offline fallback
+//   3. v1 / Prisma ← temporary migration safety net (to be removed)
+//
+// ─────────────────────────────────────────────────────────────────────────────
+
+const BASE_URL_V2 = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api') + '/v2';
+
+async function apiFetchV2<T>(path: string, timeoutMs = 8000): Promise<T> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(`${BASE_URL_V2}${path}`, { signal: controller.signal, credentials: 'include' });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body?.message ?? `v2 API ${res.status}: ${res.statusText}`);
+    }
+    return (await res.json()) as T;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+// ── v2 API type definitions ───────────────────────────────────────────────
+
+/**
+ * v2 person node shape from the Neo4j backend.
+ * Extends ApiNode with v2-specific fields.
+ */
+export interface ApiNodeV2 {
+  id: string;
+  publicId: string;
+  fullName: string;
+  username?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  linkedinUrl?: string | null;
+  instagramHandle?: string | null;
+  twitterHandle?: string | null;
+  company?: string | null;
+  cluster?: string | null;
+  influenceScore?: number;
+  connectionCount?: number;
+  realConnections?: number;
+  demoConnections?: number;
+  tags?: string[];
+  sourceConnectors?: string[];
+  metadata?: any;
+  nodeType: 'REAL' | 'DEMO';
+  hopDistance?: number;
+  // v2-specific
+  subgraphDegree?: number;
+  globalConnectionCount?: number;
+}
+
+/**
+ * v2 graph edge. Uses `edgeKind` (NOT edgeType).
+ * The v1 ApiEdge uses `edgeType` — kept for v1 compatibility.
+ */
+export interface ApiEdgeV2 {
+  id: string;
+  source: string;
+  target: string;
+  relationshipType: string;
+  trustScore: number;
+  interactionFrequency: number;
+  connectorSource: string;
+  inferredFrom?: string | null;
+  edgeKind: 'REAL_EDGE' | 'DEMO_EDGE';   // ← v2 field name
+  weight: number;
+}
+
