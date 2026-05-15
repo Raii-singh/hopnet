@@ -508,3 +508,88 @@ export async function fetchGraphV2(
   return apiFetchV2<ApiGraphDataV2>(`/graph?${params}`);
 }
 
+// ── v2 search and collection ────────────────────────────────────────────────
+/**
+ * Fetch a list of persons (REAL and DEMO).
+ * Used for populating the Universal Database.
+ */
+export async function fetchPersonsV2(limit = 500, skip = 0): Promise<ApiSearchResultV2> {
+  const params = new URLSearchParams({ limit: String(limit), skip: String(skip) });
+  return apiFetchV2<ApiSearchResultV2>(`/persons?${params}`);
+}
+
+/**
+ * Server-side search for Person nodes by name / email / username / company.
+ * Replaces the client-side allNodes filter used in v1 mode.
+ *
+ * Returns up to `limit` results (default 10).
+ */
+export async function searchPersonsV2(
+  query: string,
+  limit = 10
+): Promise<ApiSearchResultV2> {
+  if (!query.trim()) return { data: [], count: 0 };
+  const params = new URLSearchParams({ q: query, limit: String(limit) });
+  return apiFetchV2<ApiSearchResultV2>(`/persons/search?${params}`);
+}
+
+// ── v2 single node ────────────────────────────────────────────────────────
+
+/**
+ * Fetch the graph-node profile for a single person (with subgraph stats).
+ * Returns the center-view of the node (hopDistance=0, globalConnectionCount).
+ */
+export async function fetchNodeV2(id: string): Promise<ApiNodeV2> {
+  return apiFetchV2<ApiNodeV2>(`/graph/node/${id}`);
+}
+
+// ── v2 path query ─────────────────────────────────────────────────────────
+
+/**
+ * Find the constrained shortest path between two nodes.
+ *
+ * Uses the same HOPNet traversal constraint as fetchGraphV2.
+ * A physically existing path that violates REAL/DEMO rules is NOT returned.
+ *
+ * totalCost = Dijkstra friction cost = sum(1 - weight) per edge.
+ *             Lower = stronger / more-trusted path.
+ *             NOT a simple hop count.
+ *
+ * @param from        UUID of start node
+ * @param to          UUID of end node
+ * @param maxDepth    Max search depth (1–6, clamped server-side, default 6)
+ * @param includeDemo Whether DEMO nodes may be traversed (default true)
+ */
+export async function fetchPathV2(
+  from: string,
+  to: string,
+  maxDepth = 6,
+  includeDemo = true,
+  filters?: { types: string[]; minTrust: number }
+): Promise<ApiPathResponseV2> {
+  const params = new URLSearchParams({
+    from,
+    to,
+    maxDepth: String(maxDepth),
+    includeDemo: String(includeDemo),
+  });
+  if (filters?.types && filters.types.length > 0) {
+    params.set('types', filters.types.join(','));
+  }
+  if (filters?.minTrust !== undefined) {
+    params.set('minTrust', String(filters.minTrust));
+  }
+  return apiFetchV2<ApiPathResponseV2>(`/graph/path?${params}`);
+}
+
+// ── v2 Person CRUD ────────────────────────────────────────────────────────
+//
+// These are the PRIMARY write operations for the College provider.
+// They call /api/v2/persons/* and are used by graphStore CRUD actions
+// when dataSource === 'api-v2'.
+//
+// REAL/DEMO semantics:
+//   Both REAL and DEMO nodes share the same write path.
+//   The GUI distinguishes them visually (badge, accent color).
+//   nodeType is immutable after creation — the service will reject changes.
+//
