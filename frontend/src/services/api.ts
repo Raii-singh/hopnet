@@ -423,3 +423,88 @@ export interface ApiEdgeV2 {
   weight: number;
 }
 
+export interface ApiGraphMetaV2 {
+  centerId: string;
+  depth: number;
+  totalNodes: number;
+  totalEdges: number;
+  realNodes: number;
+  demoNodes: number;
+  realEdges: number;
+  demoEdges: number;
+  avgHopCount: number;
+  constraintActive: boolean;
+}
+
+export interface ApiGraphDataV2 {
+  nodes: ApiNodeV2[];
+  links: ApiEdgeV2[];
+  meta: ApiGraphMetaV2;
+}
+
+export interface ApiSearchResultV2 {
+  data: ApiNodeV2[];
+  count: number;
+}
+
+export interface ApiPathNodeV2 extends ApiNodeV2 {
+  hopDistance: number;
+}
+
+export interface ApiPathResponseV2 {
+  exists: boolean;
+  path: {
+    nodeIds: string[];
+    nodes: ApiPathNodeV2[];
+    links: ApiEdgeV2[];
+  } | null;
+  totalCost: number | null;
+}
+
+// ── v2 health check ───────────────────────────────────────────────────────
+
+/**
+ * Returns true if the v2 API is reachable and Neo4j is connected.
+ * Used by graphStore.initGraph to decide which data path to activate.
+ */
+export async function checkHealthV2(): Promise<boolean> {
+  try {
+    const result = await apiFetchV2<{ status: string }>('/health', 3000);
+    return result?.status === 'ok';
+  } catch {
+    return false;
+  }
+}
+
+// ── v2 graph subgraph ─────────────────────────────────────────────────────
+
+/**
+ * Fetch an N-hop subgraph centered on `centerId` from Neo4j.
+ *
+ * This is the PRIMARY graph-loading function for the College provider.
+ * Applies HOPNet traversal constraints (collegeConstraint: DEMO→REAL blocked).
+ *
+ * @param centerId    UUID of the center node
+ * @param depth       Hop depth (1–6, clamped server-side)
+ * @param includeDemo Whether to include DEMO nodes in the traversal
+ */
+export async function fetchGraphV2(
+  centerId: string,
+  depth: number,
+  includeDemo: boolean,
+  filters?: { types: string[]; minTrust: number }
+): Promise<ApiGraphDataV2> {
+  const params = new URLSearchParams({
+    centerId,
+    depth: String(depth),
+    includeDemo: String(includeDemo),
+  });
+  if (filters?.types && filters.types.length > 0) {
+    params.set('types', filters.types.join(','));
+  }
+  if (filters?.minTrust !== undefined) {
+    params.set('minTrust', String(filters.minTrust));
+  }
+  return apiFetchV2<ApiGraphDataV2>(`/graph?${params}`);
+}
+
