@@ -678,3 +678,64 @@ export interface CreateRelationshipV2Input {
   targetId: string;
   relationshipType: string;
   trustScore?: number;
+  interactionFrequency?: number;
+  connectorSource?: string;
+  createdBy?: string;
+}
+
+export interface UpdateRelationshipV2Input {
+  relationshipType?: string;
+  trustScore?: number;
+  interactionFrequency?: number;
+}
+
+export interface ApiRelationshipV2 {
+  id: string;
+  sourceId: string;
+  targetId: string;
+  relationshipType: string;
+  trustScore: number;
+  interactionFrequency: number;
+  connectorSource: string;
+  edgeKind: 'REAL_EDGE' | 'DEMO_EDGE';
+  weight: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  createdBy?: string;
+}
+
+/** POST /api/v2/relationships — create a directed relationship */
+export async function createRelationshipV2(
+  input: CreateRelationshipV2Input
+): Promise<ApiRelationshipV2> {
+  return apiFetchV2Mutation<ApiRelationshipV2>('/relationships', 'POST', input);
+}
+
+/** PATCH /api/v2/relationships/:id — sparse update */
+export async function updateRelationshipV2(
+  id: string,
+  updates: UpdateRelationshipV2Input
+): Promise<ApiRelationshipV2> {
+  return apiFetchV2Mutation<ApiRelationshipV2>(`/relationships/${id}`, 'PATCH', updates);
+}
+
+/** DELETE /api/v2/relationships/:id — soft-delete */
+export async function deleteRelationshipV2(id: string): Promise<void> {
+  await apiFetchV2Mutation<void>(`/relationships/${id}`, 'DELETE');
+}
+
+/** POST /api/v2/relationships/:id/restore — restore a soft-deleted relationship */
+export async function restoreRelationshipV2(
+  id: string
+): Promise<{ status: string; relationship: ApiRelationshipV2 }> {
+  return apiFetchV2Mutation<{ status: string; relationship: ApiRelationshipV2 }>(
+    `/relationships/${id}/restore`,
+    'POST'
+  );
+}
+
+/** GET /api/v2/persons/by-public-id/:publicId */
+export async function fetchPersonByPublicIdV2(publicId: string): Promise<ApiNodeV2> {
+  return apiFetchV2<ApiNodeV2>(`/persons/by-public-id/${encodeURIComponent(publicId)}`);
+}
