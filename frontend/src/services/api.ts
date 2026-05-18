@@ -593,3 +593,88 @@ export async function fetchPathV2(
 //   The GUI distinguishes them visually (badge, accent color).
 //   nodeType is immutable after creation — the service will reject changes.
 //
+// Protected fields (id, publicId, nodeType, createdAt, updatedAt, deletedAt,
+// createdBy) cannot be overwritten by update payloads — the service and
+// repository enforce this at the Neo4j merge level.
+
+export interface CreatePersonV2Input {
+  nodeType: 'REAL' | 'DEMO';
+  fullName: string;
+  username?: string;
+  email?: string;
+  phone?: string;
+  company?: string;
+  linkedinUrl?: string;
+  twitterHandle?: string;
+  cluster?: string;
+  tags?: string[];
+  sourceConnectors?: string[];
+  createdBy?: string;
+}
+
+export interface UpdatePersonV2Input {
+  fullName?: string;
+  username?: string;
+  email?: string;
+  phone?: string;
+  company?: string;
+  linkedinUrl?: string;
+  twitterHandle?: string;
+  cluster?: string;
+  tags?: string[];
+}
+
+async function apiFetchV2Mutation<T>(
+  path: string,
+  method: 'POST' | 'PATCH' | 'DELETE',
+  body?: unknown
+): Promise<T> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 10000);
+  try {
+    const res = await fetch(`${BASE_URL_V2}${path}`, {
+      method,
+      headers: body !== undefined ? { 'Content-Type': 'application/json' } : {},
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+      signal: controller.signal,
+      credentials: 'include',
+    });
+    // 204 No Content — return empty object
+    if (res.status === 204) return {} as T;
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(json?.message ?? json?.error ?? `v2 ${method} ${path} failed: ${res.status}`);
+    }
+    return json as T;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/** POST /api/v2/persons — create REAL or DEMO person node */
+export async function createPersonV2(input: CreatePersonV2Input): Promise<ApiNodeV2> {
+  return apiFetchV2Mutation<ApiNodeV2>('/persons', 'POST', input);
+}
+
+/** PATCH /api/v2/persons/:id — sparse update (only provided fields are written) */
+export async function updatePersonV2(id: string, updates: UpdatePersonV2Input): Promise<ApiNodeV2> {
+  return apiFetchV2Mutation<ApiNodeV2>(`/persons/${id}`, 'PATCH', updates);
+}
+
+/** DELETE /api/v2/persons/:id — soft-delete (sets deletedAt, preserves relationships) */
+export async function deletePersonV2(id: string): Promise<void> {
+  await apiFetchV2Mutation<void>(`/persons/${id}`, 'DELETE');
+}
+
+/** POST /api/v2/persons/:id/restore — restore a soft-deleted person */
+export async function restorePersonV2(id: string): Promise<ApiNodeV2> {
+  return apiFetchV2Mutation<ApiNodeV2>(`/persons/${id}/restore`, 'POST');
+}
+
+// ── v2 Relationship CRUD ──────────────────────────────────────────────────
+
+export interface CreateRelationshipV2Input {
+  sourceId: string;
+  targetId: string;
+  relationshipType: string;
+  trustScore?: number;
