@@ -168,3 +168,88 @@ interface GraphState {
   rootNodeId: string;
   hopDepth: number;
   showDemoNodes: boolean;
+  selectedNode: GraphNode | null;
+  hoveredNode: GraphNode | null;
+  hoveredEdge: GraphEdge | null;
+  searchQuery: string;
+  highlightedNodeIds: Set<string>;
+  highlightedEdgeIds: Set<string>;
+
+  // Filters (Step 18)
+  activeEdgeTypes: string[];
+  minTrustFilter: number;
+
+  // WORKSPACE MODE (V2.5) — only available for providers with hasCRUD
+  workspaceMode: boolean;
+  visualConnectMode: boolean;
+  connectorSourceNode: GraphNode | null;
+  focusMode: boolean;
+
+  // UI state
+  isLoading: boolean;
+
+  // Actions
+  initGraph: () => Promise<void>;
+  setPrimaryNode: (id: string | null) => Promise<void>;
+  setRootNode: (nodeId: string) => void;
+  setHopDepth: (depth: number) => void;
+  toggleDemoNodes: () => void;
+  selectNode: (node: GraphNode | null) => void;
+  setHoveredNode: (node: GraphNode | null) => void;
+  setHoveredEdge: (edge: GraphEdge | null) => void;
+  setSearchQuery: (q: string) => void;
+  resetGraph: () => void;
+  highlightNeighbors: (nodeId: string) => void;
+  clearHighlights: () => void;
+  refreshSubgraph: () => Promise<void>;
+  refreshDatabase: () => Promise<void>;
+  databaseNodes: GraphNode[];
+  setGraphFilters: (types: string[], minTrust: number) => void;
+
+  // WORKSPACE ACTIONS (V2.5)
+  toggleWorkspaceMode: () => void;
+  toggleFocusMode: () => void;
+  setVisualConnectMode: (val: boolean) => void;
+  setConnectorSourceNode: (node: GraphNode | null) => void;
+  createNewNode: (data: any) => Promise<void>;
+  modifyUserNode: (id: string, data: any) => Promise<void>;
+  removeUserNode: (id: string) => Promise<void>;
+  createNewEdge: (data: any) => Promise<void>;
+  modifyEdge: (id: string, data: any) => Promise<void>;
+  removeEdge: (id: string) => Promise<void>;
+  executeMerge: (sourceId: string, targetId: string) => Promise<void>;
+
+  // PATHFINDER INTELLIGENCE (V3.0)
+  tracedPath: GraphNode[];
+  pathCost: number | null;
+  tracePathAction: (fromId: string, toId: string) => Promise<void>;
+  clearTracedPath: () => void;
+}
+
+// ── Empty state meta ──────────────────────────────────────────
+
+const EMPTY_META: SubgraphMeta = {
+  totalNodes: 0,
+  totalEdges: 0,
+  realNodes: 0,
+  demoNodes: 0,
+  realEdges: 0,
+  demoEdges: 0,
+  avgHopCount: 0,
+  constraintActive: false,
+  centerId: '',
+};
+
+// ── Dummy data helpers ────────────────────────────────────────
+
+const ROOT_DUMMY = 'r-001';
+
+function buildDummySubgraph(
+  rootNodeId: string,
+  hopDepth: number,
+  showDemoNodes: boolean,
+  allNodes: GraphNode[],
+  allEdges: GraphEdge[]
+) {
+  const { nodes, links } = getDummySubgraph(rootNodeId, hopDepth, showDemoNodes, allNodes, allEdges);
+  const meta = computeMeta(nodes, links, rootNodeId, hopDepth);
