@@ -253,3 +253,88 @@ function buildDummySubgraph(
 ) {
   const { nodes, links } = getDummySubgraph(rootNodeId, hopDepth, showDemoNodes, allNodes, allEdges);
   const meta = computeMeta(nodes, links, rootNodeId, hopDepth);
+  return { nodes, links, meta };
+}
+
+// ── Store ─────────────────────────────────────────────────────
+
+export const useGraphStore = create<GraphState>((set, get) => ({
+  allNodes: [],
+  allEdges: [],
+  databaseNodes: [],
+  visibleNodes: [],
+  visibleLinks: [],
+  meta: EMPTY_META,
+
+  // Provider defaults
+  activeProvider: DEFAULT_PROVIDER,
+  providerCapabilities: getCapabilities(DEFAULT_PROVIDER),
+
+  dataSource: 'api-v2',
+  isApiHealthy: false,
+
+  primaryNodeId: null,
+  rootNodeId: '',
+  hopDepth: 3,
+  showDemoNodes: false,
+  selectedNode: null,
+  hoveredNode: null,
+  hoveredEdge: null,
+  searchQuery: '',
+  highlightedNodeIds: new Set(),
+  highlightedEdgeIds: new Set(),
+
+  activeEdgeTypes: [],
+  minTrustFilter: 0,
+
+  // Workspace default states
+  workspaceMode: false,
+  visualConnectMode: false,
+  connectorSourceNode: null,
+  focusMode: false,
+
+  isLoading: false,
+
+  // Pathfinder default states
+  tracedPath: [],
+  pathCost: null,
+
+  // ── PROVIDER SWITCHING (V4.0) ───────────────────────────────
+  switchProvider: async (id: ProviderId) => {
+    const caps = getCapabilities(id);
+
+    // Reset everything and apply new provider
+    set({
+      activeProvider: id,
+      providerCapabilities: caps,
+
+      // Reset graph state
+      allNodes: [],
+      allEdges: [],
+      visibleNodes: [],
+      visibleLinks: [],
+      meta: null,
+      selectedNode: null,
+      hoveredNode: null,
+      hoveredEdge: null,
+      tracedPath: [],
+      pathCost: null,
+      highlightedNodeIds: new Set(),
+      highlightedEdgeIds: new Set(),
+      searchQuery: '',
+      hopDepth: 3,
+
+      // Reset workspace (only available for providers with CRUD)
+      workspaceMode: false,
+      visualConnectMode: false,
+      connectorSourceNode: null,
+
+      // Demo nodes only available for college
+      showDemoNodes: caps.hasDemoNodes,
+    });
+
+    // Load data for the new provider
+    await get().initGraph();
+  },
+
+  setPrimaryNode: async (id: string | null) => {
