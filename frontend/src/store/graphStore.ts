@@ -338,3 +338,88 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   },
 
   setPrimaryNode: async (id: string | null) => {
+    if (!id) {
+      set({ primaryNodeId: null });
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('hopnet_primary_node_college');
+      }
+      await get().refreshSubgraph();
+      return;
+    }
+
+    const { databaseNodes } = get();
+    const matched = databaseNodes.find(n => n.id === id || n.publicId === id);
+    const targetId = matched ? matched.id : id;
+
+    set({ primaryNodeId: targetId, rootNodeId: targetId });
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('hopnet_primary_node_college', targetId);
+    }
+    await get().refreshSubgraph();
+  },
+
+  // ── Init: probe API, load live data if available ────────────
+  initGraph: async () => {
+    const { activeProvider } = get();
+    const healthy = await checkHealth();
+    set({ isApiHealthy: healthy });
+
+    if (activeProvider === 'college') {
+      // ── Primary path: v2 / Neo4j ────────────────────────────────────────
+      const v2Healthy = await checkHealthV2();
+
+      if (v2Healthy) {
+        try {
+          await get().refreshDatabase();
+          const dbNodes = get().databaseNodes;
+
+          if (dbNodes.length === 0) {
+            set({
+              dataSource: 'api-v2',
+              primaryNodeId: null,
+              rootNodeId: '',
+              isApiHealthy: true,
+              visibleNodes: [],
+              visibleLinks: [],
+              allNodes: [],
+              allEdges: [],
+              meta: EMPTY_META,
+            });
+            if (typeof window !== 'undefined') {
+              localStorage.removeItem('hopnet_primary_node_college');
+            }
+            return;
+          }
+
+          // Check if saved primary node preference exists in live Neo4j database
+          let savedPrimaryId = typeof window !== 'undefined' ? localStorage.getItem('hopnet_primary_node_college') : null;
+          let matched = savedPrimaryId ? dbNodes.find(n => n.id === savedPrimaryId || n.publicId === savedPrimaryId) : null;
+
+          let activePrimaryId: string | null = null;
+          if (matched) {
+            activePrimaryId = matched.id;
+          } else if (savedPrimaryId) {
+            // Saved primary node was deleted from Neo4j — clear preference gracefully
+            if (typeof window !== 'undefined') localStorage.removeItem('hopnet_primary_node_college');
+            activePrimaryId = null;
+          }
+
+          const effectiveRootId = activePrimaryId || (dbNodes[0]?.id ?? '');
+
+          set({
+            dataSource: 'api-v2',
+            primaryNodeId: activePrimaryId,
+            rootNodeId: effectiveRootId,
+            isApiHealthy: true,
+          });
+
+          await get().refreshSubgraph();
+          return;
+        } catch (err) {
+          console.error('[HOPNet] v2 init failed:', err);
+        }
+      }
+
+      // If we reach here, v2 health check failed or network request failed
+      console.error('[HOPNet] College Graph API is unreachable or failed to initialize.');
+      set({
