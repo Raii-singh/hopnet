@@ -508,3 +508,88 @@ export const useGraphStore = create<GraphState>((set, get) => ({
                 ...dbNode,
                 hopDistance: 99,
               });
+              visibleNodeIds.add(dbNode.id);
+            }
+          }
+        }
+
+        const realNodesCount = visibleNodes.filter(n => n.nodeType === 'REAL').length;
+        const demoNodesCount = visibleNodes.filter(n => n.nodeType === 'DEMO').length;
+        const realEdgesCount = visibleLinks.filter(l => l.edgeType === 'REAL_EDGE' || l.edgeKind === 'REAL_EDGE').length;
+        const demoEdgesCount = visibleLinks.filter(l => l.edgeType === 'DEMO_EDGE' || l.edgeKind === 'DEMO_EDGE').length;
+
+        const meta: SubgraphMeta = {
+          totalNodes: visibleNodes.length,
+          totalEdges: visibleLinks.length,
+          realNodes: realNodesCount,
+          demoNodes: demoNodesCount,
+          realEdges: realEdgesCount,
+          demoEdges: demoEdgesCount,
+          avgHopCount: data.meta.avgHopCount,
+          constraintActive: data.meta.constraintActive,
+          centerId: data.meta.centerId,
+        };
+        set({ visibleNodes, visibleLinks, meta });
+      } else if (activeProvider === 'imdb') {
+        // IMDb uses client-side BFS traversal from loaded allNodes & allEdges
+        if (hopDepth === 3) {
+          // Show full network (no BFS depth limit)
+          const meta = computeMeta(get().allNodes, get().allEdges, rootNodeId, hopDepth);
+          set({ visibleNodes: get().allNodes, visibleLinks: get().allEdges, meta });
+        } else {
+          const { nodes, links, meta } = buildDummySubgraph(rootNodeId, hopDepth, false, get().allNodes, get().allEdges);
+          set({ visibleNodes: nodes, visibleLinks: links, meta });
+        }
+      } else {
+        const { nodes, links, meta } = buildDummySubgraph(rootNodeId, hopDepth, showDemoNodes, get().allNodes, get().allEdges);
+        set({ visibleNodes: nodes, visibleLinks: links, meta });
+      }
+    } catch (err) {
+      console.error('[refreshSubgraph]', err);
+      if (activeProvider === 'college') {
+        set({ visibleNodes: [], visibleLinks: [], meta: EMPTY_META });
+      } else if (activeProvider === 'imdb') {
+        const { nodes, links, meta } = buildDummySubgraph(rootNodeId, hopDepth, false, get().allNodes, get().allEdges);
+        set({ visibleNodes: nodes, visibleLinks: links, meta });
+      }
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  refreshDatabase: async () => {
+    const { activeProvider, dataSource } = get();
+    if (activeProvider === 'college' && dataSource === 'api-v2') {
+      try {
+        const { fetchPersonsV2 } = await import('@/services/api');
+        const res = await fetchPersonsV2(500);
+        const databaseNodes = res.data.map(apiNodeV2ToGraph);
+        set({ databaseNodes });
+      } catch (err) {
+        console.error('[refreshDatabase] Failed to fetch V2 persons:', err);
+      }
+    } else {
+      // Fallback for IMDb or dummy states
+      set({ databaseNodes: get().allNodes });
+    }
+  },
+
+  setRootNode: (nodeId) => {
+    set({ rootNodeId: nodeId });
+    get().refreshSubgraph();
+  },
+
+  setHopDepth: (depth) => {
+    set({ hopDepth: depth });
+    get().refreshSubgraph();
+  },
+
+  toggleDemoNodes: () => {
+    set(s => ({ showDemoNodes: !s.showDemoNodes }));
+    get().refreshSubgraph();
+  },
+
+  selectNode: (node) => set({ selectedNode: node }),
+  setHoveredNode: (node) => set({ hoveredNode: node }),
+  setHoveredEdge: (edge) => set({ hoveredEdge: edge }),
+  setSearchQuery: (q) => set({ searchQuery: q }),
