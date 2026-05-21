@@ -423,3 +423,88 @@ export const useGraphStore = create<GraphState>((set, get) => ({
       // If we reach here, v2 health check failed or network request failed
       console.error('[HOPNet] College Graph API is unreachable or failed to initialize.');
       set({
+        dataSource: 'api-v2', // keep data source as api-v2 to avoid dummy fallback elsewhere
+        rootNodeId: '',
+        isApiHealthy: false,
+        visibleNodes: [],
+        visibleLinks: [],
+        allNodes: [],
+        allEdges: [],
+        databaseNodes: [],
+        meta: EMPTY_META,
+      });
+
+    } else if (activeProvider === 'imdb') {
+      try {
+        set({ isLoading: true });
+        // fetchImdbGraph handles offline fallback internally
+        const data = await fetchImdbGraph();
+        if (data && data.nodes.length > 0) {
+          const allNodes = data.nodes.map(apiNodeToGraph);
+          const allEdges = data.links.map(apiEdgeToGraph);
+          
+          // Set Robert Downey Jr as default root if present
+          const rdj = allNodes.find(n => n.fullName?.toLowerCase().includes('robert downey jr'));
+          const rootNodeId = rdj?.id ?? allNodes[0]?.id ?? '';
+
+          set({
+            allNodes,
+            allEdges,
+            dataSource: healthy ? 'api' : 'dummy',
+            rootNodeId,
+            hopDepth: 3, // Default to showing full network
+          });
+
+          await get().refreshSubgraph();
+        } else {
+          console.warn('[HOPNet] IMDb graph empty — run the preprocessing pipeline first.');
+          set({ dataSource: 'api', isLoading: false });
+        }
+      } catch (err) {
+        console.warn('[HOPNet] IMDb init failed completely:', err);
+        set({ dataSource: 'api', isLoading: false, isApiHealthy: false });
+      }
+    }
+  },
+
+  // ── Refresh subgraph from API or dummy ──────────────────────
+  refreshSubgraph: async () => {
+    const { rootNodeId, hopDepth, showDemoNodes, dataSource, activeProvider, activeEdgeTypes, minTrustFilter } = get();
+    set({ isLoading: true });
+
+    try {
+      if (activeProvider === 'college') {
+        if (!rootNodeId) {
+          set({ visibleNodes: [], visibleLinks: [], meta: EMPTY_META });
+          return;
+        }
+
+        // Always ensure databaseNodes is refreshed
+        let dbNodes = get().databaseNodes;
+        if (dbNodes.length === 0) {
+          try {
+            const { fetchPersonsV2 } = await import('@/services/api');
+            const res = await fetchPersonsV2(500);
+            dbNodes = res.data.map(apiNodeV2ToGraph);
+            set({ databaseNodes: dbNodes });
+          } catch (e) {
+            console.warn('[refreshSubgraph] Failed to fetch databaseNodes:', e);
+          }
+        }
+
+        const data = await fetchGraphV2(rootNodeId, hopDepth, showDemoNodes, { types: activeEdgeTypes, minTrust: minTrustFilter });
+        let visibleNodes = data.nodes.map(apiNodeV2ToGraph);
+        const visibleLinks = data.links.map(apiEdgeV2ToGraph);
+
+        // Include ONLY truly isolated database entries (0 total connections in Neo4j) as floating visual anchors
+        const visibleNodeIds = new Set(visibleNodes.map(n => n.id));
+        for (const dbNode of dbNodes) {
+          if (!visibleNodeIds.has(dbNode.id)) {
+            if (!showDemoNodes && dbNode.nodeType === 'DEMO') continue;
+            // Only float nodes that legitimately have ZERO relationships in the database
+            const totalConn = showDemoNodes ? (dbNode.connectionCount ?? 0) : (dbNode.realConnections ?? dbNode.connectionCount ?? 0);
+            if (totalConn === 0) {
+              visibleNodes.push({
+                ...dbNode,
+                hopDistance: 99,
+              });
