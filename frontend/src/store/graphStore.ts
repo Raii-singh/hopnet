@@ -678,3 +678,88 @@ export const useGraphStore = create<GraphState>((set, get) => ({
       await get().initGraph();
     } else {
       const count = get().allNodes.length;
+      const publicId = data.nodeType === 'REAL' ? `HNP-000${count + 1}` : `DNP-000${count + 1}`;
+      const newNode: GraphNode = {
+        id: `local-${count + 1}`,
+        publicId,
+        fullName: data.fullName,
+        username: data.username,
+        email: data.email,
+        company: data.company,
+        cluster: data.cluster,
+        influenceScore: data.influenceScore ?? 10,
+        connectionCount: 0,
+        realConnections: 0,
+        demoConnections: 0,
+        tags: data.tags || [],
+        sourceConnectors: data.sourceConnectors || ['Manual'],
+        metadata: data.metadata || {},
+        nodeType: data.nodeType,
+      };
+      set(s => ({ allNodes: [...s.allNodes, newNode] }));
+      if (!get().primaryNodeId) {
+        await get().setPrimaryNode(newNode.id);
+      } else {
+        await get().refreshSubgraph();
+      }
+    }
+  },
+
+  modifyUserNode: async (id, data) => {
+    if (get().dataSource === 'api-v2') {
+      // ── v2 / Neo4j primary path ─────────────────────────────────────────
+      // nodeType is immutable — strip it from the update payload.
+      // The service will reject nodeType changes; stripping avoids noise.
+      const { nodeType: _nt, id: _id, publicId: _pid, createdAt: _ca,
+              updatedAt: _ua, deletedAt: _da, createdBy: _cb, ...safeUpdates } = data;
+      await updatePersonV2(id, safeUpdates);
+      await get().refreshSubgraph();
+      await get().refreshDatabase();
+    } else if (get().dataSource === 'api') {
+      // ── v1 Prisma migration fallback (TEMPORARY) ────────────────────────
+      await updateUserNode(id, data);
+      await get().initGraph();
+    } else {
+      set(s => ({
+        allNodes: s.allNodes.map(n => n.id === id ? { ...n, ...data } : n)
+      }));
+      await get().refreshSubgraph();
+    }
+  },
+
+  removeUserNode: async (id) => {
+    if (get().dataSource === 'api-v2') {
+      // ── v2 / Neo4j primary path ─────────────────────────────────────────
+      await deletePersonV2(id);
+      
+      // If we just deleted the primary node, reset primary node preference gracefully
+      if (get().primaryNodeId === id) {
+        await get().setPrimaryNode(null);
+      }
+
+      await get().refreshSubgraph();
+      await get().refreshDatabase();
+    } else if (get().dataSource === 'api') {
+      // ── v1 Prisma migration fallback (TEMPORARY) ────────────────────────
+      await deleteUserNode(id);
+      await get().initGraph();
+    } else {
+      set(s => ({
+        allNodes: s.allNodes.filter(n => n.id !== id),
+        allEdges: s.allEdges.filter(e => {
+          const src = typeof e.source === 'string' ? e.source : e.source.id;
+          const tgt = typeof e.target === 'string' ? e.target : e.target.id;
+          return src !== id && tgt !== id;
+        })
+      }));
+      await get().refreshSubgraph();
+    }
+  },
+
+  createNewEdge: async (data) => {
+    if (get().dataSource === 'api-v2') {
+      // ── v2 / Neo4j primary path ─────────────────────────────────────────
+      // Service enforces: DEMO→REAL is forbidden, duplicate check, atomicity.
+      await createRelationshipV2({
+        sourceId: data.sourceId,
+        targetId: data.targetId,
