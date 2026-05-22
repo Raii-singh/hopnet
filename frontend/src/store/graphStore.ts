@@ -593,3 +593,88 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   setHoveredNode: (node) => set({ hoveredNode: node }),
   setHoveredEdge: (edge) => set({ hoveredEdge: edge }),
   setSearchQuery: (q) => set({ searchQuery: q }),
+  setGraphFilters: (types, minTrust) => {
+    set({ activeEdgeTypes: types, minTrustFilter: minTrust });
+    get().refreshSubgraph();
+  },
+
+  resetGraph: () => {
+    const { dataSource, allNodes, activeProvider } = get();
+    // For v2 mode, the current rootNodeId is already the correct UUID.
+    // For dummy mode, reset to static root.
+    const currentRootNodeId = get().rootNodeId;
+    const rootNodeId = dataSource === 'dummy'
+      ? ROOT_DUMMY
+      : dataSource === 'api-v2'
+        ? currentRootNodeId
+        : allNodes.find(n => n.nodeType === 'REAL')?.id ?? ROOT_DUMMY;
+
+    set({
+      rootNodeId,
+      hopDepth: 1,
+      showDemoNodes: getCapabilities(activeProvider).hasDemoNodes,
+      selectedNode: null,
+      hoveredNode: null,
+      hoveredEdge: null,
+      searchQuery: '',
+      highlightedNodeIds: new Set(),
+      highlightedEdgeIds: new Set(),
+    });
+    get().refreshSubgraph();
+  },
+
+  highlightNeighbors: (nodeId) => {
+    const { visibleLinks } = get();
+    const nodeIds = new Set<string>([nodeId]);
+    const edgeIds = new Set<string>();
+
+    for (const edge of visibleLinks) {
+      const src = typeof edge.source === 'string' ? edge.source : (edge.source as any).id;
+      const tgt = typeof edge.target === 'string' ? edge.target : (edge.target as any).id;
+      if (src === nodeId) { nodeIds.add(tgt); edgeIds.add(edge.id); }
+      if (tgt === nodeId) { nodeIds.add(src); edgeIds.add(edge.id); }
+    }
+
+    set({ highlightedNodeIds: nodeIds, highlightedEdgeIds: edgeIds });
+  },
+
+  clearHighlights: () => set({ highlightedNodeIds: new Set(), highlightedEdgeIds: new Set() }),
+
+  // ── WORKSPACE ACTIONS ──
+  toggleWorkspaceMode: () => {
+    const { providerCapabilities } = get();
+    if (!providerCapabilities.hasWorkspaceMode) return; // Guard: read-only providers
+    set(s => ({ workspaceMode: !s.workspaceMode, visualConnectMode: false, connectorSourceNode: null }));
+  },
+  toggleFocusMode: () => set(s => ({ focusMode: !s.focusMode })),
+  setVisualConnectMode: (val) => set({ visualConnectMode: val, connectorSourceNode: null }),
+  setConnectorSourceNode: (node) => set({ connectorSourceNode: node }),
+
+  createNewNode: async (data) => {
+    if (get().dataSource === 'api-v2') {
+      // ── v2 / Neo4j primary path ─────────────────────────────────────────
+      const res = await createPersonV2({
+        nodeType: data.nodeType,
+        fullName: data.fullName,
+        username: data.username,
+        email: data.email,
+        phone: data.phone,
+        company: data.company,
+        cluster: data.cluster,
+        tags: data.tags,
+        sourceConnectors: data.sourceConnectors ?? ['Manual Workspace'],
+        createdBy: 'Manual Workspace',
+      });
+      // Requirement 3: If graph had no primary node, make newly created person initial primary node
+      if (!get().primaryNodeId && res && res.id) {
+        await get().setPrimaryNode(res.id);
+      } else {
+        await get().refreshSubgraph();
+        await get().refreshDatabase();
+      }
+    } else if (get().dataSource === 'api') {
+      // ── v1 Prisma migration fallback (TEMPORARY) ────────────────────────
+      await createUserNode(data);
+      await get().initGraph();
+    } else {
+      const count = get().allNodes.length;
