@@ -763,3 +763,88 @@ export const useGraphStore = create<GraphState>((set, get) => ({
       await createRelationshipV2({
         sourceId: data.sourceId,
         targetId: data.targetId,
+        relationshipType: data.relationshipType || 'acquaintance',
+        trustScore: data.trustScore ?? 0.5,
+        interactionFrequency: data.interactionFrequency ?? 0.5,
+        connectorSource: data.connectorSource ?? 'Manual Workspace',
+        createdBy: 'Manual Workspace',
+      });
+      await get().refreshSubgraph();
+    } else if (get().dataSource === 'api') {
+      // ── v1 Prisma migration fallback (TEMPORARY) ────────────────────────
+      await createRelationship(data);
+      await get().initGraph();
+    } else {
+      const count = get().allEdges.length;
+      const srcNode = get().allNodes.find(n => n.id === data.sourceId)!;
+      const tgtNode = get().allNodes.find(n => n.id === data.targetId)!;
+      const isReal = srcNode.nodeType === 'REAL' && tgtNode.nodeType === 'REAL';
+
+      const newLink: GraphEdge = {
+        id: `local-edge-${count + 1}`,
+        source: data.sourceId,
+        target: data.targetId,
+        relationshipType: data.relationshipType || 'acquaintance',
+        trustScore: data.trustScore ?? 0.5,
+        interactionFrequency: data.interactionFrequency ?? 0.5,
+        connectorSource: data.connectorSource || 'Manual',
+        edgeType: isReal ? 'REAL_EDGE' : 'DEMO_EDGE',
+        weight: Math.round(((data.trustScore ?? 0.5) * 0.6 + (data.interactionFrequency ?? 0.5) * 0.4) * 100) / 100,
+      };
+
+      set(s => ({ allEdges: [...s.allEdges, newLink] }));
+      await get().refreshSubgraph();
+    }
+  },
+
+  modifyEdge: async (id, data) => {
+    if (get().dataSource === 'api-v2') {
+      // ── v2 / Neo4j primary path ─────────────────────────────────────────
+      await updateRelationshipV2(id, {
+        relationshipType: data.relationshipType,
+        trustScore: data.trustScore,
+        interactionFrequency: data.interactionFrequency,
+      });
+      await get().refreshSubgraph();
+    } else if (get().dataSource === 'api') {
+      // ── v1 Prisma migration fallback (TEMPORARY) ────────────────────────
+      await updateRelationship(id, data);
+      await get().initGraph();
+    } else {
+      set(s => ({
+        allEdges: s.allEdges.map(e => {
+          if (e.id !== id) return e;
+          const trust = data.trustScore !== undefined ? data.trustScore : e.trustScore;
+          const freq = data.interactionFrequency !== undefined ? data.interactionFrequency : e.interactionFrequency;
+          return {
+            ...e,
+            relationshipType: data.relationshipType || e.relationshipType,
+            trustScore: trust,
+            interactionFrequency: freq,
+            weight: Math.round((trust * 0.6 + freq * 0.4) * 100) / 100,
+          };
+        })
+      }));
+      await get().refreshSubgraph();
+    }
+  },
+
+  removeEdge: async (id) => {
+    if (get().dataSource === 'api-v2') {
+      // ── v2 / Neo4j primary path ─────────────────────────────────────────
+      await deleteRelationshipV2(id);
+      await get().refreshSubgraph();
+      await get().refreshDatabase();
+    } else if (get().dataSource === 'api') {
+      // ── v1 Prisma migration fallback (TEMPORARY) ────────────────────────
+      await deleteRelationship(id);
+      await get().initGraph();
+    } else {
+      set(s => ({
+        allEdges: s.allEdges.filter(e => e.id !== id)
+      }));
+      await get().refreshSubgraph();
+    }
+  },
+
+  executeMerge: async (sourceId, targetId) => {
