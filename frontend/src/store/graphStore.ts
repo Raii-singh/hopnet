@@ -848,3 +848,88 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   },
 
   executeMerge: async (sourceId, targetId) => {
+    if (get().dataSource === 'api') {
+      await mergeIdentities(sourceId, targetId);
+      await get().initGraph();
+    } else {
+      const sourceUser = get().allNodes.find(n => n.id === sourceId)!;
+      const targetUser = get().allNodes.find(n => n.id === targetId)!;
+      const combinedTags = Array.from(new Set([...(sourceUser.tags || []), ...(targetUser.tags || [])]));
+
+      set(s => ({
+        allNodes: s.allNodes
+          .map(n => n.id === targetId ? { ...n, tags: combinedTags } : n)
+          .filter(n => n.id !== sourceId),
+        allEdges: s.allEdges
+          .map(e => {
+            let src = typeof e.source === 'string' ? e.source : (e.source as any).id;
+            let tgt = typeof e.target === 'string' ? e.target : (e.target as any).id;
+            if (src === sourceId) src = targetId;
+            if (tgt === sourceId) tgt = targetId;
+            return { ...e, source: src, target: tgt };
+          })
+          .filter(e => {
+            const src = typeof e.source === 'string' ? e.source : (e.source as any).id;
+            const tgt = typeof e.target === 'string' ? e.target : (e.target as any).id;
+            return src !== tgt;
+          })
+      }));
+      await get().refreshSubgraph();
+    }
+  },
+
+  tracePathAction: async (fromId, toId) => {
+    set({ isLoading: true });
+    try {
+      let res = await fetchPath(fromId, toId);
+
+      // Client-side BFS fallback if API path is unavailable or local mode
+      if (!res || !res.path || res.path.length === 0) {
+        const allEdges = get().allEdges;
+        const queue: string[][] = [[fromId]];
+        const visited = new Set<string>([fromId]);
+        let foundPath: string[] | null = null;
+
+        while (queue.length > 0) {
+          const currPath = queue.shift()!;
+          const curr = currPath[currPath.length - 1];
+
+          if (curr === toId) {
+            foundPath = currPath;
+            break;
+          }
+
+          for (const e of allEdges) {
+            const src = typeof e.source === 'string' ? e.source : (e.source as any).id;
+            const tgt = typeof e.target === 'string' ? e.target : (e.target as any).id;
+            let nextId: string | null = null;
+            if (src === curr) nextId = tgt;
+            else if (tgt === curr) nextId = src;
+
+            if (nextId && !visited.has(nextId)) {
+              visited.add(nextId);
+              queue.push([...currPath, nextId]);
+            }
+          }
+        }
+
+        if (foundPath) {
+          res = { path: foundPath, totalCost: foundPath.length - 1 };
+        }
+      }
+
+      if (res && res.path && res.path.length > 0) {
+        const allNodes = get().allNodes;
+        const mappedPath = res.path
+          .map(id => allNodes.find(n => n.id === id || n.publicId === id))
+          .filter(Boolean) as GraphNode[];
+
+        const nodeIds = new Set(res.path);
+        const edgeIds = new Set<string>();
+
+        for (let i = 0; i < res.path.length - 1; i++) {
+          const src = res.path[i];
+          const tgt = res.path[i + 1];
+          const edge = get().allEdges.find(e => {
+            const s = typeof e.source === 'string' ? e.source : (e.source as any).id;
+            const t = typeof e.target === 'string' ? e.target : (e.target as any).id;
