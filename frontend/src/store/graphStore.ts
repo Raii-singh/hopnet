@@ -933,3 +933,44 @@ export const useGraphStore = create<GraphState>((set, get) => ({
           const edge = get().allEdges.find(e => {
             const s = typeof e.source === 'string' ? e.source : (e.source as any).id;
             const t = typeof e.target === 'string' ? e.target : (e.target as any).id;
+            return (s === src && t === tgt) || (s === tgt && t === src);
+          });
+          if (edge) edgeIds.add(edge.id);
+        }
+
+        set({
+          tracedPath: mappedPath,
+          pathCost: res.totalCost,
+          highlightedNodeIds: nodeIds,
+          highlightedEdgeIds: edgeIds,
+        });
+      } else {
+        set({
+          tracedPath: [],
+          pathCost: null,
+          highlightedNodeIds: new Set(),
+          highlightedEdgeIds: new Set(),
+        });
+      }
+    } catch (err) {
+      console.error('Failed to trace path:', err);
+      set({
+        tracedPath: [],
+        pathCost: null,
+        highlightedNodeIds: new Set(),
+        highlightedEdgeIds: new Set(),
+      });
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  clearTracedPath: () => {
+    set({
+      tracedPath: [],
+      pathCost: null,
+      highlightedNodeIds: new Set(),
+      highlightedEdgeIds: new Set(),
+    });
+  },
+}));
