@@ -83,3 +83,38 @@ export function dijkstra(
       if (!constraint(currentNode, neighborNode)) continue;
 
       const alt = (distance.get(u) ?? Infinity) + cost;
+      if (alt < (distance.get(neighborId) ?? Infinity)) {
+        distance.set(neighborId, alt);
+        previous.set(neighborId, u);
+      }
+    }
+  }
+
+  return { distance, previous };
+}
+
+/**
+ * Reconstruct the optimal path from root to `targetId` using the Dijkstra result.
+ *
+ * @param targetId - Destination node ID
+ * @param previous - Predecessor map from `dijkstra()`
+ * @returns Ordered array of node IDs from root → target,
+ *          or empty array if target is unreachable
+ */
+export function reconstructPath(
+  targetId: string,
+  previous: Map<string, string | null>
+): string[] {
+  const path: string[] = [];
+  let current: string | null = targetId;
+
+  while (current !== null) {
+    path.unshift(current);
+    current = previous.get(current) ?? null;
+  }
+
+  // If path doesn't start from root (disconnected), return empty
+  if (path.length === 1 && path[0] !== targetId) return [];
+
+  return path;
+}
