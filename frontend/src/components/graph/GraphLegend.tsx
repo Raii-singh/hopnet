@@ -1,19 +1,25 @@
-'use client';
+function hexToRgba(hex: string, alpha: number): string {
+  if (!hex || !hex.startsWith('#')) return `rgba(255, 255, 255, ${alpha})`;
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
 
 export default function GraphLegend() {
   const nodeTypes = [
-    { color: 'var(--neon-cyan)', glow: 'rgba(6,182,212,0.6)', label: 'Real Node', shape: 'circle' },
-    { color: 'var(--silver-500)', glow: null, label: 'Demo Node', shape: 'circle' },
-    { color: 'var(--neon-blue)', glow: 'rgba(59,130,246,0.6)', label: 'Real Edge', shape: 'line' },
-    { color: 'var(--silver-700)', glow: null, label: 'Demo Edge', shape: 'line' },
+    { color: '#ffffff', glow: 'rgba(255,255,255,0.2)', label: 'Real Node', shape: 'circle' },
+    { color: '#475569', glow: null, label: 'Demo Node', shape: 'circle' },
+    { color: 'rgba(255,255,255,0.4)', glow: null, label: 'Real Edge', shape: 'line' },
+    { color: 'rgba(255,255,255,0.1)', glow: null, label: 'Demo Edge', shape: 'line' },
   ];
 
   const communities = [
-    { color: '#06b6d4', label: 'Tech Cluster' },
-    { color: '#10b981', label: 'Finance Cluster' },
-    { color: '#f59e0b', label: 'Health Cluster' },
-    { color: '#8b5cf6', label: 'Venture Cluster' },
-    { color: '#6366f1', label: 'Academia Cluster' },
+    { color: '#ffffff', label: 'Tech Cluster' },
+    { color: '#f1f5f9', label: 'Finance Cluster' },
+    { color: '#cbd5e1', label: 'Health Cluster' },
+    { color: '#94a3b8', label: 'Venture Cluster' },
+    { color: '#475569', label: 'Academia Cluster' },
   ];
 
   return (
@@ -67,7 +73,7 @@ export default function GraphLegend() {
               <div style={{
                 width: 6, height: 6, borderRadius: '50%',
                 background: c.color,
-                boxShadow: `0 0 4px ${c.color}`,
+                boxShadow: `0 0 4px ${hexToRgba(c.color, 0.4)}`,
                 flexShrink: 0,
               }} />
               <span style={{ fontSize: '9px', color: 'var(--silver-400)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -80,22 +86,22 @@ export default function GraphLegend() {
             <div style={{
               width: 7, height: 7, borderRadius: '50%',
               background: 'transparent',
-              border: '1.5px double #a78bfa',
-              boxShadow: '0 0 4px #8b5cf6',
+              border: '1.5px double #ffffff',
+              boxShadow: '0 0 4px rgba(255,255,255,0.3)',
               flexShrink: 0,
             }} />
-            <span style={{ fontSize: '9px', color: 'var(--neon-violet)', fontWeight: 600 }}>Bridge Node (Multi-Cluster)</span>
+            <span style={{ fontSize: '9px', color: 'var(--silver-300)', fontWeight: 600 }}>Bridge Node (Multi-Cluster)</span>
           </div>
         </div>
 
         {/* Constraint warning */}
         <div style={{
           padding: '4px 6px',
-          background: 'rgba(244,63,94,0.06)',
-          border: '1px solid rgba(244,63,94,0.15)',
+          background: 'rgba(255,255,255,0.03)',
+          border: '1px solid rgba(255,255,255,0.08)',
           borderRadius: '4px',
           fontSize: '9px',
-          color: 'rgba(244,63,94,0.85)',
+          color: 'var(--silver-400)',
           lineHeight: 1.3,
           textAlign: 'center',
         }}>

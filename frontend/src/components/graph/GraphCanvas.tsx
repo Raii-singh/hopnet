@@ -20,32 +20,32 @@ const ForceGraph2D = dynamic(() => import('react-force-graph-2d'), {
     }}>
       <div style={{ textAlign: 'center' }}>
         <div style={{
-          width: 40, height: 40, border: '2px solid var(--neon-blue)',
-          borderTopColor: 'transparent', borderRadius: '50%',
+          width: 32, height: 32, border: '2px solid rgba(255,255,255,0.2)',
+          borderTopColor: '#ffffff', borderRadius: '50%',
           animation: 'spin 0.8s linear infinite',
           margin: '0 auto 12px',
         }} />
-        <span className="text-label" style={{ color: 'var(--neon-blue)' }}>Loading Graph Engine…</span>
+        <span className="text-label" style={{ color: 'var(--silver-400)' }}>Syncing Spatial Matrix…</span>
       </div>
     </div>
   ),
 });
 
-// Community Tailored colors mapping
+// Community Tailored colors mapping (Monochromatic Silver/Chrome shades V3.5)
 function getClusterColor(cluster?: string): string {
-  if (!cluster) return '#64748b'; // slate
+  if (!cluster) return '#64748b'; // Slate slate
   switch (cluster.toLowerCase()) {
-    case 'tech': return '#06b6d4'; // Cyan
-    case 'finance': return '#10b981'; // Emerald
-    case 'health': return '#f59e0b'; // Amber
-    case 'venture': return '#8b5cf6'; // Violet
-    case 'academia': return '#6366f1'; // Indigo
+    case 'tech': return '#ffffff';      // Pure White Highlight
+    case 'finance': return '#f1f5f9';   // Platinum Light
+    case 'health': return '#cbd5e1';    // Titanium Silver
+    case 'venture': return '#94a3b8';   // Silver Steel
+    case 'academia': return '#475569';  // Muted Slate
     default: return '#64748b';
   }
 }
 
 function hexToRgba(hex: string, alpha: number): string {
-  if (!hex || !hex.startsWith('#')) return `rgba(100,116,139,${alpha})`;
+  if (!hex || !hex.startsWith('#')) return `rgba(255, 255, 255, ${alpha})`;
   const r = parseInt(hex.slice(1, 3), 16);
   const g = parseInt(hex.slice(3, 5), 16);
   const b = parseInt(hex.slice(5, 7), 16);
@@ -73,6 +73,27 @@ export default function GraphCanvas() {
   // Workspace Local Modal triggers
   const [editingEdge, setEditingEdge] = useState<GraphEdge | null>(null);
   const [creatingEdgeData, setCreatingEdgeData] = useState<{ sourceId: string; targetId: string } | null>(null);
+
+  // Compute active connection sets on hover for propagation responses V3.5
+  const hoveredNodeConnections = useMemo(() => {
+    if (!hoveredNode) return { nodeIds: new Set<string>(), edgeIds: new Set<string>() };
+    const nodeIds = new Set<string>([hoveredNode.id]);
+    const edgeIds = new Set<string>();
+    
+    for (const link of visibleLinks) {
+      const src = typeof link.source === 'string' ? link.source : (link.source as any).id;
+      const tgt = typeof link.target === 'string' ? link.target : (link.target as any).id;
+      if (src === hoveredNode.id) {
+        nodeIds.add(tgt);
+        edgeIds.add(link.id);
+      }
+      if (tgt === hoveredNode.id) {
+        nodeIds.add(src);
+        edgeIds.add(link.id);
+      }
+    }
+    return { nodeIds, edgeIds };
+  }, [hoveredNode, visibleLinks]);
 
   // precompute bridge nodes based on visible graph schema
   const bridgeNodes = useMemo(() => {
@@ -155,39 +176,49 @@ export default function GraphCanvas() {
     const isHighlighted = highlightedNodeIds.size === 0 || highlightedNodeIds.has(n.id);
     const isSelected = selectedNode?.id === n.id;
     const isHovered = hoveredNode?.id === n.id;
+    const isConnectedToHovered = hoveredNodeConnections.nodeIds.has(n.id);
+    const hasActiveHover = hoveredNode !== null;
 
-    if (isConnectorSource) return '#8b5cf6'; // pulsing violet in linking mode
-    if (isSelected) return '#a78bfa'; // focal violet
-    
-    // Cluster colored community mapping V3.0
-    if (n.cluster) {
-      const baseColor = getClusterColor(n.cluster);
-      if (!isHighlighted) return hexToRgba(baseColor, 0.18);
-      if (isHovered) return baseColor;
-      return baseColor;
-    }
+    let color = '#ffffff';
 
-    if (n.nodeType === 'REAL') {
-      if (!isHighlighted) return 'rgba(6,182,212,0.2)';
-      if (isHovered) return '#67e8f9';
-      return '#06b6d4';
+    if (isConnectorSource) color = '#ffffff'; // pure white in linking mode
+    else if (isSelected) color = '#ffffff';
+    else if (n.cluster) {
+      color = getClusterColor(n.cluster);
+    } else if (n.nodeType === 'REAL') {
+      color = '#e2e8f0'; // platinum
     } else {
-      if (!isHighlighted) return 'rgba(100,116,139,0.15)';
-      if (isHovered) return '#94a3b8';
-      return '#64748b';
+      color = '#475569'; // charcoal slate
     }
-  }, [highlightedNodeIds, selectedNode, hoveredNode, connectorSourceNode]);
+
+    // High Depth Fading: if static highlight selection is active and this node is skipped
+    if (!isHighlighted) {
+      return hexToRgba(color, 0.08);
+    }
+
+    // High Depth Fading: if hovering a node and this node is not connected to it
+    if (hasActiveHover && !isHovered && !isConnectedToHovered) {
+      return hexToRgba(color, 0.08);
+    }
+
+    // Bright highlights on hover focus
+    if (isHovered || isConnectedToHovered) {
+      return color;
+    }
+
+    return hexToRgba(color, 0.7);
+  }, [highlightedNodeIds, selectedNode, hoveredNode, connectorSourceNode, hoveredNodeConnections]);
 
   // ── Node size ───────────────────────────────────────────────
   const getNodeSize = useCallback((node: any) => {
     const n = node as GraphNode;
     const base = n.nodeType === 'REAL' ? 5.5 + (n.influenceScore / 100) * 5 : 4.2;
-    if (hoveredNode?.id === n.id) return base * 1.45;
-    if (selectedNode?.id === n.id) return base * 1.55;
+    if (hoveredNode?.id === n.id) return base * 1.35;
+    if (selectedNode?.id === n.id) return base * 1.45;
     return base;
   }, [hoveredNode, selectedNode]);
 
-  // ── Node canvas rendering ────────────────────────────────────
+  // ── Node canvas rendering (High-End Spatial Outlines V3.5) ──
   const paintNode = useCallback((node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
     const n = node as GraphNode;
     if (!isFinite(node.x) || !isFinite(node.y)) return;
@@ -199,106 +230,125 @@ export default function GraphCanvas() {
     const isSelected = selectedNode?.id === n.id;
     const isConnectorSource = connectorSourceNode?.id === n.id;
     const isHighlighted = highlightedNodeIds.size === 0 || highlightedNodeIds.has(n.id);
+    const isConnectedToHovered = hoveredNodeConnections.nodeIds.has(n.id);
+    const hasActiveHover = hoveredNode !== null;
+
+    // Subtle node breathing animation (lerp sync wave)
+    const time = Date.now() * 0.0022;
+    const breathingOffset = Math.sin(time + n.fullName.charCodeAt(0)) * 0.22;
+    const adjustedRadius = r + breathingOffset;
 
     ctx.save();
 
-    // 1. Soft cluster halos rendering behind nodes (V3.0)
-    if (n.cluster && isHighlighted) {
+    // 1. Soft cluster halos rendering behind nodes (Translucent Platinum glow)
+    if (n.cluster && isHighlighted && (!hasActiveHover || isHovered || isConnectedToHovered)) {
       const clusterColor = getClusterColor(n.cluster);
       const glowScale = isSelected ? 3.0 : isHovered ? 2.6 : 2.2;
-      const grad = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, r * glowScale);
-      const alpha = isSelected ? 0.25 : isHovered ? 0.2 : 0.08;
+      const grad = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, adjustedRadius * glowScale);
+      const alpha = isSelected ? 0.16 : isHovered ? 0.1 : 0.04;
       grad.addColorStop(0, hexToRgba(clusterColor, alpha));
       grad.addColorStop(1, 'transparent');
       
       ctx.beginPath();
-      ctx.arc(node.x, node.y, r * glowScale, 0, 2 * Math.PI);
+      ctx.arc(node.x, node.y, adjustedRadius * glowScale, 0, 2 * Math.PI);
       ctx.fillStyle = grad;
       ctx.fill();
     }
 
-    // 2. Connector linking selection ring
+    // 2. Connector linking selection ring (Faint chrome dash)
     if (isConnectorSource) {
       ctx.beginPath();
-      ctx.arc(node.x, node.y, r * 2.2, 0, 2 * Math.PI);
-      ctx.strokeStyle = '#a78bfa';
-      ctx.lineWidth = 1.5;
+      ctx.arc(node.x, node.y, adjustedRadius * 2.2, 0, 2 * Math.PI);
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1.2;
       ctx.setLineDash([3, 3]);
       ctx.stroke();
       ctx.setLineDash([]); // reset
     }
 
-    // 3. Special Bridge Node glowing rings (V3.0)
-    if (bridgeNodes.has(n.id) && isHighlighted) {
+    // 3. Special Bridge Node glowing rings (Sleek Silver Double-Stroke)
+    if (bridgeNodes.has(n.id) && isHighlighted && (!hasActiveHover || isHovered || isConnectedToHovered)) {
       ctx.beginPath();
-      ctx.arc(node.x, node.y, r * 1.5, 0, 2 * Math.PI);
-      ctx.strokeStyle = '#8b5cf6'; // glowing violet double-stroke ring
-      ctx.lineWidth = isHovered ? 1.5 : 0.9;
+      ctx.arc(node.x, node.y, adjustedRadius * 1.5, 0, 2 * Math.PI);
+      ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+      ctx.lineWidth = isHovered ? 1.2 : 0.8;
       ctx.stroke();
     }
 
     // Node core circle
     ctx.beginPath();
-    ctx.arc(node.x, node.y, r, 0, 2 * Math.PI);
+    ctx.arc(node.x, node.y, adjustedRadius, 0, 2 * Math.PI);
     ctx.fillStyle = color;
     ctx.fill();
 
-    // Stroke
+    // Outlines
     if (isSelected || isConnectorSource) {
-      ctx.strokeStyle = isConnectorSource ? '#8b5cf6' : '#a78bfa';
-      ctx.lineWidth = 2.2;
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1.8;
       ctx.stroke();
     } else if (isHovered && isReal) {
-      ctx.strokeStyle = '#67e8f9';
-      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+    } else if (isReal && (!hasActiveHover || isConnectedToHovered)) {
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
+      ctx.lineWidth = 0.6;
       ctx.stroke();
     } else if (isReal) {
-      ctx.strokeStyle = n.cluster ? hexToRgba(getClusterColor(n.cluster), 0.5) : 'rgba(6,182,212,0.4)';
-      ctx.lineWidth = 0.8;
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+      ctx.lineWidth = 0.4;
       ctx.stroke();
     }
 
-    // Label — only at zoom > 2 or for hovered
-    if (globalScale > 2.2 || isHovered || isSelected || isConnectorSource) {
-      ctx.font = `${isSelected || isConnectorSource ? 600 : 400} ${Math.max(3.2, 9 / globalScale)}px Outfit, Inter, sans-serif`;
-      ctx.fillStyle = isReal ? '#f1f5f9' : '#94a3b8';
+    // Label — spatial Outfit typography hierarchy
+    const labelAlpha = isSelected || isHovered || isConnectorSource ? 1.0 : isConnectedToHovered ? 0.8 : hasActiveHover ? 0.06 : 0.55;
+    if (globalScale > 2.2 || isHovered || isSelected || isConnectorSource || isConnectedToHovered) {
+      ctx.font = `${isSelected || isConnectorSource ? 600 : 400} ${Math.max(3.2, 8.5 / globalScale)}px Outfit, Inter, sans-serif`;
+      ctx.fillStyle = isReal ? `rgba(255, 255, 255, ${labelAlpha})` : `rgba(148, 163, 184, ${labelAlpha})`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'top';
-      ctx.fillText(n.fullName, node.x, node.y + r + 2.5);
+      ctx.fillText(n.fullName, node.x, node.y + adjustedRadius + 3.0);
     }
 
     ctx.restore();
-  }, [getNodeColor, getNodeSize, hoveredNode, selectedNode, highlightedNodeIds, connectorSourceNode, bridgeNodes]);
+  }, [getNodeColor, getNodeSize, hoveredNode, selectedNode, highlightedNodeIds, connectorSourceNode, bridgeNodes, hoveredNodeConnections]);
 
-
-  // ── Link color ──────────────────────────────────────────────
+  // ── Link color (Monochromatic Silver flow) ──────────────────
   const getLinkColor = useCallback((link: any) => {
     const e = link as GraphEdge;
     const isHighlighted = highlightedEdgeIds.size === 0 || highlightedEdgeIds.has(e.id);
     const isHovered = hoveredEdge?.id === e.id;
     const isTracedOptimalPath = highlightedEdgeIds.has(e.id) && highlightedEdgeIds.size > 0;
+    const isConnectedToHovered = hoveredNodeConnections.edgeIds.has(e.id);
+    const hasActiveHover = hoveredNode !== null;
 
-    if (isTracedOptimalPath) return '#a78bfa'; // Bright glowing violet for optimal paths!
-    if (e.edgeType === 'REAL_EDGE') {
-      if (!isHighlighted) return 'rgba(59,130,246,0.06)';
-      if (isHovered) return '#60a5fa';
-      return `rgba(59,130,246,${0.25 + e.weight * 0.4})`;
-    } else {
-      if (!isHighlighted) return 'rgba(71,85,105,0.04)';
-      if (isHovered) return '#475569';
-      return `rgba(71,85,105,${0.15 + e.weight * 0.25})`;
+    // Cinematic Hover Depth Fading: dim unconnected paths
+    if (hasActiveHover && !isConnectedToHovered) {
+      return 'rgba(255, 255, 255, 0.015)';
     }
-  }, [highlightedEdgeIds, hoveredEdge]);
+
+    if (isTracedOptimalPath) return '#ffffff'; // Glowing white for optimal paths
+    if (isHovered || isConnectedToHovered) return 'rgba(255, 255, 255, 0.5)'; // bright silver
+
+    if (e.edgeType === 'REAL_EDGE') {
+      if (!isHighlighted) return 'rgba(255, 255, 255, 0.03)';
+      return `rgba(255, 255, 255, ${0.1 + e.weight * 0.15})`;
+    } else {
+      if (!isHighlighted) return 'rgba(255, 255, 255, 0.01)';
+      return `rgba(255, 255, 255, ${0.03 + e.weight * 0.05})`;
+    }
+  }, [highlightedEdgeIds, hoveredEdge, hoveredNode, hoveredNodeConnections]);
 
   const getLinkWidth = useCallback((link: any) => {
     const e = link as GraphEdge;
     const isHovered = hoveredEdge?.id === e.id;
     const isTracedOptimalPath = highlightedEdgeIds.has(e.id) && highlightedEdgeIds.size > 0;
+    const isConnectedToHovered = hoveredNodeConnections.edgeIds.has(e.id);
     
-    if (isTracedOptimalPath) return 3.2; // Widen path tracers
-    const base = e.edgeType === 'REAL_EDGE' ? 1 + e.weight * 1.5 : 0.5 + e.weight * 0.5;
-    return isHovered ? base * 2 : base;
-  }, [hoveredEdge, highlightedEdgeIds]);
+    if (isTracedOptimalPath) return 2.6; // Widen path route
+    const base = e.edgeType === 'REAL_EDGE' ? 0.8 + e.weight * 0.8 : 0.4 + e.weight * 0.4;
+    return (isHovered || isConnectedToHovered) ? base * 1.6 : base;
+  }, [hoveredEdge, highlightedEdgeIds, hoveredNodeConnections]);
 
   return (
     <div
@@ -325,26 +375,24 @@ export default function GraphCanvas() {
           linkColor={getLinkColor}
           linkWidth={getLinkWidth}
           linkCurvature={0.08}
-          // Accelerated cinematic path particles (V3.0)
+          // Accelerated cinematic path particles (White flow V3.5)
           linkDirectionalParticles={(link: any) => {
             const e = link as GraphEdge;
-            if (highlightedEdgeIds.has(e.id) && highlightedEdgeIds.size > 0) return 6; // accelerate!
-            return e.edgeType === 'REAL_EDGE' ? 2 : 0;
+            const isConnectedToHovered = hoveredNodeConnections.edgeIds.has(e.id);
+            if (highlightedEdgeIds.has(e.id) && highlightedEdgeIds.size > 0) return 6; // optimal path trace!
+            if (isConnectedToHovered) return 3; // send flow to neighbors on hover!
+            return e.edgeType === 'REAL_EDGE' ? 1 : 0;
           }}
           linkDirectionalParticleWidth={(link: any) => {
             const e = link as GraphEdge;
-            if (highlightedEdgeIds.has(e.id) && highlightedEdgeIds.size > 0) return 3.5;
-            return 1.5 + e.weight;
+            if (highlightedEdgeIds.has(e.id) && highlightedEdgeIds.size > 0) return 2.6;
+            return 1.2;
           }}
-          linkDirectionalParticleColor={(link: any) => {
-            const e = link as GraphEdge;
-            if (highlightedEdgeIds.has(e.id) && highlightedEdgeIds.size > 0) return '#a78bfa';
-            return e.edgeType === 'REAL_EDGE' ? '#3b82f6' : '#475569';
-          }}
+          linkDirectionalParticleColor={() => '#ffffff'}
           linkDirectionalParticleSpeed={(link: any) => {
             const e = link as GraphEdge;
-            if (highlightedEdgeIds.has(e.id) && highlightedEdgeIds.size > 0) return 0.012; // super accelerated!
-            return 0.004;
+            if (highlightedEdgeIds.has(e.id) && highlightedEdgeIds.size > 0) return 0.015; // super accelerated!
+            return 0.003;
           }}
           // Physics
           d3AlphaDecay={0.015}
@@ -407,18 +455,18 @@ export default function GraphCanvas() {
         <div style={{
           position: 'absolute', inset: 0,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          background: 'rgba(5,5,15,0.6)',
-          backdropFilter: 'blur(4px)',
+          background: 'rgba(2,2,2,0.65)',
+          backdropFilter: 'blur(10px)',
           zIndex: 50,
         }}>
           <div style={{ textAlign: 'center' }}>
             <div style={{
-              width: 36, height: 36,
-              border: '2px solid var(--neon-blue)', borderTopColor: 'transparent',
+              width: 32, height: 32,
+              border: '2px solid rgba(255,255,255,0.15)', borderTopColor: '#ffffff',
               borderRadius: '50%', animation: 'spin 0.7s linear infinite',
               margin: '0 auto 10px',
             }} />
-            <span className="text-label" style={{ color: 'var(--neon-blue)' }}>Expanding Subgraph…</span>
+            <span className="text-label" style={{ color: 'var(--silver-400)' }}>Expanding Subgraph…</span>
           </div>
         </div>
       )}

@@ -32,9 +32,9 @@ export default function EdgeTooltip({ edge, x, y }: EdgeTooltipProps) {
           <div style={{
             width: 24, height: 2, borderRadius: 1,
             background: isReal
-              ? 'linear-gradient(90deg, #3b82f6, #06b6d4)'
-              : 'var(--silver-700)',
-            boxShadow: isReal ? '0 0 6px rgba(59,130,246,0.6)' : 'none',
+              ? 'linear-gradient(90deg, #ffffff, #cbd5e1)'
+              : 'rgba(255, 255, 255, 0.1)',
+            boxShadow: 'none',
           }} />
           <span className={`badge ${isReal ? 'badge-real-edge' : 'badge-demo'}`}>
             {isReal ? 'REAL EDGE' : 'DEMO EDGE'}
@@ -54,13 +54,13 @@ export default function EdgeTooltip({ edge, x, y }: EdgeTooltipProps) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
             <span className="text-label">Relationship Score</span>
-            <span className="text-value text-mono" style={{ color: isReal ? 'var(--neon-blue)' : 'var(--silver-400)' }}>
+            <span className="text-value text-mono" style={{ color: isReal ? '#ffffff' : 'var(--silver-400)' }}>
               {weight}
             </span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
             <span className="text-label">Type</span>
-            <span className="text-value text-mono" style={{ color: 'var(--neon-cyan)', fontSize: '11px' }}>
+            <span className="text-value text-mono" style={{ color: '#ffffff', fontSize: '11px' }}>
               {edge.relationshipType}
             </span>
           </div>

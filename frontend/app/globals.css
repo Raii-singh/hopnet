@@ -1,53 +1,53 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
 @import "tailwindcss";
 
 /* ============================================================
-   HOPNET — Global Design System
-   Dark Glassmorphism · Futuristic · Graph-Native
+   HOPNET V3 — Premium Spatial OS Design System
+   Obsidian Glassmorphism · Silver Outlines · Apple-Grade Spatial
    ============================================================ */
 
 :root {
-  /* Core Palette */
-  --bg-void: #05050f;
-  --bg-deep: #080816;
-  --bg-surface: #0d0d24;
-  --bg-panel: rgba(13, 13, 36, 0.7);
-  --bg-glass: rgba(255, 255, 255, 0.04);
-  --bg-glass-hover: rgba(255, 255, 255, 0.07);
+  /* Core Palette (Premium Obsidian Pitch Black) */
+  --bg-void: #020202;
+  --bg-deep: #060606;
+  --bg-surface: #0a0a0a;
+  --bg-panel: rgba(8, 8, 8, 0.65);
+  --bg-glass: rgba(255, 255, 255, 0.015);
+  --bg-glass-hover: rgba(255, 255, 255, 0.035);
 
-  /* Silver Scale */
-  --silver-100: #f0f4f8;
-  --silver-200: #d9e2ec;
-  --silver-300: #bcccdc;
-  --silver-400: #9fb3c8;
-  --silver-500: #829ab1;
-  --silver-600: #627d98;
-  --silver-700: #486581;
-  --silver-800: #334e68;
-  --silver-900: #243b53;
+  /* Silver & Platinum Scale (Pure Monochromatic Spectrum) */
+  --silver-100: #ffffff;
+  --silver-200: #f8fafc;
+  --silver-300: #f1f5f9;
+  --silver-400: #e2e8f0;
+  --silver-500: #cbd5e1;
+  --silver-600: #94a3b8;
+  --silver-700: #64748b;
+  --silver-800: #475569;
+  --silver-900: #334155;
 
-  /* Neon Accents */
-  --neon-blue: #3b82f6;
-  --neon-cyan: #06b6d4;
-  --neon-violet: #8b5cf6;
-  --neon-emerald: #10b981;
-  --neon-amber: #f59e0b;
-  --neon-rose: #f43f5e;
+  /* Premium Muted Spatial Highlights */
+  --neon-blue: #ffffff;      /* Pure Silver White */
+  --neon-cyan: #f1f5f9;      /* Platinum Accent */
+  --neon-violet: #94a3b8;    /* Muted Steel Grey */
+  --neon-emerald: #e2e8f0;   /* Bright Titanium */
+  --neon-amber: #cbd5e1;     /* Soft Platinum */
+  --neon-rose: #64748b;      /* Cool Charcoal */
 
-  /* Node Colors */
-  --color-real-node: #06b6d4;
-  --color-demo-node: #64748b;
-  --color-real-edge: #3b82f6;
-  --color-demo-edge: #374151;
-  --color-selected: #8b5cf6;
+  /* Muted Monochromatic Node & Edge Visuals */
+  --color-real-node: #e2e8f0;
+  --color-demo-node: #334155;
+  --color-real-edge: rgba(255, 255, 255, 0.15);
+  --color-demo-edge: rgba(255, 255, 255, 0.04);
+  --color-selected: #ffffff;
 
-  /* Glass Effects */
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-border-strong: rgba(59, 130, 246, 0.3);
-  --glass-glow: rgba(59, 130, 246, 0.15);
+  /* Spatial Glass Borders & Shadows */
+  --glass-border: rgba(255, 255, 255, 0.07);
+  --glass-border-strong: rgba(255, 255, 255, 0.18);
+  --glass-glow: rgba(255, 255, 255, 0.02);
 
-  /* Typography */
-  --font-sans: 'Inter', sans-serif;
+  /* Apple-Grade Spatial Typography */
+  --font-sans: 'Outfit', 'Inter', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 
   /* Spacing */
@@ -68,14 +68,15 @@
 html, body {
   height: 100%;
   overflow: hidden;
+  background: var(--bg-void);
 }
 
 body {
   background: var(--bg-void);
-  color: var(--silver-200);
+  color: var(--silver-300);
   font-family: var(--font-sans);
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: 13.5px;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -92,45 +93,52 @@ body {
   background: var(--bg-deep);
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--silver-800);
-  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--silver-600);
+  background: rgba(255, 255, 255, 0.15);
 }
 
 /* ============================================================
-   GLASS COMPONENTS
+   SPATIAL GLASS SYSTEM
    ============================================================ */
 
 .glass-panel {
-  background: var(--bg-panel);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid var(--glass-border);
-  border-radius: 12px;
+  background: rgba(8, 8, 8, 0.6);
+  backdrop-filter: blur(24px) saturate(140%);
+  -webkit-backdrop-filter: blur(24px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 14px;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.35);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.glass-panel:hover {
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
 .glass-panel-strong {
-  background: rgba(13, 13, 36, 0.85);
-  backdrop-filter: blur(30px) saturate(200%);
-  -webkit-backdrop-filter: blur(30px) saturate(200%);
-  border: 1px solid rgba(59, 130, 246, 0.2);
-  border-radius: 12px;
+  background: rgba(6, 6, 6, 0.82);
+  backdrop-filter: blur(32px) saturate(140%);
+  -webkit-backdrop-filter: blur(32px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.5);
 }
 
 .glass-button {
-  background: var(--bg-glass);
-  backdrop-filter: blur(10px);
-  border: 1px solid var(--glass-border);
-  border-radius: 8px;
-  color: var(--silver-300);
+  background: rgba(255, 255, 255, 0.025);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 9px;
+  color: var(--silver-400);
   cursor: pointer;
   font-family: var(--font-sans);
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 500;
   padding: 8px 14px;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -138,82 +146,74 @@ body {
 }
 
 .glass-button:hover {
-  background: var(--bg-glass-hover);
-  border-color: rgba(59, 130, 246, 0.4);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.18);
   color: var(--silver-100);
-  box-shadow: 0 0 16px rgba(59, 130, 246, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 }
 
 .glass-button:active {
-  transform: scale(0.97);
+  transform: scale(0.98);
 }
 
 .glass-button.active {
-  background: rgba(59, 130, 246, 0.15);
-  border-color: rgba(59, 130, 246, 0.5);
-  color: var(--neon-cyan);
-  box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1);
 }
 
 .glass-input {
-  background: var(--bg-glass);
-  backdrop-filter: blur(10px);
-  border: 1px solid var(--glass-border);
-  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 9px;
   color: var(--silver-100);
   font-family: var(--font-sans);
   font-size: 13px;
   outline: none;
   padding: 8px 12px;
-  transition: all 0.2s ease;
+  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
   width: 100%;
 }
 
 .glass-input:focus {
-  border-color: rgba(59, 130, 246, 0.5);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.04);
 }
 
 .glass-input::placeholder {
-  color: var(--silver-600);
+  color: var(--silver-700);
 }
 
 /* ============================================================
-   NEON GLOW EFFECTS
+   SUBTLE ATMOSPHERIC HINTS
    ============================================================ */
 
-.glow-blue {
-  box-shadow: 0 0 20px rgba(59, 130, 246, 0.3), 0 0 40px rgba(59, 130, 246, 0.1);
-}
-
-.glow-cyan {
-  box-shadow: 0 0 20px rgba(6, 182, 212, 0.3), 0 0 40px rgba(6, 182, 212, 0.1);
-}
-
-.glow-violet {
-  box-shadow: 0 0 20px rgba(139, 92, 246, 0.3), 0 0 40px rgba(139, 92, 246, 0.1);
+.glow-blue, .glow-cyan, .glow-violet {
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4), 0 0 1px 1px rgba(255, 255, 255, 0.08);
 }
 
 .text-glow {
-  text-shadow: 0 0 20px currentColor;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
 }
 
 /* ============================================================
-   TYPOGRAPHY
+   SPATIAL TYPOGRAPHY
    ============================================================ */
 
 .text-label {
-  font-size: 10px;
+  font-size: 9.5px;
   font-weight: 600;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.15em;
   text-transform: uppercase;
-  color: var(--silver-500);
+  color: var(--silver-600);
 }
 
 .text-value {
   font-size: 13px;
   font-weight: 500;
-  color: var(--silver-200);
+  color: var(--silver-300);
 }
 
 .text-mono {
@@ -221,52 +221,52 @@ body {
 }
 
 .text-gradient {
-  background: linear-gradient(135deg, var(--neon-cyan), var(--neon-blue), var(--neon-violet));
+  background: linear-gradient(135deg, #ffffff 0%, #e2e8f0 40%, #cbd5e1 70%, #94a3b8 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 /* ============================================================
-   BADGE / TAG
+   SPATIAL BADGES (Apple Platinum Style)
    ============================================================ */
 
 .badge {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 2px 8px;
+  padding: 2.5px 8px;
   border-radius: 100px;
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 600;
   letter-spacing: 0.05em;
 }
 
 .badge-real {
-  background: rgba(6, 182, 212, 0.15);
-  border: 1px solid rgba(6, 182, 212, 0.4);
-  color: var(--neon-cyan);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #ffffff;
 }
 
 .badge-demo {
-  background: rgba(100, 116, 139, 0.15);
-  border: 1px solid rgba(100, 116, 139, 0.4);
-  color: var(--silver-500);
+  background: rgba(255, 255, 255, 0.015);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: var(--silver-600);
 }
 
 .badge-real-edge {
-  background: rgba(59, 130, 246, 0.15);
-  border: 1px solid rgba(59, 130, 246, 0.4);
-  color: var(--neon-blue);
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--silver-400);
 }
 
 /* ============================================================
-   PROGRESS BAR
+   PROGRESS BARS
    ============================================================ */
 
 .progress-bar {
   height: 4px;
-  background: var(--bg-glass);
+  background: rgba(255, 255, 255, 0.03);
   border-radius: 100px;
   overflow: hidden;
 }
@@ -278,26 +278,26 @@ body {
 }
 
 .progress-fill-cyan {
-  background: linear-gradient(90deg, var(--neon-cyan), var(--neon-blue));
-  box-shadow: 0 0 8px rgba(6, 182, 212, 0.5);
+  background: linear-gradient(90deg, #ffffff, #cbd5e1);
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.15);
 }
 
 .progress-fill-blue {
-  background: linear-gradient(90deg, var(--neon-blue), var(--neon-violet));
-  box-shadow: 0 0 8px rgba(59, 130, 246, 0.5);
+  background: linear-gradient(90deg, #cbd5e1, #64748b);
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.08);
 }
 
 /* ============================================================
-   SLIDER
+   SPATIAL SLIDERS
    ============================================================ */
 
 .hop-slider {
   -webkit-appearance: none;
   appearance: none;
   width: 100%;
-  height: 4px;
+  height: 3px;
   border-radius: 100px;
-  background: var(--bg-glass);
+  background: rgba(255, 255, 255, 0.05);
   outline: none;
   cursor: pointer;
 }
@@ -305,28 +305,28 @@ body {
 .hop-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
-  background: var(--neon-blue);
+  background: #ffffff;
   cursor: pointer;
-  box-shadow: 0 0 12px rgba(59, 130, 246, 0.6);
-  border: 2px solid rgba(255,255,255,0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  border: 2px solid #e2e8f0;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .hop-slider::-webkit-slider-thumb:hover {
-  transform: scale(1.2);
-  box-shadow: 0 0 20px rgba(59, 130, 246, 0.8);
+  transform: scale(1.15);
+  box-shadow: 0 3px 12px rgba(255, 255, 255, 0.2);
 }
 
 /* ============================================================
-   DIVIDER
+   DIVIDERS
    ============================================================ */
 
 .divider {
   height: 1px;
-  background: var(--glass-border);
+  background: rgba(255, 255, 255, 0.06);
   margin: 12px 0;
 }
 
@@ -337,21 +337,18 @@ body {
 .graph-container {
   position: fixed;
   inset: 0;
-  background: var(--bg-void);
+  background: transparent;
   overflow: hidden;
 }
 
 .graph-canvas-bg {
   position: absolute;
   inset: 0;
-  background:
-    radial-gradient(ellipse at 20% 50%, rgba(59, 130, 246, 0.04) 0%, transparent 60%),
-    radial-gradient(ellipse at 80% 20%, rgba(6, 182, 212, 0.04) 0%, transparent 60%),
-    radial-gradient(ellipse at 60% 80%, rgba(139, 92, 246, 0.03) 0%, transparent 60%);
+  background: transparent;
 }
 
 /* ============================================================
-   ANIMATIONS
+   CINEMATIC TRANSITIONS & INERTIAL EFFECTS
    ============================================================ */
 
 @keyframes fadeIn {
@@ -360,33 +357,23 @@ body {
 }
 
 @keyframes fadeInScale {
-  from { opacity: 0; transform: scale(0.95) translateY(8px); }
+  from { opacity: 0; transform: scale(0.97) translateY(8px); }
   to   { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 @keyframes slideInRight {
-  from { opacity: 0; transform: translateX(20px); }
+  from { opacity: 0; transform: translateX(16px); }
   to   { opacity: 1; transform: translateX(0); }
 }
 
 @keyframes slideInLeft {
-  from { opacity: 0; transform: translateX(-20px); }
+  from { opacity: 0; transform: translateX(-16px); }
   to   { opacity: 1; transform: translateX(0); }
 }
 
 @keyframes slideInUp {
-  from { opacity: 0; transform: translateY(20px); }
+  from { opacity: 0; transform: translateY(16px); }
   to   { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes pulseGlow {
-  0%, 100% { box-shadow: 0 0 12px rgba(59, 130, 246, 0.3); }
-  50%       { box-shadow: 0 0 24px rgba(59, 130, 246, 0.6); }
-}
-
-@keyframes scanLine {
-  from { transform: translateY(-100%); }
-  to   { transform: translateY(100vh); }
 }
 
 @keyframes spin {
@@ -395,35 +382,31 @@ body {
 }
 
 .animate-fade-in {
-  animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: fadeIn 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
 
 .animate-fade-in-scale {
-  animation: fadeInScale 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  animation: fadeInScale 0.38s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .animate-slide-in-right {
-  animation: slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: slideInRight 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .animate-slide-in-left {
-  animation: slideInLeft 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: slideInLeft 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .animate-slide-in-up {
-  animation: slideInUp 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-}
-
-.animate-pulse-glow {
-  animation: pulseGlow 2s ease-in-out infinite;
+  animation: slideInUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .animate-spin {
-  animation: spin 1s linear infinite;
+  animation: spin 0.8s linear infinite;
 }
 
 /* ============================================================
-   TOOLTIP
+   TOOLTIPS
    ============================================================ */
 
 .tooltip {
@@ -433,14 +416,15 @@ body {
 }
 
 /* ============================================================
-   MODAL OVERLAY
+   MODAL OVERLAY (Apple visionOS Blurred Backdrop)
    ============================================================ */
 
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(5, 5, 15, 0.7);
-  backdrop-filter: blur(4px);
+  background: rgba(2, 2, 2, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   z-index: 1000;
   display: flex;
   align-items: center;
@@ -448,7 +432,7 @@ body {
 }
 
 /* ============================================================
-   NAVBAR
+   SPATIAL NAVBAR
    ============================================================ */
 
 .navbar {
@@ -462,13 +446,14 @@ body {
   align-items: center;
   padding: 0 24px;
   gap: 8px;
-  background: rgba(8, 8, 22, 0.85);
-  backdrop-filter: blur(20px) saturate(180%);
-  border-bottom: 1px solid var(--glass-border);
+  background: rgba(2, 2, 2, 0.6);
+  backdrop-filter: blur(24px) saturate(140%);
+  -webkit-backdrop-filter: blur(24px) saturate(140%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
 }
 
 /* ============================================================
-   PAGE LAYOUTS (non-graph pages)
+   PAGE LAYOUTS (Obsidian Base)
    ============================================================ */
 
 .page-layout {
@@ -476,7 +461,7 @@ body {
   inset: 0;
   padding-top: var(--navbar-height);
   overflow-y: auto;
-  background: var(--bg-void);
+  background: transparent;
 }
 
 .page-content {

@@ -197,12 +197,12 @@ export default function ProfilePage({ params }: ProfilePageProps) {
     setHighlightedEdgeIds(new Set());
   };
 
-  // Mini Force Graph Custom Rendering
+  // Mini Force Graph Custom Rendering (Premium Spatial Theme)
   const getNodeColor = useCallback((node: any) => {
     const n = node as GraphNode;
-    if (n.id === profile?.id) return '#a78bfa'; // violet for focal node
-    if (highlightedNodeIds.has(n.id)) return '#06b6d4'; // glowing cyan for path nodes
-    return n.nodeType === 'REAL' ? 'rgba(6,182,212,0.4)' : 'rgba(100,116,139,0.3)';
+    if (n.id === profile?.id) return '#ffffff'; // pure white focal node
+    if (highlightedNodeIds.has(n.id)) return '#ffffff'; // white path node
+    return n.nodeType === 'REAL' ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.12)';
   }, [profile?.id, highlightedNodeIds]);
 
   const getNodeSize = useCallback((node: any) => {
@@ -215,14 +215,14 @@ export default function ProfilePage({ params }: ProfilePageProps) {
 
   const getLinkColor = useCallback((link: any) => {
     const e = link as GraphEdge;
-    if (highlightedEdgeIds.has(e.id)) return '#3b82f6'; // glowing blue edge
-    return e.edgeType === 'REAL_EDGE' ? 'rgba(59,130,246,0.12)' : 'rgba(71,85,105,0.08)';
+    if (highlightedEdgeIds.has(e.id)) return '#ffffff'; // pure white edge route
+    return e.edgeType === 'REAL_EDGE' ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.04)';
   }, [highlightedEdgeIds]);
 
   const getLinkWidth = useCallback((link: any) => {
     const e = link as GraphEdge;
-    if (highlightedEdgeIds.has(e.id)) return 3;
-    return e.edgeType === 'REAL_EDGE' ? 1 : 0.6;
+    if (highlightedEdgeIds.has(e.id)) return 2.5;
+    return e.edgeType === 'REAL_EDGE' ? 0.8 : 0.4;
   }, [highlightedEdgeIds]);
 
   if (loading) {
