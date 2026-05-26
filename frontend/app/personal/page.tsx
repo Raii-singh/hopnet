@@ -1,9 +1,6 @@
 'use client';
 
 import { useGraphStore } from '@/store/graphStore';
-import { ALL_NODES } from '@/utils/dummyData';
-
-const ADMIN = ALL_NODES.find(n => n.id === 'r-001')!;
 
 function MetricCard({ label, value, sub, color = 'var(--neon-cyan)' }: {
   label: string; value: string | number; sub?: string; color?: string;
@@ -18,18 +15,32 @@ function MetricCard({ label, value, sub, color = 'var(--neon-cyan)' }: {
 }
 
 export default function PersonalPage() {
-  const { allNodes, visibleLinks, setRootNode } = useGraphStore();
+  const { allNodes, visibleLinks, setRootNode, rootNodeId, dataSource } = useGraphStore();
 
-  // Real connections of admin
+  // Admin = the current root node (first REAL node in the network)
+  const ADMIN = allNodes.find(n => n.id === rootNodeId) ?? allNodes.find(n => n.type === 'REAL');
+
+  if (!ADMIN) {
+    return (
+      <div className="page-layout">
+        <div className="page-content">
+          <div style={{ color: 'var(--silver-600)', padding: '40px', textAlign: 'center' }}>
+            Loading network data…
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const adminEdges = visibleLinks.filter(e => {
-    const src = typeof e.source === 'string' ? e.source : e.source.id;
-    const tgt = typeof e.target === 'string' ? e.target : e.target.id;
+    const src = typeof e.source === 'string' ? e.source : (e.source as any).id;
+    const tgt = typeof e.target === 'string' ? e.target : (e.target as any).id;
     return src === ADMIN.id || tgt === ADMIN.id;
   });
 
   const realConns = allNodes.filter(n => n.type === 'REAL' && n.id !== ADMIN.id).length;
-  const demoConns = allNodes.filter(n => n.type === 'DEMO').length;
   const reachabilityScore = Math.round((ADMIN.influenceScore / 100) * realConns);
+
 
   const metrics = [
     { label: 'Total Connections', value: ADMIN.connectionCount, color: 'var(--silver-100)' },
@@ -48,22 +59,30 @@ export default function PersonalPage() {
     .slice(0, 5)
     .map(edge => {
       const otherId = (() => {
-        const src = typeof edge.source === 'string' ? edge.source : edge.source.id;
+        const src = typeof edge.source === 'string' ? edge.source : (edge.source as any).id;
         return src === ADMIN.id
-          ? (typeof edge.target === 'string' ? edge.target : edge.target.id)
+          ? (typeof edge.target === 'string' ? edge.target : (edge.target as any).id)
           : src;
       })();
       const other = allNodes.find(n => n.id === otherId);
       return { edge, other };
     });
 
+  // Best bridge = highest influence REAL node that isn't the admin
+  const bestBridge = allNodes
+    .filter(n => n.type === 'REAL' && n.id !== ADMIN.id)
+    .sort((a, b) => b.influenceScore - a.influenceScore)[0];
+
+  const warmIntroPct = Math.min(99, Math.round(ADMIN.influenceScore * 0.87));
+  const strongestTrust = strongestLinks[0] ? Math.round(strongestLinks[0].edge.weight * 100) : 0;
+
   const intelligenceItems = [
-    { label: 'Best Connector Type', value: 'Hub Bridger', color: 'var(--neon-cyan)' },
-    { label: 'Warm Intro Probability', value: '82%', color: 'var(--neon-emerald)' },
-    { label: 'Strongest Path Trust', value: '91/100', color: 'var(--neon-blue)' },
+    { label: 'Best Connector Type', value: ADMIN.realConnections > 5 ? 'Hub Bridger' : 'Deep Connector', color: 'var(--neon-cyan)' },
+    { label: 'Warm Intro Probability', value: `${warmIntroPct}%`, color: 'var(--neon-emerald)' },
+    { label: 'Strongest Path Trust', value: `${strongestTrust}/100`, color: 'var(--neon-blue)' },
     { label: 'Strategic Reach', value: `${reachabilityScore} nodes`, color: 'var(--neon-violet)' },
-    { label: 'Best Bridge Node', value: 'Priya Mehta', color: 'var(--silver-200)' },
-    { label: 'Influence Propagation', value: '94 pts', color: 'var(--neon-cyan)' },
+    { label: 'Best Bridge Node', value: bestBridge?.name ?? '—', color: 'var(--silver-200)' },
+    { label: 'Data Source', value: dataSource === 'api' ? 'Live DB' : 'Demo', color: dataSource === 'api' ? 'var(--neon-emerald)' : 'var(--silver-500)' },
   ];
 
   return (
@@ -107,21 +126,37 @@ export default function PersonalPage() {
               <p style={{ textAlign: 'center', marginBottom: '12px' }}>
                 <span className="badge badge-real">● REAL NODE</span>
               </p>
-              <p style={{ fontSize: '12px', color: 'var(--silver-500)', lineHeight: 1.6, marginBottom: '14px' }}>
-                {ADMIN.bio}
-              </p>
+              {/* Bio — shown only if available (dummy data) */}
+              {ADMIN.bio && (
+                <p style={{ fontSize: '12px', color: 'var(--silver-500)', lineHeight: 1.6, marginBottom: '14px' }}>
+                  {ADMIN.bio}
+                </p>
+              )}
 
               <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', justifyContent: 'center', marginBottom: '16px' }}>
-                {ADMIN.tags?.map(tag => (
-                  <span key={tag} style={{
-                    padding: '2px 8px', borderRadius: '100px',
-                    fontSize: '10px', fontWeight: 500,
-                    background: 'var(--bg-glass)', border: '1px solid var(--glass-border)',
-                    color: 'var(--silver-400)',
-                  }}>
-                    {tag}
-                  </span>
-                ))}
+                {/* Tags from dummy data or cluster badge as fallback */}
+                {ADMIN.tags && ADMIN.tags.length > 0
+                  ? ADMIN.tags.map(tag => (
+                    <span key={tag} style={{
+                      padding: '2px 8px', borderRadius: '100px',
+                      fontSize: '10px', fontWeight: 500,
+                      background: 'var(--bg-glass)', border: '1px solid var(--glass-border)',
+                      color: 'var(--silver-400)',
+                    }}>
+                      {tag}
+                    </span>
+                  ))
+                  : ADMIN.cluster && (
+                    <span style={{
+                      padding: '2px 10px', borderRadius: '100px',
+                      fontSize: '10px', fontWeight: 500,
+                      background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.3)',
+                      color: 'var(--neon-violet)',
+                    }}>
+                      {ADMIN.cluster}
+                    </span>
+                  )
+                }
               </div>
 
               <button
