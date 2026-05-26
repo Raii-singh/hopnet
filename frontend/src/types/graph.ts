@@ -12,6 +12,7 @@ export interface GraphNode {
   demoConnections: number;
   centrality?: number;
   avgPathDistance?: number;
+  hopDistance?: number;
   bio?: string;
   tags?: string[];
   // Force graph internals (added by react-force-graph)
@@ -47,6 +48,7 @@ export interface SubgraphMeta {
   realEdges: number;
   demoEdges: number;
   avgHopCount: number;
-  rootNodeId: string;
-  depth: number;
+  rootNodeId?: string;
+  depth?: number;
+  constraintActive?: boolean;
 }

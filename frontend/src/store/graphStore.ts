@@ -3,9 +3,45 @@ import { GraphNode, GraphEdge, SubgraphMeta } from '@/types/graph';
 import {
   ALL_NODES,
   ALL_EDGES,
-  getSubgraph,
+  getSubgraph as getDummySubgraph,
   computeMeta,
 } from '@/utils/dummyData';
+import { fetchGraph, fetchUsers, checkHealth, ApiNode, ApiEdge } from '@/services/api';
+
+// ── Type adapters: API → internal GraphNode/GraphEdge ─────────
+
+function apiNodeToGraph(n: ApiNode): GraphNode {
+  return {
+    id: n.id,
+    name: n.name,
+    type: n.type,
+    cluster: n.cluster ?? undefined,
+    influenceScore: n.influenceScore,
+    connectionCount: n.connectionCount,
+    realConnections: n.realConnections,
+    demoConnections: n.demoConnections,
+    // Derived fields not in API — set defaults
+    bio: undefined,
+    tags: [],
+    centrality: 0,
+    avgPathDistance: undefined,
+    hopDistance: n.hopDistance,
+  };
+}
+
+function apiEdgeToGraph(e: ApiEdge): GraphEdge {
+  return {
+    id: e.id,
+    source: e.source,
+    target: e.target,
+    edgeType: e.edgeType,
+    weight: e.weight,
+    trustScore: e.trustScore,
+    interactionStrength: e.interactionStrength,
+  };
+}
+
+// ── Store interface ───────────────────────────────────────────
 
 interface GraphState {
   // Graph data
@@ -14,6 +50,10 @@ interface GraphState {
   visibleNodes: GraphNode[];
   visibleLinks: GraphEdge[];
   meta: SubgraphMeta | null;
+
+  // Source mode
+  dataSource: 'dummy' | 'api';
+  isApiHealthy: boolean;
 
   // View state
   rootNodeId: string;
@@ -30,6 +70,7 @@ interface GraphState {
   isLoading: boolean;
 
   // Actions
+  initGraph: () => Promise<void>;
   setRootNode: (nodeId: string) => void;
   setHopDepth: (depth: number) => void;
   toggleDemoNodes: () => void;
@@ -40,119 +81,160 @@ interface GraphState {
   resetGraph: () => void;
   highlightNeighbors: (nodeId: string) => void;
   clearHighlights: () => void;
-  refreshSubgraph: () => void;
+  refreshSubgraph: () => Promise<void>;
 }
 
-const ROOT_NODE_ID = 'r-001';
+// ── Dummy data helpers ────────────────────────────────────────
 
-function buildSubgraph(
-  rootNodeId: string,
-  hopDepth: number,
-  showDemoNodes: boolean
-) {
-  const { nodes, links } = getSubgraph(
-    rootNodeId,
-    hopDepth,
-    showDemoNodes,
-    ALL_NODES,
-    ALL_EDGES
-  );
+const ROOT_DUMMY = 'r-001';
+
+function buildDummySubgraph(rootNodeId: string, hopDepth: number, showDemoNodes: boolean) {
+  const { nodes, links } = getDummySubgraph(rootNodeId, hopDepth, showDemoNodes, ALL_NODES, ALL_EDGES);
   const meta = computeMeta(nodes, links, rootNodeId, hopDepth);
   return { nodes, links, meta };
 }
 
-export const useGraphStore = create<GraphState>((set, get) => {
-  const { nodes, links, meta } = buildSubgraph(ROOT_NODE_ID, 1, true);
+// ── Store ─────────────────────────────────────────────────────
 
-  return {
-    allNodes: ALL_NODES,
-    allEdges: ALL_EDGES,
-    visibleNodes: nodes,
-    visibleLinks: links,
-    meta,
+const { nodes: initNodes, links: initLinks, meta: initMeta } = buildDummySubgraph(ROOT_DUMMY, 1, true);
 
-    rootNodeId: ROOT_NODE_ID,
-    hopDepth: 1,
-    showDemoNodes: true,
-    selectedNode: null,
-    hoveredNode: null,
-    hoveredEdge: null,
-    searchQuery: '',
-    highlightedNodeIds: new Set(),
-    highlightedEdgeIds: new Set(),
-    isLoading: false,
+export const useGraphStore = create<GraphState>((set, get) => ({
+  allNodes: ALL_NODES,
+  allEdges: ALL_EDGES,
+  visibleNodes: initNodes,
+  visibleLinks: initLinks,
+  meta: initMeta,
 
-    setRootNode: (nodeId) => {
-      const { hopDepth, showDemoNodes } = get();
-      const { nodes, links, meta } = buildSubgraph(nodeId, hopDepth, showDemoNodes);
-      set({ rootNodeId: nodeId, visibleNodes: nodes, visibleLinks: links, meta });
-    },
+  dataSource: 'dummy',
+  isApiHealthy: false,
 
-    setHopDepth: (depth) => {
-      const { rootNodeId, showDemoNodes } = get();
-      set({ isLoading: true });
-      // Small timeout to show loading state
-      setTimeout(() => {
-        const { nodes, links, meta } = buildSubgraph(rootNodeId, depth, showDemoNodes);
-        set({ hopDepth: depth, visibleNodes: nodes, visibleLinks: links, meta, isLoading: false });
-      }, 200);
-    },
+  rootNodeId: ROOT_DUMMY,
+  hopDepth: 1,
+  showDemoNodes: true,
+  selectedNode: null,
+  hoveredNode: null,
+  hoveredEdge: null,
+  searchQuery: '',
+  highlightedNodeIds: new Set(),
+  highlightedEdgeIds: new Set(),
+  isLoading: false,
 
-    toggleDemoNodes: () => {
-      const { rootNodeId, hopDepth, showDemoNodes } = get();
-      const next = !showDemoNodes;
-      const { nodes, links, meta } = buildSubgraph(rootNodeId, hopDepth, next);
-      set({ showDemoNodes: next, visibleNodes: nodes, visibleLinks: links, meta });
-    },
+  // ── Init: probe API, load live data if available ────────────
+  initGraph: async () => {
+    const healthy = await checkHealth();
+    set({ isApiHealthy: healthy });
 
-    selectNode: (node) => set({ selectedNode: node }),
+    if (!healthy) {
+      // Stay on dummy data
+      set({ dataSource: 'dummy' });
+      return;
+    }
 
-    setHoveredNode: (node) => set({ hoveredNode: node }),
+    // Fetch all users for allNodes
+    try {
+      const { users } = await fetchUsers();
+      const allNodes = users.map(apiNodeToGraph);
+      const firstReal = allNodes.find(n => n.type === 'REAL');
+      const rootNodeId = firstReal?.id ?? allNodes[0]?.id ?? ROOT_DUMMY;
 
-    setHoveredEdge: (edge) => set({ hoveredEdge: edge }),
+      set({ allNodes, dataSource: 'api', rootNodeId });
 
-    setSearchQuery: (q) => set({ searchQuery: q }),
+      // Load 1-hop subgraph
+      await get().refreshSubgraph();
+    } catch (err) {
+      console.warn('[HOPNet] API init failed, using dummy data:', err);
+      set({ dataSource: 'dummy', isApiHealthy: false });
+    }
+  },
 
-    resetGraph: () => {
-      const { nodes, links, meta } = buildSubgraph(ROOT_NODE_ID, 1, true);
-      set({
-        rootNodeId: ROOT_NODE_ID,
-        hopDepth: 1,
-        showDemoNodes: true,
-        selectedNode: null,
-        hoveredNode: null,
-        hoveredEdge: null,
-        searchQuery: '',
-        highlightedNodeIds: new Set(),
-        highlightedEdgeIds: new Set(),
-        visibleNodes: nodes,
-        visibleLinks: links,
-        meta,
-      });
-    },
+  // ── Refresh subgraph from API or dummy ──────────────────────
+  refreshSubgraph: async () => {
+    const { rootNodeId, hopDepth, showDemoNodes, dataSource } = get();
+    set({ isLoading: true });
 
-    highlightNeighbors: (nodeId) => {
-      const { visibleLinks, allNodes } = get();
-      const nodeIds = new Set<string>([nodeId]);
-      const edgeIds = new Set<string>();
-
-      for (const edge of visibleLinks) {
-        const src = typeof edge.source === 'string' ? edge.source : edge.source.id;
-        const tgt = typeof edge.target === 'string' ? edge.target : edge.target.id;
-        if (src === nodeId) { nodeIds.add(tgt); edgeIds.add(edge.id); }
-        if (tgt === nodeId) { nodeIds.add(src); edgeIds.add(edge.id); }
+    try {
+      if (dataSource === 'api') {
+        const data = await fetchGraph(rootNodeId, hopDepth, showDemoNodes);
+        const visibleNodes = data.nodes.map(apiNodeToGraph);
+        const visibleLinks = data.links.map(apiEdgeToGraph);
+        const meta: SubgraphMeta = {
+          totalNodes: data.meta.totalNodes,
+          totalEdges: data.meta.totalEdges,
+          realNodes: data.meta.realNodes,
+          demoNodes: data.meta.demoNodes,
+          realEdges: data.meta.realEdges,
+          demoEdges: data.meta.demoEdges,
+          avgHopCount: data.meta.avgHopCount,
+          constraintActive: data.meta.constraintActive,
+        };
+        set({ visibleNodes, visibleLinks, meta });
+      } else {
+        const { nodes, links, meta } = buildDummySubgraph(rootNodeId, hopDepth, showDemoNodes);
+        set({ visibleNodes: nodes, visibleLinks: links, meta });
       }
-
-      set({ highlightedNodeIds: nodeIds, highlightedEdgeIds: edgeIds });
-    },
-
-    clearHighlights: () =>
-      set({ highlightedNodeIds: new Set(), highlightedEdgeIds: new Set() }),
-
-    refreshSubgraph: () => {
-      const { rootNodeId, hopDepth, showDemoNodes } = get();
-      const { nodes, links, meta } = buildSubgraph(rootNodeId, hopDepth, showDemoNodes);
+    } catch (err) {
+      console.error('[refreshSubgraph]', err);
+      // Fall back to dummy on error
+      const { nodes, links, meta } = buildDummySubgraph(ROOT_DUMMY, 1, true);
       set({ visibleNodes: nodes, visibleLinks: links, meta });
-    },
-  };
-});
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  setRootNode: (nodeId) => {
+    set({ rootNodeId: nodeId });
+    get().refreshSubgraph();
+  },
+
+  setHopDepth: (depth) => {
+    set({ hopDepth: depth });
+    get().refreshSubgraph();
+  },
+
+  toggleDemoNodes: () => {
+    set(s => ({ showDemoNodes: !s.showDemoNodes }));
+    get().refreshSubgraph();
+  },
+
+  selectNode: (node) => set({ selectedNode: node }),
+  setHoveredNode: (node) => set({ hoveredNode: node }),
+  setHoveredEdge: (edge) => set({ hoveredEdge: edge }),
+  setSearchQuery: (q) => set({ searchQuery: q }),
+
+  resetGraph: () => {
+    const rootNodeId = get().dataSource === 'dummy'
+      ? ROOT_DUMMY
+      : get().allNodes.find(n => n.type === 'REAL')?.id ?? ROOT_DUMMY;
+
+    set({
+      rootNodeId,
+      hopDepth: 1,
+      showDemoNodes: true,
+      selectedNode: null,
+      hoveredNode: null,
+      hoveredEdge: null,
+      searchQuery: '',
+      highlightedNodeIds: new Set(),
+      highlightedEdgeIds: new Set(),
+    });
+    get().refreshSubgraph();
+  },
+
+  highlightNeighbors: (nodeId) => {
+    const { visibleLinks } = get();
+    const nodeIds = new Set<string>([nodeId]);
+    const edgeIds = new Set<string>();
+
+    for (const edge of visibleLinks) {
+      const src = typeof edge.source === 'string' ? edge.source : (edge.source as any).id;
+      const tgt = typeof edge.target === 'string' ? edge.target : (edge.target as any).id;
+      if (src === nodeId) { nodeIds.add(tgt); edgeIds.add(edge.id); }
+      if (tgt === nodeId) { nodeIds.add(src); edgeIds.add(edge.id); }
+    }
+
+    set({ highlightedNodeIds: nodeIds, highlightedEdgeIds: edgeIds });
+  },
+
+  clearHighlights: () => set({ highlightedNodeIds: new Set(), highlightedEdgeIds: new Set() }),
+}));
