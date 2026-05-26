@@ -7,13 +7,24 @@ const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
 export interface ApiNode {
   id: string;
-  name: string;
-  type: 'REAL' | 'DEMO';
+  publicId: string;
+  fullName: string;
+  username: string | null;
+  email: string | null;
+  phone: string | null;
+  linkedinUrl: string | null;
+  instagramHandle: string | null;
+  twitterHandle: string | null;
+  company: string | null;
   cluster: string | null;
   influenceScore: number;
   connectionCount: number;
   realConnections: number;
   demoConnections: number;
+  tags?: string[];
+  sourceConnectors?: string[];
+  metadata?: any;
+  nodeType: 'REAL' | 'DEMO';
   hopDistance?: number;
 }
 
@@ -21,10 +32,13 @@ export interface ApiEdge {
   id: string;
   source: string;
   target: string;
+  relationshipType: string;
+  trustScore: number;
+  interactionFrequency: number;
+  connectorSource: string;
+  inferredFrom?: string | null;
   edgeType: 'REAL_EDGE' | 'DEMO_EDGE';
   weight: number;
-  trustScore: number;
-  interactionStrength: number;
 }
 
 export interface ApiGraphMeta {
@@ -78,6 +92,11 @@ export async function fetchNode(id: string): Promise<ApiNode> {
   return apiFetch<ApiNode>(`/graph/node/${id}`);
 }
 
+// ── User profile by public ID ─────────────────────────────────
+export async function fetchUserProfile(publicId: string): Promise<ApiNode> {
+  return apiFetch<ApiNode>(`/users/profile/${publicId}`);
+}
+
 // ── All users ─────────────────────────────────────────────────
 export async function fetchUsers(): Promise<{ users: ApiNode[]; total: number }> {
   return apiFetch<{ users: ApiNode[]; total: number }>('/users');
@@ -103,6 +122,100 @@ export async function fetchPath(
   }
 }
 
+// ── WORKSPACE: User Node CRUD ──────────────────────────────────
+export async function createUserNode(data: any): Promise<ApiNode> {
+  const res = await fetch(`${BASE_URL}/users`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const errorJson = await res.json().catch(() => ({}));
+    throw new Error(errorJson.error || 'Failed to create user node');
+  }
+  return res.json();
+}
+
+export async function updateUserNode(id: string, data: any): Promise<ApiNode> {
+  const res = await fetch(`${BASE_URL}/users/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const errorJson = await res.json().catch(() => ({}));
+    throw new Error(errorJson.error || 'Failed to update user node');
+  }
+  return res.json();
+}
+
+export async function deleteUserNode(id: string): Promise<{ success: boolean }> {
+  const res = await fetch(`${BASE_URL}/users/${id}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) {
+    const errorJson = await res.json().catch(() => ({}));
+    throw new Error(errorJson.error || 'Failed to delete user node');
+  }
+  return res.json();
+}
+
+// ── WORKSPACE: Edge Relationship CRUD ──────────────────────────
+export async function createRelationship(data: any): Promise<ApiEdge> {
+  const res = await fetch(`${BASE_URL}/graph/edge`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const errorJson = await res.json().catch(() => ({}));
+    throw new Error(errorJson.error || 'Failed to create connection');
+  }
+  return res.json();
+}
+
+export async function updateRelationship(id: string, data: any): Promise<ApiEdge> {
+  const res = await fetch(`${BASE_URL}/graph/edge/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const errorJson = await res.json().catch(() => ({}));
+    throw new Error(errorJson.error || 'Failed to update connection');
+  }
+  return res.json();
+}
+
+export async function deleteRelationship(id: string): Promise<{ success: boolean }> {
+  const res = await fetch(`${BASE_URL}/graph/edge/${id}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) {
+    const errorJson = await res.json().catch(() => ({}));
+    throw new Error(errorJson.error || 'Failed to delete connection');
+  }
+  return res.json();
+}
+
+// ── WORKSPACE: Duplicate Suggestions & Merges ──────────────────
+export async function fetchDuplicates(): Promise<{ suggestions: any[] }> {
+  return apiFetch<{ suggestions: any[] }>('/users/duplicates');
+}
+
+export async function mergeIdentities(sourceId: string, targetId: string): Promise<{ success: boolean }> {
+  const res = await fetch(`${BASE_URL}/users/merge`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sourceId, targetId }),
+  });
+  if (!res.ok) {
+    const errorJson = await res.json().catch(() => ({}));
+    throw new Error(errorJson.error || 'Failed to merge users');
+  }
+  return res.json();
+}
+
 // ── Health check ──────────────────────────────────────────────
 export async function checkHealth(): Promise<boolean> {
   try {
@@ -112,3 +225,48 @@ export async function checkHealth(): Promise<boolean> {
     return false;
   }
 }
+
+// ── CONNECTORS: Import Integrations (V2.5) ────────────────────
+export interface ApiImportLog {
+  id: string;
+  connectorSource: string;
+  filename: string;
+  status: string;
+  nodesCreated: number;
+  edgesCreated: number;
+  inferredEdgesCount: number;
+  confidenceScore: number;
+  importLogs: string[];
+  createdAt: string;
+}
+
+export async function fetchImportHistory(): Promise<{ logs: ApiImportLog[] }> {
+  return apiFetch<{ logs: ApiImportLog[] }>('/connectors/history');
+}
+
+export async function previewConnectorImport(connectorType: string, rawText: string): Promise<any> {
+  const res = await fetch(`${BASE_URL}/connectors/preview`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ connectorType, rawText }),
+  });
+  if (!res.ok) {
+    const errorJson = await res.json().catch(() => ({}));
+    throw new Error(errorJson.error || 'Failed to parse import preview data.');
+  }
+  return res.json();
+}
+
+export async function finalizeConnectorIngest(connectorType: string, filename: string, previewData: any): Promise<any> {
+  const res = await fetch(`${BASE_URL}/connectors/ingest`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ connectorType, filename, previewData }),
+  });
+  if (!res.ok) {
+    const errorJson = await res.json().catch(() => ({}));
+    throw new Error(errorJson.error || 'Failed to ingest data to database.');
+  }
+  return res.json();
+}
+

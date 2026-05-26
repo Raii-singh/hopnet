@@ -2,15 +2,18 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useGraphStore } from '@/store/graphStore';
 
 const navLinks = [
   { href: '/', label: 'Home' },
   { href: '/personal', label: 'Personal Database' },
   { href: '/database', label: 'Universal Database' },
+  { href: '/connectors', label: 'Integrations' },
 ];
 
 export default function Navbar() {
   const pathname = usePathname();
+  const { workspaceMode, toggleWorkspaceMode } = useGraphStore();
 
   return (
     <nav className="navbar animate-fade-in">
@@ -74,8 +77,43 @@ export default function Navbar() {
         })}
       </div>
 
-      {/* Status Indicators */}
+      {/* Status & Controls */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        {/* Workspace Mode Toggle */}
+        <button
+          onClick={toggleWorkspaceMode}
+          className="glass-button"
+          style={{
+            borderColor: workspaceMode ? 'rgba(139,92,246,0.6)' : 'var(--glass-border)',
+            color: workspaceMode ? 'var(--neon-violet)' : 'var(--silver-400)',
+            background: workspaceMode ? 'rgba(139,92,246,0.1)' : 'var(--bg-glass)',
+            boxShadow: workspaceMode ? '0 0 15px rgba(139,92,246,0.2)' : 'none',
+            fontWeight: 600,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            transition: 'all 0.3s ease',
+            cursor: 'pointer',
+          }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{
+            filter: workspaceMode ? 'drop-shadow(0 0 3px var(--neon-violet))' : 'none'
+          }}>
+            {workspaceMode ? (
+              <>
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </>
+            ) : (
+              <>
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 9.9-1"/>
+              </>
+            )}
+          </svg>
+          {workspaceMode ? 'WORKSPACE ACTIVE' : 'WORKSPACE MODE'}
+        </button>
+
         {/* Graph status dot */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           <span style={{
@@ -84,17 +122,8 @@ export default function Navbar() {
             boxShadow: '0 0 8px rgba(16,185,129,0.8)',
             animation: 'pulseGlow 2s ease-in-out infinite',
           }} />
-          <span className="text-label" style={{ color: 'var(--silver-600)' }}>LIVE</span>
+          <span className="text-label" style={{ color: 'var(--silver-600)', fontSize: '11px', letterSpacing: '0.05em' }}>LIVE</span>
         </div>
-
-        {/* Sign In placeholder */}
-        <button className="glass-button" style={{ opacity: 0.5, cursor: 'not-allowed' }} disabled>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-            <circle cx="12" cy="7" r="4"/>
-          </svg>
-          Sign In
-        </button>
       </div>
     </nav>
   );
