@@ -3,6 +3,8 @@
 import { useEffect } from 'react';
 import GraphCanvas from '@/components/graph/GraphCanvas';
 import GraphControls from '@/components/graph/GraphControls';
+import WorkspacePanel from '@/components/graph/WorkspacePanel';
+import PathfinderPanel from '@/components/graph/PathfinderPanel';
 import GraphLegend from '@/components/graph/GraphLegend';
 import BottomInfoBar from '@/components/ui/BottomInfoBar';
 import { useGraphStore } from '@/store/graphStore';
@@ -52,6 +54,8 @@ export default function HomePage() {
       </div>
 
       <GraphControls />
+      <WorkspacePanel />
+      <PathfinderPanel />
       <GraphLegend />
       <BottomInfoBar meta={meta} isLoading={isLoading} />
     </main>

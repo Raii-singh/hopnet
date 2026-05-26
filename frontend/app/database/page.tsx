@@ -3,6 +3,8 @@
 import { useState, useMemo } from 'react';
 import { GraphNode } from '@/types/graph';
 import { useGraphStore } from '@/store/graphStore';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 type SortKey = 'rank' | 'name' | 'connectionCount' | 'influenceScore' | 'realConnections' | 'avgPathDistance';
 type SortDir = 'asc' | 'desc';
@@ -18,7 +20,8 @@ function computeRank(node: GraphNode): number {
 }
 
 export default function DatabasePage() {
-  const { allNodes, allEdges, setRootNode } = useGraphStore();
+  const router = useRouter();
+  const { allNodes, allEdges, setRootNode, isLoading } = useGraphStore();
   const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('rank');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
@@ -39,16 +42,24 @@ export default function DatabasePage() {
 
   const filtered = useMemo(() => {
     let r = ranked.filter(n => {
-      const matchSearch = !search || n.name.toLowerCase().includes(search.toLowerCase()) || n.cluster?.toLowerCase().includes(search.toLowerCase());
+      const tagString = n.tags?.join(' ') || '';
+      const matchSearch =
+        !search ||
+        n.fullName.toLowerCase().includes(search.toLowerCase()) ||
+        n.company?.toLowerCase().includes(search.toLowerCase()) ||
+        tagString.toLowerCase().includes(search.toLowerCase()) ||
+        n.cluster?.toLowerCase().includes(search.toLowerCase()) ||
+        n.publicId.toLowerCase().includes(search.toLowerCase());
+      
       const matchCluster = clusterFilter === 'All' || n.cluster === clusterFilter;
-      const matchType = typeFilter === 'All' || n.type === typeFilter;
+      const matchType = typeFilter === 'All' || n.nodeType === typeFilter;
       return matchSearch && matchCluster && matchType;
     });
 
     r.sort((a, b) => {
       let va: number | string, vb: number | string;
       if (sortKey === 'rank') { va = a.rankScore; vb = b.rankScore; }
-      else if (sortKey === 'name') { va = a.name; vb = b.name; }
+      else if (sortKey === 'name') { va = a.fullName; vb = b.fullName; }
       else if (sortKey === 'avgPathDistance') { va = a.avgPathDistance || 99; vb = b.avgPathDistance || 99; }
       else { va = (a as any)[sortKey]; vb = (b as any)[sortKey]; }
 
@@ -86,8 +97,8 @@ export default function DatabasePage() {
   });
 
   return (
-    <div className="page-layout">
-      <div className="page-content">
+    <div className="page-layout" style={{ overflowY: 'auto', height: 'calc(100vh - 64px)' }}>
+      <div className="page-content" style={{ paddingBottom: '48px' }}>
 
         {/* ── Header ── */}
         <div style={{ marginBottom: '28px' }}>
@@ -96,17 +107,17 @@ export default function DatabasePage() {
             Network Intelligence Index
           </h1>
           <p style={{ color: 'var(--silver-500)', fontSize: '13px', marginTop: '6px' }}>
-            {allNodes.length} nodes · {allEdges.length} edges · ranked by weighted connection score
+            {allNodes.length} professional profiles · {allEdges.length} verified connections · sorted by trust-aware centrality
           </p>
         </div>
 
         {/* ── Stats row ── */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '24px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginBottom: '24px' }}>
           {[
-            { label: 'Total Nodes', value: allNodes.length, color: 'var(--silver-100)' },
-            { label: 'Real Nodes', value: allNodes.filter(n => n.type === 'REAL').length, color: 'var(--neon-cyan)' },
-            { label: 'Demo Nodes', value: allNodes.filter(n => n.type === 'DEMO').length, color: 'var(--silver-500)' },
-            { label: 'Total Edges', value: allEdges.length, color: 'var(--neon-blue)' },
+            { label: 'Total Index', value: allNodes.length, color: 'var(--silver-100)' },
+            { label: 'Real Identities', value: allNodes.filter(n => n.nodeType === 'REAL').length, color: 'var(--neon-cyan)' },
+            { label: 'Demo Expanders', value: allNodes.filter(n => n.nodeType === 'DEMO').length, color: 'var(--silver-500)' },
+            { label: 'Graph Pathways', value: allEdges.length, color: 'var(--neon-blue)' },
           ].map(s => (
             <div key={s.label} className="glass-panel" style={{ padding: '12px 16px' }}>
               <div className="text-label" style={{ marginBottom: '4px' }}>{s.label}</div>
@@ -118,14 +129,14 @@ export default function DatabasePage() {
         {/* ── Filters ── */}
         <div className="glass-panel" style={{ padding: '14px 16px', marginBottom: '16px', display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
           {/* Search */}
-          <div style={{ position: 'relative', flex: 1, minWidth: 200 }}>
+          <div style={{ position: 'relative', flex: 1, minWidth: 240 }}>
             <svg style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--silver-600)' }}
               width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
             </svg>
             <input
               className="glass-input"
-              placeholder="Search name or cluster…"
+              placeholder="Search name, ID, company or tags…"
               value={search}
               onChange={e => { setSearch(e.target.value); setPage(0); }}
               style={{ paddingLeft: 30 }}
@@ -155,7 +166,7 @@ export default function DatabasePage() {
             onChange={e => { setClusterFilter(e.target.value); setPage(0); }}
             style={{ width: 'auto', background: 'var(--bg-glass)', cursor: 'pointer' }}
           >
-            {clusters.map(c => <option key={c} value={c} style={{ background: '#0d0d24' }}>{c}</option>)}
+            {clusters.map(c => <option key={c} value={c} style={{ background: '#0d0d24' }}>{c} Cluster</option>)}
           </select>
 
           <span className="text-label" style={{ whiteSpace: 'nowrap' }}>
@@ -170,107 +181,145 @@ export default function DatabasePage() {
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--glass-border)' }}>
                   <th style={colStyle('rank')} onClick={() => toggleSort('rank')}>Rank <SortIcon k="rank" /></th>
-                  <th style={colStyle('name')} onClick={() => toggleSort('name')}>Name <SortIcon k="name" /></th>
+                  <th style={colStyle('name')} onClick={() => toggleSort('name')}>Public ID & Name <SortIcon k="name" /></th>
                   <th style={{ ...colStyle('rank'), cursor: 'default' }}>Type</th>
-                  <th style={{ ...colStyle('rank'), cursor: 'default' }}>Cluster</th>
+                  <th style={{ ...colStyle('rank'), cursor: 'default' }}>Company Footprint</th>
                   <th style={colStyle('connectionCount')} onClick={() => toggleSort('connectionCount')}>Connections <SortIcon k="connectionCount" /></th>
                   <th style={colStyle('realConnections')} onClick={() => toggleSort('realConnections')}>Real <SortIcon k="realConnections" /></th>
                   <th style={colStyle('influenceScore')} onClick={() => toggleSort('influenceScore')}>Influence <SortIcon k="influenceScore" /></th>
-                  <th style={colStyle('avgPathDistance')} onClick={() => toggleSort('avgPathDistance')}>Avg Path <SortIcon k="avgPathDistance" /></th>
+                  <th style={colStyle('avgPathDistance')} onClick={() => toggleSort('avgPathDistance')}>Avg Hop <SortIcon k="avgPathDistance" /></th>
                 </tr>
               </thead>
               <tbody>
-                {paginated.map((node, i) => {
-                  const globalRank = filtered.findIndex(n => n.id === node.id) + 1;
-                  const isReal = node.type === 'REAL';
-                  const isSelected = selectedNode?.id === node.id;
-                  return (
-                    <tr
-                      key={node.id}
-                      onClick={() => setSelectedNode(isSelected ? null : node)}
-                      style={{
-                        borderBottom: '1px solid rgba(255,255,255,0.04)',
-                        cursor: 'pointer',
-                        background: isSelected ? 'rgba(59,130,246,0.07)' : 'transparent',
-                        transition: 'background 0.15s',
-                      }}
-                      onMouseEnter={e => { if (!isSelected) (e.currentTarget as HTMLElement).style.background = 'var(--bg-glass)'; }}
-                      onMouseLeave={e => { if (!isSelected) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
-                    >
-                      {/* Rank */}
-                      <td style={{ padding: '12px 14px', minWidth: 60 }}>
-                        <span className="text-mono" style={{
-                          fontSize: '13px', fontWeight: 700,
-                          color: globalRank <= 3 ? 'var(--neon-cyan)' : 'var(--silver-600)',
-                        }}>
-                          {globalRank <= 3 ? ['🥇','🥈','🥉'][globalRank - 1] : `#${globalRank}`}
-                        </span>
-                      </td>
-
-                      {/* Name */}
-                      <td style={{ padding: '12px 14px', minWidth: 160 }}>
+                {isLoading || allNodes.length === 0 ? (
+                  Array.from({ length: 6 }).map((_, idx) => (
+                    <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', height: '56px' }}>
+                      <td style={{ padding: '12px 14px' }}><div className="animate-pulse" style={{ width: 30, height: 12, background: 'rgba(255,255,255,0.05)', borderRadius: 3 }} /></td>
+                      <td style={{ padding: '12px 14px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <div style={{
-                            width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
-                            background: isReal ? 'rgba(6,182,212,0.15)' : 'rgba(100,116,139,0.15)',
-                            border: `1px solid ${isReal ? 'rgba(6,182,212,0.4)' : 'rgba(100,116,139,0.3)'}`,
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontSize: '11px', fontWeight: 700,
-                            color: isReal ? 'var(--neon-cyan)' : 'var(--silver-500)',
-                          }}>
-                            {node.name.charAt(0)}
+                          <div className="animate-pulse" style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(255,255,255,0.05)' }} />
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <div className="animate-pulse" style={{ width: 120, height: 12, background: 'rgba(255,255,255,0.05)', borderRadius: 3 }} />
+                            <div className="animate-pulse" style={{ width: 60, height: 8, background: 'rgba(255,255,255,0.03)', borderRadius: 2 }} />
                           </div>
-                          <span style={{ fontWeight: 500, color: 'var(--silver-100)', fontSize: '13px' }}>
-                            {node.name}
-                          </span>
                         </div>
                       </td>
-
-                      {/* Type */}
+                      <td style={{ padding: '12px 14px' }}><div className="animate-pulse" style={{ width: 45, height: 16, background: 'rgba(255,255,255,0.04)', borderRadius: 4 }} /></td>
                       <td style={{ padding: '12px 14px' }}>
-                        <span className={`badge ${isReal ? 'badge-real' : 'badge-demo'}`}>
-                          {isReal ? '● REAL' : '○ DEMO'}
-                        </span>
+                        <div className="animate-pulse" style={{ width: 80, height: 12, background: 'rgba(255,255,255,0.05)', borderRadius: 3 }} />
+                        <div className="animate-pulse" style={{ width: 40, height: 8, background: 'rgba(255,255,255,0.03)', borderRadius: 2, marginTop: 4 }} />
                       </td>
-
-                      {/* Cluster */}
-                      <td style={{ padding: '12px 14px' }}>
-                        <span style={{ fontSize: '12px', color: 'var(--neon-violet)' }}>{node.cluster || '—'}</span>
-                      </td>
-
-                      {/* Connections */}
-                      <td style={{ padding: '12px 14px', textAlign: 'center' }}>
-                        <span className="text-mono" style={{ color: 'var(--silver-200)' }}>{node.connectionCount}</span>
-                      </td>
-
-                      {/* Real */}
-                      <td style={{ padding: '12px 14px', textAlign: 'center' }}>
-                        <span className="text-mono" style={{ color: 'var(--neon-cyan)' }}>{node.realConnections}</span>
-                      </td>
-
-                      {/* Influence */}
-                      <td style={{ padding: '12px 14px', minWidth: 120 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <span className="text-mono" style={{ color: 'var(--neon-blue)', minWidth: 28, fontSize: '12px' }}>
-                            {node.influenceScore}
+                      <td style={{ padding: '12px 14px' }}><div className="animate-pulse" style={{ width: 30, height: 12, background: 'rgba(255,255,255,0.05)', borderRadius: 3 }} /></td>
+                      <td style={{ padding: '12px 14px' }}><div className="animate-pulse" style={{ width: 20, height: 12, background: 'rgba(255,255,255,0.05)', borderRadius: 3 }} /></td>
+                      <td style={{ padding: '12px 14px' }}><div className="animate-pulse" style={{ width: 100, height: 10, background: 'rgba(255,255,255,0.04)', borderRadius: 2 }} /></td>
+                      <td style={{ padding: '12px 14px' }}><div className="animate-pulse" style={{ width: 20, height: 12, background: 'rgba(255,255,255,0.05)', borderRadius: 3 }} /></td>
+                    </tr>
+                  ))
+                ) : filtered.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} style={{ padding: '48px', textAlign: 'center', color: 'var(--silver-500)', fontSize: '13px' }}>
+                      🚫 No matching professional intelligence footprints found in the directory.
+                    </td>
+                  </tr>
+                ) : (
+                  paginated.map((node) => {
+                    const globalRank = ranked.findIndex(n => n.id === node.id) + 1;
+                    const isReal = node.nodeType === 'REAL';
+                    const isSelected = selectedNode?.id === node.id;
+                    return (
+                      <tr
+                        key={node.id}
+                        onClick={() => setSelectedNode(isSelected ? null : node)}
+                        style={{
+                          borderBottom: '1px solid rgba(255,255,255,0.04)',
+                          cursor: 'pointer',
+                          background: isSelected ? 'rgba(59,130,246,0.07)' : 'transparent',
+                          transition: 'background 0.15s',
+                        }}
+                        onMouseEnter={e => { if (!isSelected) (e.currentTarget as HTMLElement).style.background = 'var(--bg-glass)'; }}
+                        onMouseLeave={e => { if (!isSelected) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+                      >
+                        {/* Rank */}
+                        <td style={{ padding: '12px 14px', minWidth: 60 }}>
+                          <span className="text-mono" style={{
+                            fontSize: '13px', fontWeight: 700,
+                            color: globalRank <= 3 ? 'var(--neon-cyan)' : 'var(--silver-600)',
+                          }}>
+                            {globalRank <= 3 ? ['🥇','🥈','🥉'][globalRank - 1] : `#${globalRank}`}
                           </span>
-                          <div style={{ flex: 1 }}>
-                            <div className="progress-bar">
-                              <div className="progress-fill progress-fill-blue" style={{ width: `${node.influenceScore}%` }} />
+                        </td>
+
+                        {/* Public ID & Name */}
+                        <td style={{ padding: '12px 14px', minWidth: 200 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <div style={{
+                              width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
+                              background: isReal ? 'rgba(6,182,212,0.15)' : 'rgba(100,116,139,0.15)',
+                              border: `1px solid ${isReal ? 'rgba(6,182,212,0.4)' : 'rgba(100,116,139,0.3)'}`,
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              fontSize: '11px', fontWeight: 700,
+                              color: isReal ? 'var(--neon-cyan)' : 'var(--silver-500)',
+                            }}>
+                              {node.fullName.charAt(0)}
+                            </div>
+                            <div>
+                              <div style={{ fontWeight: 600, color: 'var(--silver-100)', fontSize: '13px' }}>
+                                {node.fullName}
+                              </div>
+                              <div className="text-mono" style={{ fontSize: '10px', color: 'var(--silver-500)' }}>
+                                {node.publicId}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </td>
+                        </td>
 
-                      {/* Avg Path */}
-                      <td style={{ padding: '12px 14px', textAlign: 'center' }}>
-                        <span className="text-mono" style={{ color: 'var(--silver-400)', fontSize: '12px' }}>
-                          {node.avgPathDistance?.toFixed(1) || '—'}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })}
+                        {/* Type */}
+                        <td style={{ padding: '12px 14px' }}>
+                          <span className={`badge ${isReal ? 'badge-real' : 'badge-demo'}`}>
+                            {isReal ? '● REAL' : '○ DEMO'}
+                          </span>
+                        </td>
+
+                        {/* Company & Cluster */}
+                        <td style={{ padding: '12px 14px', minWidth: 160 }}>
+                          <div style={{ fontSize: '12px', color: 'var(--silver-200)', fontWeight: 500 }}>{node.company || '—'}</div>
+                          <div style={{ fontSize: '10px', color: 'var(--neon-violet)', fontWeight: 600 }}>{node.cluster || '—'}</div>
+                        </td>
+
+                        {/* Connections */}
+                        <td style={{ padding: '12px 14px', textAlign: 'center' }}>
+                          <span className="text-mono" style={{ color: 'var(--silver-200)' }}>{node.connectionCount}</span>
+                        </td>
+
+                        {/* Real */}
+                        <td style={{ padding: '12px 14px', textAlign: 'center' }}>
+                          <span className="text-mono" style={{ color: 'var(--neon-cyan)' }}>{node.realConnections}</span>
+                        </td>
+
+                        {/* Influence */}
+                        <td style={{ padding: '12px 14px', minWidth: 120 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span className="text-mono" style={{ color: 'var(--neon-blue)', minWidth: 28, fontSize: '12px' }}>
+                              {node.influenceScore}
+                            </span>
+                            <div style={{ flex: 1 }}>
+                              <div className="progress-bar">
+                                <div className="progress-fill progress-fill-blue" style={{ width: `${node.influenceScore}%` }} />
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Avg Hop */}
+                        <td style={{ padding: '12px 14px', textAlign: 'center' }}>
+                          <span className="text-mono" style={{ color: 'var(--silver-400)', fontSize: '12px' }}>
+                            {node.avgPathDistance?.toFixed(1) || '—'}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
               </tbody>
             </table>
           </div>
@@ -283,37 +332,36 @@ export default function DatabasePage() {
               padding: '16px 24px',
               display: 'flex', alignItems: 'center', gap: '24px', flexWrap: 'wrap',
             }}>
-              <div>
-                <div className="text-label" style={{ marginBottom: '2px' }}>Details</div>
-                <p style={{ fontSize: '12px', color: 'var(--silver-400)', margin: 0 }}>
-                  {selectedNode.bio || `${selectedNode.type} node · ${selectedNode.cluster ?? 'No cluster'} · Score ${selectedNode.influenceScore}`}
-                </p>
+              <div style={{ flex: 1, minWidth: 280 }}>
+                <div className="text-label" style={{ marginBottom: '4px' }}>Professional Footprint Tags</div>
+                <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', marginBottom: '8px' }}>
+                  {selectedNode.tags && selectedNode.tags.length > 0 ? (
+                    selectedNode.tags.map(t => (
+                      <span key={t} style={{ padding: '2px 8px', borderRadius: '100px', fontSize: '10px', background: 'var(--bg-glass)', border: '1px solid var(--glass-border)', color: 'var(--silver-300)' }}>{t}</span>
+                    ))
+                  ) : (
+                    <span style={{ fontSize: '11px', color: 'var(--silver-500)' }}>No tags registered</span>
+                  )}
+                </div>
+                <div className="text-mono" style={{ fontSize: '11px', color: 'var(--silver-500)' }}>
+                  Footprint Sources: <span style={{ color: 'var(--neon-violet)' }}>{selectedNode.sourceConnectors?.join(', ') || 'Manual'}</span>
+                </div>
               </div>
-              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                {selectedNode.tags && selectedNode.tags.length > 0
-                  ? selectedNode.tags.map(t => (
-                    <span key={t} style={{ padding: '2px 8px', borderRadius: '100px', fontSize: '10px', background: 'var(--bg-glass)', border: '1px solid var(--glass-border)', color: 'var(--silver-400)' }}>{t}</span>
-                  ))
-                  : selectedNode.cluster && (
-                    <span style={{ padding: '2px 8px', borderRadius: '100px', fontSize: '10px', background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.3)', color: 'var(--neon-violet)' }}>
-                      {selectedNode.cluster}
-                    </span>
-                  )
-                }
-              </div>
-              <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px' }}>
+              
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <Link href={`/profile/${selectedNode.publicId}`} style={{ textDecoration: 'none' }}>
+                  <button className="glass-button">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3"/>
+                    </svg>
+                    Explore Full Profile
+                  </button>
+                </Link>
                 <button className="glass-button" onClick={() => { setRootNode(selectedNode.id); }}>
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/>
                   </svg>
                   Focus Graph
-                </button>
-                <button className="glass-button" style={{ opacity: 0.5 }}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                  </svg>
-                  Shortest Path
                 </button>
               </div>
             </div>
