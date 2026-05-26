@@ -1,18 +1,15 @@
-/**
- * Centrality scoring utilities for HOPNet nodes.
- * Used to compute influence scores and node rankings.
- */
+import { NodeType, EdgeType } from '@prisma/client';
 
 export interface ScoringNode {
   id: string;
-  type: string;
+  nodeType: NodeType;
 }
 
 export interface ScoringEdge {
   sourceId: string;
   targetId: string;
   weight: number;
-  edgeType: string;
+  edgeType: EdgeType;
 }
 
 export interface NodeScore {
@@ -59,7 +56,7 @@ export function computeScores(
     const nodeEdges = edgesByNode.get(node.id) ?? [];
     const degree = nodeEdges.length;
     const weightedDeg = nodeEdges.reduce((sum, e) => sum + e.weight, 0);
-    const realEdges = nodeEdges.filter(e => e.edgeType === 'REAL_EDGE').length;
+    const realEdges = nodeEdges.filter(e => e.edgeType === EdgeType.REAL_EDGE).length;
     const realRatio = degree > 0 ? realEdges / degree : 0;
 
     const degreeCentrality = degree / maxPossibleDegree;
@@ -94,3 +91,4 @@ export function rankNodes(scores: Map<string, NodeScore>): (NodeScore & { rank: 
     .sort((a, b) => b.influenceScore - a.influenceScore)
     .map((s, i) => ({ ...s, rank: i + 1 }));
 }
+

@@ -1,15 +1,16 @@
 import { isTraversalAllowed, LightNode } from './constraints';
+import { NodeType, EdgeType } from '@prisma/client';
 
 export interface BFSNode extends LightNode {
   id: string;
-  type: string;
+  nodeType: NodeType;
 }
 
 export interface BFSEdge {
   id: string;
   sourceId: string;
   targetId: string;
-  edgeType: string;
+  edgeType: EdgeType;
   weight: number;
 }
 
@@ -67,7 +68,7 @@ export function bfsSubgraph(
       if (!isTraversalAllowed(currentNode, neighborNode)) continue;
 
       // Respect demo filter
-      if (!includeDemo && neighborNode.type === 'DEMO') continue;
+      if (!includeDemo && neighborNode.nodeType === NodeType.DEMO) continue;
 
       // Mark edge as visited even if neighbor already visited
       visitedEdges.add(edgeId);
@@ -82,3 +83,4 @@ export function bfsSubgraph(
 
   return { visitedNodeIds: visitedNodes, visitedEdgeIds: visitedEdges, hopMap };
 }
+

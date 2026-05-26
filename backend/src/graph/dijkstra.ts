@@ -1,8 +1,9 @@
 import { isTraversalAllowed, LightNode } from './constraints';
+import { NodeType } from '@prisma/client';
 
 export interface DijkstraNode extends LightNode {
   id: string;
-  type: string;
+  nodeType: NodeType;
 }
 
 export interface DijkstraEdge {
@@ -106,3 +107,4 @@ export function reconstructPath(
   }
   return path;
 }
+

@@ -11,11 +11,11 @@
  *   DEMO → REAL  ❌ BLOCKED
  */
 
-export type NodeType = 'REAL' | 'DEMO';
+import { NodeType } from '@prisma/client';
 
 export interface LightNode {
   id: string;
-  type: string;
+  nodeType: NodeType;
 }
 
 /**
@@ -23,7 +23,7 @@ export interface LightNode {
  */
 export function isTraversalAllowed(from: LightNode, to: LightNode): boolean {
   // DEMO → REAL is always blocked
-  if (from.type === 'DEMO' && to.type === 'REAL') {
+  if (from.nodeType === NodeType.DEMO && to.nodeType === NodeType.REAL) {
     return false;
   }
   return true;
@@ -43,3 +43,4 @@ export function findConstraintViolation(path: LightNode[]): number {
   }
   return -1;
 }
+
