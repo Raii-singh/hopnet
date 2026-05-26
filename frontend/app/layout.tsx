@@ -11,8 +11,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" style={{ height: '100%' }}>
-      <body style={{ height: '100%', overflow: 'hidden', margin: 0 }}>
+    <html lang="en" suppressHydrationWarning style={{ height: '100%' }}>
+      <body suppressHydrationWarning style={{ height: '100%', overflow: 'hidden', margin: 0 }}>
         <Navbar />
         {children}
       </body>

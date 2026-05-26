@@ -8,8 +8,8 @@ import NodeTooltip from '@/components/ui/NodeTooltip';
 import EdgeTooltip from '@/components/ui/EdgeTooltip';
 import NodeProfileModal from '@/components/modals/NodeProfileModal';
 
-// Dynamically import ForceGraph2D to avoid SSR issues
-const ForceGraph2D = dynamic(() => import('react-force-graph').then(m => m.ForceGraph2D), {
+// react-force-graph-2d: 2D only, no A-Frame / Three.js overhead
+const ForceGraph2D = dynamic(() => import('react-force-graph-2d'), {
   ssr: false,
   loading: () => (
     <div style={{
@@ -111,6 +111,9 @@ export default function GraphCanvas() {
   // ── Node canvas rendering ────────────────────────────────────
   const paintNode = useCallback((node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
     const n = node as GraphNode;
+    // Guard: skip until force simulation places the node
+    if (!isFinite(node.x) || !isFinite(node.y)) return;
+
     const r = getNodeSize(n);
     const color = getNodeColor(n);
     const isReal = n.type === 'REAL';
@@ -162,6 +165,7 @@ export default function GraphCanvas() {
 
     ctx.restore();
   }, [getNodeColor, getNodeSize, hoveredNode, selectedNode, highlightedNodeIds]);
+
 
   // ── Link color ──────────────────────────────────────────────
   const getLinkColor = useCallback((link: any) => {
