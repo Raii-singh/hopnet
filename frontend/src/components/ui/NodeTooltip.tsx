@@ -9,7 +9,7 @@ interface NodeTooltipProps {
 }
 
 export default function NodeTooltip({ node, x, y }: NodeTooltipProps) {
-  const isReal = node.type === 'REAL';
+  const isReal = node.nodeType === 'REAL';
   const connectionRatio = node.connectionCount > 0
     ? Math.round((node.realConnections / node.connectionCount) * 100)
     : 0;
@@ -34,7 +34,7 @@ export default function NodeTooltip({ node, x, y }: NodeTooltipProps) {
             flexShrink: 0,
           }} />
           <span style={{ fontWeight: 600, fontSize: '13px', color: 'var(--silver-100)', flex: 1 }}>
-            {node.name}
+            {node.fullName}
           </span>
         </div>
 

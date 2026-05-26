@@ -21,7 +21,7 @@ export default function GraphControls() {
       return;
     }
     const results = ALL_NODES.filter(n =>
-      n.name.toLowerCase().includes(q.toLowerCase()) ||
+      n.fullName.toLowerCase().includes(q.toLowerCase()) ||
       n.cluster?.toLowerCase().includes(q.toLowerCase())
     ).slice(0, 6);
     setSearchResults(results);
@@ -164,11 +164,11 @@ export default function GraphControls() {
                   >
                     <span style={{
                       width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
-                      background: node.type === 'REAL' ? 'var(--neon-cyan)' : 'var(--silver-500)',
-                      boxShadow: node.type === 'REAL' ? '0 0 6px rgba(6,182,212,0.6)' : 'none',
+                      background: node.nodeType === 'REAL' ? 'var(--neon-cyan)' : 'var(--silver-500)',
+                      boxShadow: node.nodeType === 'REAL' ? '0 0 6px rgba(6,182,212,0.6)' : 'none',
                     }} />
                     <span style={{ color: 'var(--silver-200)', fontSize: '12px', fontWeight: 500, flex: 1 }}>
-                      {node.name}
+                      {node.fullName}
                     </span>
                     <span className="text-label" style={{ fontSize: '9px' }}>
                       {node.cluster}

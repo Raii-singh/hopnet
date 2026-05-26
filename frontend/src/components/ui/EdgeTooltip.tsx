@@ -8,9 +8,9 @@ interface EdgeTooltipProps {
   y: number;
 }
 
-function resolveNode(n: string | GraphNode): { id: string; name?: string; type?: string } {
+function resolveNode(n: string | GraphNode): { id: string; fullName?: string; nodeType?: string } {
   if (typeof n === 'string') return { id: n };
-  return { id: n.id, name: n.name, type: n.type };
+  return { id: n.id, fullName: n.fullName, nodeType: n.nodeType };
 }
 
 export default function EdgeTooltip({ edge, x, y }: EdgeTooltipProps) {
@@ -18,8 +18,8 @@ export default function EdgeTooltip({ edge, x, y }: EdgeTooltipProps) {
   const src = resolveNode(edge.source);
   const tgt = resolveNode(edge.target);
   const weight = Math.round(edge.weight * 100);
-  const trust = edge.trustScore ? Math.round(edge.trustScore * 100) : null;
-  const strength = edge.interactionStrength ? Math.round(edge.interactionStrength * 100) : null;
+  const trust = Math.round(edge.trustScore * 100);
+  const interaction = Math.round(edge.interactionFrequency * 100);
 
   return (
     <div
@@ -42,9 +42,9 @@ export default function EdgeTooltip({ edge, x, y }: EdgeTooltipProps) {
         </div>
 
         {/* Connection label */}
-        {(src.name || tgt.name) && (
+        {(src.fullName || tgt.fullName) && (
           <div style={{ marginBottom: '8px', fontSize: '11px', color: 'var(--silver-400)' }}>
-            {src.name || src.id.slice(0, 8)} → {tgt.name || tgt.id.slice(0, 8)}
+            {src.fullName || src.id.slice(0, 8)} → {tgt.fullName || tgt.id.slice(0, 8)}
           </div>
         )}
 
@@ -53,23 +53,29 @@ export default function EdgeTooltip({ edge, x, y }: EdgeTooltipProps) {
         {/* Scores */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <span className="text-label">Rel. Score</span>
+            <span className="text-label">Relationship Score</span>
             <span className="text-value text-mono" style={{ color: isReal ? 'var(--neon-blue)' : 'var(--silver-400)' }}>
               {weight}
             </span>
           </div>
-          {trust !== null && (
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span className="text-label">Trust</span>
-              <span className="text-value text-mono">{trust}</span>
-            </div>
-          )}
-          {strength !== null && (
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span className="text-label">Interaction</span>
-              <span className="text-value text-mono">{strength}</span>
-            </div>
-          )}
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <span className="text-label">Type</span>
+            <span className="text-value text-mono" style={{ color: 'var(--neon-cyan)', fontSize: '11px' }}>
+              {edge.relationshipType}
+            </span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <span className="text-label">Trust</span>
+            <span className="text-value text-mono">{trust}</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <span className="text-label">Interaction</span>
+            <span className="text-value text-mono">{interaction}</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <span className="text-label">Source</span>
+            <span className="text-value text-mono" style={{ fontSize: '11px' }}>{edge.connectorSource}</span>
+          </div>
         </div>
 
         {/* Weight bar */}
