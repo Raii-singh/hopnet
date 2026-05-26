@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import graphRouter from './routes/graph.routes';
 import usersRouter from './routes/users.routes';
+import connectorsRouter from './routes/connectors.routes';
 
 const app = express();
 
@@ -17,5 +18,6 @@ app.get('/api/health', (_req, res) => {
 // Routes
 app.use('/api/graph', graphRouter);
 app.use('/api/users', usersRouter);
+app.use('/api/connectors', connectorsRouter);
 
 export default app;

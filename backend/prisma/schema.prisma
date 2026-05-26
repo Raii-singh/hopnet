@@ -7,30 +7,81 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum NodeType {
+  REAL
+  DEMO
+}
+
+enum EdgeType {
+  REAL_EDGE
+  DEMO_EDGE
+}
+
 model User {
-  id               String   @id @default(uuid())
-  name             String
-  type             String
+  id               String    @id @default(uuid())
+  publicId         String    @unique
+
+  fullName         String
+  username         String?   @unique
+  email            String?   @unique
+  phone            String?
+  linkedinUrl      String?
+  instagramHandle  String?
+  twitterHandle    String?
+  company          String?
   cluster          String?
-  influenceScore   Float    @default(0)
+  influenceScore   Float     @default(0)
 
-  outgoingEdges    Edge[] @relation("SourceEdges")
-  incomingEdges    Edge[] @relation("TargetEdges")
+  tags             String[]  @default([])
+  sourceConnectors String[]  @default([])
+  metadata         Json      @default("{}")
+  nodeType         NodeType
 
-  createdAt        DateTime @default(now())
+  // Audit Fields
+  deletedAt        DateTime?
+  updatedAt        DateTime  @updatedAt
+  createdBy        String    @default("system")
+
+  outgoingEdges    Edge[]    @relation("SourceEdges")
+  incomingEdges    Edge[]    @relation("TargetEdges")
+
+  createdAt        DateTime  @default(now())
 }
 
 model Edge {
-  id          String   @id @default(uuid())
+  id                  String   @id @default(uuid())
 
-  sourceId    String
-  targetId    String
+  sourceId            String
+  targetId            String
 
-  edgeType    String
-  weight      Float    @default(1)
+  relationshipType    String   @default("acquaintance")
+  trustScore          Float    @default(0.5)
+  interactionFrequency Float    @default(0.5)
+  connectorSource     String   @default("Manual")
+  inferredFrom        String?
+  edgeType            EdgeType
+  weight              Float    @default(0.5)
 
-  source      User @relation("SourceEdges", fields: [sourceId], references: [id])
-  target      User @relation("TargetEdges", fields: [targetId], references: [id])
+  // Audit Fields
+  inferred            Boolean  @default(false)
+  updatedAt           DateTime @updatedAt
+  createdBy           String   @default("system")
 
-  createdAt   DateTime @default(now())
+  source              User     @relation("SourceEdges", fields: [sourceId], references: [id])
+  target              User     @relation("TargetEdges", fields: [targetId], references: [id])
+
+  createdAt           DateTime @default(now())
+}
+
+model ImportLog {
+  id                 String   @id @default(uuid())
+  connectorSource    String   // LinkedIn, Google, Outlook, Gmail, Twitter
+  filename           String
+  status             String   // SUCCESS, FAILED
+  nodesCreated       Int      @default(0)
+  edgesCreated       Int      @default(0)
+  inferredEdgesCount Int      @default(0)
+  confidenceScore    Float    @default(1.0)
+  importLogs         String[] @default([])
+  createdAt          DateTime @default(now())
 }
