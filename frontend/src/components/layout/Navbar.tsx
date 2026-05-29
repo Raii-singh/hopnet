@@ -168,3 +168,96 @@ export default function Navbar() {
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={caps.accentColor} strokeWidth="2.5">
                       <polyline points="20 6 9 17 4 12" />
                     </svg>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* ── Nav Links (capability-aware) ── */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flex: 1 }}>
+        {navItems.map(({ href, label }) => {
+          const active = pathname === href;
+          return (
+            <Link
+              key={href}
+              href={href}
+              onClick={() => setSwitcherOpen(false)}
+              style={{
+                padding: '6px 14px',
+                borderRadius: '8px',
+                fontSize: '13px',
+                fontWeight: active ? 600 : 400,
+                color: active ? '#ffffff' : 'var(--silver-400)',
+                background: active ? 'rgba(255, 255, 255, 0.05)' : 'transparent',
+                border: active ? '1px solid rgba(255, 255, 255, 0.15)' : '1px solid transparent',
+                textDecoration: 'none',
+                transition: 'all 0.25s ease',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {label}
+            </Link>
+          );
+        })}
+      </div>
+
+      {/* ── Status & Controls ── */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        {/* Focus Mode Toggle */}
+        <button
+          onClick={toggleFocusMode}
+          className="glass-button"
+          style={{
+            borderColor: focusMode ? 'rgba(255, 255, 255, 0.4)' : 'var(--glass-border)',
+            color: focusMode ? '#ffffff' : 'var(--silver-400)',
+            background: focusMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.02)',
+            boxShadow: focusMode ? '0 0 12px rgba(255, 255, 255, 0.2)' : 'none',
+            fontWeight: 600,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            transition: 'all 0.3s ease',
+            cursor: 'pointer',
+            padding: '6px 12px',
+          }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            {focusMode ? (
+              <>
+                <circle cx="12" cy="12" r="3" />
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+              </>
+            ) : (
+              <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
+            )}
+          </svg>
+        </button>
+
+        {/* Graph status dot */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span style={{
+            display: 'block', width: 6, height: 6, borderRadius: '50%',
+            background: accentColor,
+            boxShadow: `0 0 8px ${accentColor}80`,
+            animation: 'pulseGlow 2s ease-in-out infinite',
+          }} />
+        </div>
+      </div>
+
+      {/* Backdrop to close switcher */}
+      {switcherOpen && (
+        <div
+          style={{ position: 'fixed', inset: 0, zIndex: 1999 }}
+          onClick={() => setSwitcherOpen(false)}
+        />
+      )}
+
+      {showLoginModal && (
+        <SudoLoginModal onClose={() => setShowLoginModal(false)} />
+      )}
+    </nav>
+  );
+}
