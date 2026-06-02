@@ -83,3 +83,36 @@ export default function BottomInfoBar({ meta, isLoading }: BottomInfoBarProps) {
               display: 'block', width: 7, height: 7, borderRadius: '50%',
               background: accentColor,
               boxShadow: `0 0 8px ${accentColor}80`,
+            }} />
+          )}
+          <span style={{ fontSize: '10px', color: accentColor, letterSpacing: '0.1em', fontWeight: 700 }}>
+            {isImdb ? '🎬 IMDB' : 'GRAPH'}
+          </span>
+        </div>
+
+        {/* Stats */}
+        {stats.map((stat, i) => (
+          <div
+            key={stat.label}
+            style={{
+              padding: '8px 16px',
+              borderRight: i < stats.length - 1 ? `1px solid ${accentColor}10` : 'none',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '1px',
+              minWidth: 55,
+            }}
+          >
+            <span className="text-mono" style={{ fontSize: '13px', fontWeight: 600, color: stat.color }}>
+              {stat.value}
+            </span>
+            <span className="text-label" style={{ fontSize: '9px' }}>
+              {stat.label}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
