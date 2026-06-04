@@ -83,3 +83,91 @@ export default function NodeTooltip({ node }: NodeTooltipProps) {
             </>
           )}
         </div>
+
+        <div className="divider" style={{ margin: '8px 0' }} />
+
+        {/* Stats */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+          {isImdb ? (
+            <>
+              {birthYear && (
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span className="text-label">Birth Year</span>
+                  <span className="text-value text-mono">{birthYear}</span>
+                </div>
+              )}
+              {appearances !== undefined && (
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span className="text-label">Appearances</span>
+                  <span className="text-value text-mono">{appearances}</span>
+                </div>
+              )}
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span className="text-label">Collaborations</span>
+                <span className="text-value text-mono" style={{ color: accentColor }}>{node.connectionCount}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span className="text-label">Influence Score</span>
+                <span className="text-value text-mono" style={{ color: accentColor }}>{node.influenceScore}</span>
+              </div>
+              {rank && (
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span className="text-label">Global Rank</span>
+                  <span className="text-value text-mono">#{rank}</span>
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span className="text-label">Connections</span>
+                <span className="text-value text-mono">{node.connectionCount}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span className="text-label">Influence</span>
+                <span className="text-value text-mono" style={{ color: 'var(--neon-cyan)' }}>
+                  {node.influenceScore}
+                </span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span className="text-label">Real Ratio</span>
+                <span className="text-value text-mono">{connectionRatio}%</span>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Connection/Influence bar */}
+        {!isImdb && (
+          <div style={{ marginTop: '10px' }}>
+            <div className="progress-bar">
+              <div
+                className="progress-fill progress-fill-cyan"
+                style={{ width: `${connectionRatio}%` }}
+              />
+            </div>
+          </div>
+        )}
+
+        {isImdb && node.influenceScore > 0 && (
+          <div style={{ marginTop: '10px' }}>
+            <div className="progress-bar">
+              <div
+                style={{
+                  height: '100%', borderRadius: '100px',
+                  background: accentColor,
+                  width: `${Math.min(node.influenceScore, 100)}%`,
+                  transition: 'width 0.3s ease',
+                }}
+              />
+            </div>
+          </div>
+        )}
+
+        <div style={{ marginTop: '8px', fontSize: '10px', color: 'var(--silver-600)', letterSpacing: '0.04em' }}>
+          Click to view full profile
+        </div>
+      </div>
+    </div>
+  );
+}
