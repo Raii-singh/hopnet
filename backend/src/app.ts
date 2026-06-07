@@ -4,6 +4,7 @@ import cors from 'cors';
 import graphRouter from './routes/graph.routes';
 import usersRouter from './routes/users.routes';
 import connectorsRouter from './routes/connectors.routes';
+import imdbRouter from './routes/imdb.routes';
 
 const app = express();
 
@@ -19,5 +20,7 @@ app.get('/api/health', (_req, res) => {
 app.use('/api/graph', graphRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/connectors', connectorsRouter);
+app.use('/api/imdb', imdbRouter);
 
 export default app;
+

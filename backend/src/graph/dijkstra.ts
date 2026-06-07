@@ -1,5 +1,6 @@
-import { isTraversalAllowed, LightNode } from './constraints';
+import { LightNode } from './constraints';
 import { NodeType } from '@prisma/client';
+import { dijkstra as engineDijkstra, reconstructPath as engineReconstructPath } from '@hopnet/shared/graph-engine';
 
 export interface DijkstraNode extends LightNode {
   id: string;
@@ -20,76 +21,27 @@ export interface DijkstraResult {
 
 /**
  * Dijkstra shortest-weighted-path from rootId.
- *
- * Edge weight in HOPNet represents connection strength (0-1).
- * Cost = 1 - weight (so stronger edges have lower cost = preferred).
- *
- * Constraint: DEMO → REAL blocked (same as BFS).
+ * Delegates to the shared graph engine.
  */
 export function dijkstra(
   rootId: string,
   allNodes: DijkstraNode[],
   allEdges: DijkstraEdge[]
 ): DijkstraResult {
-  const nodeMap = new Map<string, DijkstraNode>(allNodes.map(n => [n.id, n]));
+  const engineNodes = allNodes.map(n => ({
+    id: n.id,
+    kind: n.nodeType as any
+  }));
 
-  // Build adjacency list with costs
-  const adj = new Map<string, { neighborId: string; cost: number }[]>();
-  for (const edge of allEdges) {
-    const cost = 1 - edge.weight; // higher weight = lower cost
-    if (!adj.has(edge.sourceId)) adj.set(edge.sourceId, []);
-    if (!adj.has(edge.targetId)) adj.set(edge.targetId, []);
-    adj.get(edge.sourceId)!.push({ neighborId: edge.targetId, cost });
-    adj.get(edge.targetId)!.push({ neighborId: edge.sourceId, cost });
-  }
+  const engineEdges = allEdges.map(e => ({
+    id: e.id,
+    sourceId: e.sourceId,
+    targetId: e.targetId,
+    kind: 'REAL_EDGE' as any, // default fallback
+    weight: e.weight
+  }));
 
-  const distance = new Map<string, number>();
-  const previous = new Map<string, string | null>();
-  const visited = new Set<string>();
-
-  for (const node of allNodes) {
-    distance.set(node.id, Infinity);
-    previous.set(node.id, null);
-  }
-  distance.set(rootId, 0);
-
-  // Simple priority queue (min-heap would be faster but this is sufficient for HOPNet scale)
-  const remaining = new Set(allNodes.map(n => n.id));
-
-  while (remaining.size > 0) {
-    // Pick node with minimum distance
-    let minDist = Infinity;
-    let u: string | null = null;
-    for (const id of remaining) {
-      const d = distance.get(id) ?? Infinity;
-      if (d < minDist) { minDist = d; u = id; }
-    }
-
-    if (u === null || minDist === Infinity) break;
-    remaining.delete(u);
-    visited.add(u);
-
-    const currentNode = nodeMap.get(u);
-    if (!currentNode) continue;
-
-    for (const { neighborId, cost } of adj.get(u) ?? []) {
-      if (visited.has(neighborId)) continue;
-
-      const neighborNode = nodeMap.get(neighborId);
-      if (!neighborNode) continue;
-
-      // Enforce HOPNet constraint
-      if (!isTraversalAllowed(currentNode, neighborNode)) continue;
-
-      const alt = (distance.get(u) ?? Infinity) + cost;
-      if (alt < (distance.get(neighborId) ?? Infinity)) {
-        distance.set(neighborId, alt);
-        previous.set(neighborId, u);
-      }
-    }
-  }
-
-  return { distance, previous };
+  return engineDijkstra(rootId, engineNodes, engineEdges);
 }
 
 /**
@@ -99,12 +51,7 @@ export function reconstructPath(
   targetId: string,
   previous: Map<string, string | null>
 ): string[] {
-  const path: string[] = [];
-  let current: string | null = targetId;
-  while (current !== null) {
-    path.unshift(current);
-    current = previous.get(current) ?? null;
-  }
-  return path;
+  return engineReconstructPath(targetId, previous);
 }
+
 

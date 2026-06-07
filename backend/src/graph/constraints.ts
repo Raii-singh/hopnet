@@ -4,14 +4,11 @@
  * Critical rule: REAL → DEMO → REAL traversal MUST NEVER be allowed.
  * This creates fake reachability and destroys trust in the network.
  *
- * Allowed paths:
- *   REAL → REAL  ✅
- *   REAL → DEMO  ✅ (one-way entry into demo cluster)
- *   DEMO → DEMO  ✅
- *   DEMO → REAL  ❌ BLOCKED
+ * This backend adapter delegates constraint enforcement to the shared graph engine.
  */
 
 import { NodeType } from '@prisma/client';
+import { isTraversalAllowed as engineIsTraversalAllowed, findConstraintViolation as engineFindConstraintViolation } from '@hopnet/shared/graph-engine';
 
 export interface LightNode {
   id: string;
@@ -22,11 +19,10 @@ export interface LightNode {
  * Check if traversal from `from` to `to` is allowed by HOPNet rules.
  */
 export function isTraversalAllowed(from: LightNode, to: LightNode): boolean {
-  // DEMO → REAL is always blocked
-  if (from.nodeType === NodeType.DEMO && to.nodeType === NodeType.REAL) {
-    return false;
-  }
-  return true;
+  return engineIsTraversalAllowed(
+    { id: from.id, kind: from.nodeType as any },
+    { id: to.id, kind: to.nodeType as any }
+  );
 }
 
 /**
@@ -34,13 +30,8 @@ export function isTraversalAllowed(from: LightNode, to: LightNode): boolean {
  * Returns the index of the first violation, or -1 if clean.
  */
 export function findConstraintViolation(path: LightNode[]): number {
-  for (let i = 0; i < path.length - 1; i++) {
-    const current = path[i];
-    const next = path[i + 1];
-    if (current && next && !isTraversalAllowed(current, next)) {
-      return i;
-    }
-  }
-  return -1;
+  const enginePath = path.map(n => ({ id: n.id, kind: n.nodeType as any }));
+  return engineFindConstraintViolation(enginePath);
 }
+
 
