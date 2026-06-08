@@ -253,3 +253,88 @@ export default function GraphCanvas() {
     const base = isImdb
       ? 2.5 + Math.min((n.influenceScore / 100) * 3.5, 3.5)
       : (n.nodeType === 'REAL' ? 3.5 + Math.min((n.influenceScore / 100) * 3, 3) : 2.8);
+    if (hoveredNode?.id === n.id) return base * 1.7;
+    if (selectedNode?.id === n.id) return base * 1.8;
+    return base;
+  }, [hoveredNode, selectedNode, isImdb]);
+
+  // ── Node paint (with ALWAYS-VISIBLE labels) ───────────────────────────────
+  const paintNode = useCallback((node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
+    const n = node as GraphNode;
+    if (!isFinite(node.x) || !isFinite(node.y)) return;
+
+    const r = getNodeSize(n);
+    const color = getNodeColor(n);
+    const isReal = n.nodeType === 'REAL' || isImdb;
+    const isHovered = hoveredNode?.id === n.id;
+    const isSelected = selectedNode?.id === n.id;
+    const isConnectorSource = connectorSourceNode?.id === n.id;
+    const isHighlighted = highlightedNodeIds.size === 0 || highlightedNodeIds.has(n.id);
+    const isConnectedToSelected = selectedNodeConnections.nodeIds.has(n.id);
+    const hasActiveSelection = activeSelectedNode !== null;
+
+    // Subtle breathing
+    const charCode = n.fullName?.charCodeAt(0) ?? n.id?.charCodeAt(0) ?? 0;
+    const breathingOffset = Math.sin(Date.now() * 0.002 + charCode) * 0.15;
+    const ar = r + breathingOffset;
+
+    ctx.save();
+
+    // Cluster halo
+    if (n.cluster && isHighlighted && (!hasActiveSelection || isSelected || isConnectedToSelected)) {
+      const cc = getClusterColor(n.cluster);
+      const glowScale = isSelected ? 5 : isHovered ? 4 : 3;
+      const alpha = isSelected ? 0.4 : isHovered ? 0.25 : 0.10;
+      const grad = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, ar * glowScale);
+      grad.addColorStop(0, hexToRgba(cc, alpha));
+      grad.addColorStop(1, 'transparent');
+      ctx.beginPath();
+      ctx.arc(node.x, node.y, ar * glowScale, 0, 2 * Math.PI);
+      ctx.fillStyle = grad;
+      ctx.fill();
+    }
+
+    // Connector ring
+    if (isConnectorSource) {
+      ctx.beginPath(); ctx.arc(node.x, node.y, ar * 2.2, 0, 2 * Math.PI);
+      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.2; ctx.setLineDash([3, 3]);
+      ctx.stroke(); ctx.setLineDash([]);
+    }
+
+    // Bridge ring
+    if (bridgeNodes.has(n.id) && isHighlighted && (!hasActiveSelection || isSelected || isConnectedToSelected)) {
+      ctx.beginPath(); ctx.arc(node.x, node.y, ar * 1.6, 0, 2 * Math.PI);
+      ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.lineWidth = isHovered ? 1.2 : 0.7;
+      ctx.stroke();
+    }
+
+    // Node core
+    ctx.beginPath(); ctx.arc(node.x, node.y, ar, 0, 2 * Math.PI);
+    if (isReal) {
+      ctx.fillStyle = color; ctx.fill();
+    } else {
+      ctx.strokeStyle = color; ctx.lineWidth = 1.8; ctx.stroke();
+      ctx.fillStyle = hexToRgba('#000000', 0.55); ctx.fill();
+    }
+
+    // Outline
+    if (isSelected || isConnectorSource) {
+      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2.5; ctx.stroke();
+    } else if (isHovered && isReal) {
+      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.8; ctx.stroke();
+    } else if (isReal && (!hasActiveSelection || isConnectedToSelected)) {
+      ctx.strokeStyle = 'rgba(255,255,255,0.35)'; ctx.lineWidth = 0.9; ctx.stroke();
+    }
+
+    // ── ALWAYS-VISIBLE LABELS ──────────────────────────────────────────────
+    if (n.fullName) {
+      const displayName = n.fullName.length > 20 ? n.fullName.slice(0, 20) + '…' : n.fullName;
+      // Font scales with zoom but stays readable: constant screen size ~8px
+      const fontSize = Math.max(3.5, 8 / globalScale);
+      const isBold = isSelected || isConnectorSource || isHovered;
+      const labelAlpha = isSelected || isHovered || isConnectorSource ? 1.0
+        : isConnectedToSelected ? 0.95
+          : hasActiveSelection ? 0.65
+            : (!isHighlighted ? 0.30 : (isImdb ? 0.80 : 0.75));
+
+      ctx.font = `${isBold ? 600 : 400} ${fontSize}px Outfit, Inter, sans-serif`;
