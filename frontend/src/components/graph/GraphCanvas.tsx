@@ -83,3 +83,88 @@ export default function GraphCanvas() {
   } = useGraphStore();
 
   const tooltipContainerRef = useRef<HTMLDivElement>(null);
+  const [editingEdge, setEditingEdge] = useState<GraphEdge | null>(null);
+  const [creatingEdgeData, setCreatingEdgeData] = useState<{ sourceId: string; targetId: string } | null>(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+
+  const isImdb = activeProvider === 'imdb';
+  const accentColor = providerCapabilities.accentColor;
+
+  function getClusterColor(cluster?: string): string {
+    return isImdb ? getImdbClusterColor(cluster) : getCollegeClusterColor(cluster);
+  }
+
+  const [mouseGraphPos, setMouseGraphPos] = useState<{ x: number; y: number } | null>(null);
+
+  // Helper to reliably center & zoom in close to the graph network
+  const zoomInClose = useCallback(() => {
+    if (!graphRef.current) return;
+    const fg = graphRef.current;
+    fg.zoomToFit?.(300, 30);
+    setTimeout(() => {
+      const z = fg.zoom?.();
+      if (z && z > 0) {
+        fg.zoom?.(z * 2.5, 400);
+      }
+    }, 320);
+  }, []);
+
+  // ── Auto-center, configure physics forces, and fit graph on initial load ──
+  useEffect(() => {
+    if (!graphRef.current || visibleNodes.length === 0) return;
+    const fg = graphRef.current;
+
+    // Unpin fixed coordinates so force simulation can naturally adjust and untangle
+    visibleNodes.forEach((n: any) => {
+      n.fx = undefined;
+      n.fy = undefined;
+    });
+
+    // Configure D3 physics forces for magical, smooth, soft spring elasticity
+    fg.d3Force('charge')?.strength(-160)?.distanceMax(500);
+    fg.d3Force('link')?.distance((link: any) => {
+      const e = link as GraphEdge;
+      return e.edgeType === 'REAL_EDGE' ? 80 : 100;
+    })?.strength(0.30); // Soft spring elasticity for graceful slow self-correction
+    fg.d3Force('collide', forceCollide(26));
+
+    fg.d3ReheatSimulation?.();
+
+    // Trigger close-up zoom strictly ONCE on initial webpage boot
+    if (!hasInitialZoomedRef.current) {
+      hasInitialZoomedRef.current = true;
+      const timer = setTimeout(() => {
+        zoomInClose();
+      }, 400);
+      return () => clearTimeout(timer);
+    }
+  }, [visibleNodes.length, primaryNodeId, zoomInClose]);
+
+  // ── Dynamic clean-up when active provider changes ─────────────────────────
+  useEffect(() => {
+    if (!isImdb && visibleNodes.length > 0) {
+      visibleNodes.forEach((n: any) => {
+        n.fx = undefined;
+        n.fy = undefined;
+      });
+    }
+  }, [isImdb, visibleNodes]);
+
+
+
+  const activeSelectedNode = selectedNode || activeSmallCardNode;
+
+  // ── Click connection sets (ON CLICK ONLY) ──────────────────────────────────
+  const selectedNodeConnections = useMemo(() => {
+    if (!activeSelectedNode) return { nodeIds: new Set<string>(), edgeIds: new Set<string>() };
+    const nodeIds = new Set<string>([activeSelectedNode.id]);
+    const edgeIds = new Set<string>();
+    for (const link of visibleLinks) {
+      const src = typeof link.source === 'string' ? link.source : (link.source as any).id;
+      const tgt = typeof link.target === 'string' ? link.target : (link.target as any).id;
+      if (src === activeSelectedNode.id) { nodeIds.add(tgt); edgeIds.add(link.id); }
+      if (tgt === activeSelectedNode.id) { nodeIds.add(src); edgeIds.add(link.id); }
+    }
+    return { nodeIds, edgeIds };
+  }, [activeSelectedNode, visibleLinks]);
+
