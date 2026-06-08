@@ -168,3 +168,88 @@ export default function GraphCanvas() {
     return { nodeIds, edgeIds };
   }, [activeSelectedNode, visibleLinks]);
 
+  // ── Bridge nodes ──────────────────────────────────────────────────────────
+  const bridgeNodes = useMemo(() => {
+    const bridgeSet = new Set<string>();
+    const clusterMap = new Map<string, string>();
+    for (const node of visibleNodes) { if (node.cluster) clusterMap.set(node.id, node.cluster); }
+    const nodeNeighborClusters = new Map<string, Set<string>>();
+    for (const link of visibleLinks) {
+      const src = typeof link.source === 'string' ? link.source : (link.source as any).id;
+      const tgt = typeof link.target === 'string' ? link.target : (link.target as any).id;
+      const srcC = clusterMap.get(src), tgtC = clusterMap.get(tgt);
+      if (srcC) { if (!nodeNeighborClusters.has(tgt)) nodeNeighborClusters.set(tgt, new Set()); nodeNeighborClusters.get(tgt)!.add(srcC); }
+      if (tgtC) { if (!nodeNeighborClusters.has(src)) nodeNeighborClusters.set(src, new Set()); nodeNeighborClusters.get(src)!.add(tgtC); }
+    }
+    for (const [nodeId, clusters] of nodeNeighborClusters.entries()) {
+      const node = visibleNodes.find(n => n.id === nodeId);
+      if (node?.cluster) clusters.add(node.cluster);
+      if (clusters.size > 1) bridgeSet.add(nodeId);
+    }
+    return bridgeSet;
+  }, [visibleNodes, visibleLinks]);
+
+  // ── Container resize ──────────────────────────────────────────────────────
+  useEffect(() => {
+    function update() {
+      if (containerRef.current) setDimensions({ w: containerRef.current.clientWidth, h: containerRef.current.clientHeight });
+    }
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
+
+  // ── Mouse tracking (DOM tooltip positioning & graph cursor coordinates) ──
+  useEffect(() => {
+    function onMM(e: MouseEvent) {
+      if (tooltipContainerRef.current) {
+        tooltipContainerRef.current.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0)`;
+      }
+
+      if (visualConnectMode && connectorSourceNode && graphRef.current && containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        const screenX = e.clientX - rect.left;
+        const screenY = e.clientY - rect.top;
+        if (typeof graphRef.current.screen2GraphCoords === 'function') {
+          const coords = graphRef.current.screen2GraphCoords(screenX, screenY);
+          setMouseGraphPos(coords);
+        }
+      }
+    }
+    window.addEventListener('mousemove', onMM);
+    return () => window.removeEventListener('mousemove', onMM);
+  }, [visualConnectMode, connectorSourceNode]);
+
+  // ── Node color ────────────────────────────────────────────────────────────
+  const getNodeColor = useCallback((node: any) => {
+    const n = node as GraphNode;
+    const isHighlighted = highlightedNodeIds.size === 0 || highlightedNodeIds.has(n.id);
+    const isConnectorSource = connectorSourceNode?.id === n.id;
+    const isSelected = activeSelectedNode?.id === n.id;
+    const isHovered = hoveredNode?.id === n.id;
+    const isConnectedToSelected = selectedNodeConnections.nodeIds.has(n.id);
+    const hasActiveSelection = activeSelectedNode !== null;
+
+    let color: string;
+    if (isImdb) {
+      color = n.cluster ? getImdbClusterColor(n.cluster) : accentColor;
+    } else {
+      if (isConnectorSource || isSelected) color = '#ffffff';
+      else if (n.cluster) color = getCollegeClusterColor(n.cluster);
+      else if (n.nodeType === 'REAL') color = '#ffffff';
+      else color = '#64748b';
+    }
+
+    if (!isHighlighted) return hexToRgba(color, 0.25);
+    if (hasActiveSelection && !isSelected && !isConnectedToSelected) return hexToRgba(color, 0.70);
+    if (isSelected || isConnectedToSelected || isHovered) return color;
+    return hexToRgba(color, 0.90);
+  }, [highlightedNodeIds, activeSelectedNode, hoveredNode, connectorSourceNode, selectedNodeConnections, isImdb, accentColor]);
+
+  // ── Node size (SMALLER) ───────────────────────────────────────────────────
+  const getNodeSize = useCallback((node: any) => {
+    const n = node as GraphNode;
+    // Much smaller base sizes
+    const base = isImdb
+      ? 2.5 + Math.min((n.influenceScore / 100) * 3.5, 3.5)
+      : (n.nodeType === 'REAL' ? 3.5 + Math.min((n.influenceScore / 100) * 3, 3) : 2.8);
