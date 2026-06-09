@@ -338,3 +338,88 @@ export default function GraphCanvas() {
             : (!isHighlighted ? 0.30 : (isImdb ? 0.80 : 0.75));
 
       ctx.font = `${isBold ? 600 : 400} ${fontSize}px Outfit, Inter, sans-serif`;
+      ctx.fillStyle = `rgba(255,255,255,${labelAlpha})`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      ctx.fillText(displayName, node.x, node.y + ar + 2.5);
+    }
+
+    ctx.restore();
+  }, [getNodeColor, getNodeSize, hoveredNode, selectedNode, activeSelectedNode, highlightedNodeIds, connectorSourceNode, bridgeNodes, selectedNodeConnections, isImdb]);
+
+  // ── Inject Frontend-Only Invisible Layout Anchors for Isolated/Unreachable Components ─────
+  const physicsLinks = useMemo(() => {
+    // 1. Sanitize all real visible links to string IDs so D3 forceLink engine never holds stale node object references
+    const links: any[] = visibleLinks.map(l => ({
+      ...l,
+      source: typeof l.source === 'object' ? (l.source as any).id : l.source,
+      target: typeof l.target === 'object' ? (l.target as any).id : l.target,
+    }));
+
+    if (visibleNodes.length <= 1) return links;
+
+    // Find the primary node object in visibleNodes (or fallback to first node)
+    const primaryNode = (primaryNodeId ? visibleNodes.find(n => n.id === primaryNodeId || n.publicId === primaryNodeId) : null) || visibleNodes[0];
+    if (!primaryNode) return links;
+
+    // 2. Perform BFS from primaryNode to find all nodes reachable via real edges
+    const connectedToPrimary = new Set<string>([primaryNode.id]);
+    const queue = [primaryNode.id];
+
+    while (queue.length > 0) {
+      const curr = queue.shift()!;
+      for (const l of links) {
+        const s = typeof l.source === 'object' ? (l.source as any).id : l.source;
+        const t = typeof l.target === 'object' ? (l.target as any).id : l.target;
+        if (s === curr && !connectedToPrimary.has(t)) {
+          connectedToPrimary.add(t);
+          queue.push(t);
+        } else if (t === curr && !connectedToPrimary.has(s)) {
+          connectedToPrimary.add(s);
+          queue.push(s);
+        }
+      }
+    }
+
+    // 3. Any node that is isolated OR in an unreachable island gets a frontend-only layout anchor to primaryNode
+    const unanchoredNodes = visibleNodes.filter(node => node.id !== primaryNode.id && !connectedToPrimary.has(node.id));
+    const totalUnanchored = unanchoredNodes.length;
+
+    unanchoredNodes.forEach((node, idx) => {
+      const pX = typeof primaryNode.x === 'number' ? primaryNode.x : 0;
+      const pY = typeof primaryNode.y === 'number' ? primaryNode.y : 0;
+
+      // Seed initial coordinates near primary node in a balanced compact circle
+      if (typeof node.x !== 'number' || typeof node.y !== 'number' || Math.abs(node.x - pX) > 180 || Math.abs(node.y - pY) > 180) {
+        const angle = (idx / Math.max(1, totalUnanchored)) * 2 * Math.PI;
+        node.x = pX + Math.cos(angle) * 55;
+        node.y = pY + Math.sin(angle) * 55;
+        node.vx = 0;
+        node.vy = 0;
+      }
+
+      links.push({
+        id: `layout-anchor-${node.id}`,
+        source: primaryNode.id,
+        target: node.id,
+        relationshipType: 'LAYOUT_ANCHOR',
+        trustScore: 0,
+        interactionFrequency: 0,
+        connectorSource: 'LAYOUT_ENGINE',
+        edgeKind: 'LAYOUT_ANCHOR',
+        edgeType: 'LAYOUT_ANCHOR',
+        weight: 0,
+        isLayoutAnchor: true,
+      });
+    });
+
+    return links;
+  }, [visibleNodes, visibleLinks, primaryNodeId]);
+
+  // ── Link color ────────────────────────────────────────────────────────────
+  const getLinkColor = useCallback((link: any) => {
+    if (link.isLayoutAnchor || link.edgeKind === 'LAYOUT_ANCHOR') return 'transparent';
+    const e = link as GraphEdge;
+    const isHighlighted = highlightedEdgeIds.size === 0 || highlightedEdgeIds.has(e.id);
+    const isHovered = hoveredEdge?.id === e.id;
+    const isTraced = highlightedEdgeIds.has(e.id) && highlightedEdgeIds.size > 0;
