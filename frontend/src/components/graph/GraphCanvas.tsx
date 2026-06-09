@@ -508,3 +508,88 @@ export default function GraphCanvas() {
     nodes: visibleNodes as any,
     links: physicsLinks as any,
   }), [visibleNodes, physicsLinks]);
+
+  // Memoize particle accessors with stable function identity
+  const getLinkDirectionalParticles = useCallback((link: any) => {
+    const e = link as GraphEdge;
+    return e.edgeType === 'REAL_EDGE' ? 2 : 0;
+  }, []);
+
+  const getLinkDirectionalParticleColor = useCallback(() => {
+    return isImdb ? accentColor : 'rgba(255, 255, 255, 0.92)';
+  }, [isImdb, accentColor]);
+
+  return (
+    <div ref={containerRef} className="graph-container" onClick={() => clearHighlights()}>
+      <div className="graph-canvas-bg" />
+
+      {dimensions.w > 0 && visibleNodes.length > 0 && (
+        <ForceGraph2D
+          ref={graphRef}
+          graphData={graphData}
+          width={dimensions.w}
+          height={dimensions.h}
+          backgroundColor="transparent"
+          nodeCanvasObject={paintNode}
+          nodeCanvasObjectMode={() => 'replace'}
+          nodePointerAreaPaint={paintNodePointerArea}
+          onRenderFramePost={drawVisualConnectorOverlay}
+          onBackgroundClick={() => {
+            setActiveSmallCardNode(null);
+            if (visualConnectMode) {
+              setVisualConnectMode(false);
+              setConnectorSourceNode(null);
+            } else {
+              clearHighlights();
+            }
+          }}
+          nodeVal={getNodeSize}
+          linkColor={getLinkColor}
+          linkWidth={getLinkWidth}
+          linkCurvature={isImdb ? 0.10 : 0.08}
+          linkDirectionalParticles={getLinkDirectionalParticles}
+          linkDirectionalParticleWidth={1.4}
+          linkDirectionalParticleColor={getLinkDirectionalParticleColor}
+          linkDirectionalParticleSpeed={0.002}
+          warmupTicks={120}
+          cooldownTicks={120}
+          cooldownTime={2000}
+          d3AlphaDecay={0.008}
+          d3VelocityDecay={0.24}
+          onNodeClick={(node: any, event: any) => {
+            const n = node as GraphNode;
+            if (visualConnectMode) {
+              if (!connectorSourceNode) {
+                setConnectorSourceNode(n);
+              } else if (connectorSourceNode.id === n.id) {
+                setConnectorSourceNode(null);
+              } else {
+                if (!isImdb && connectorSourceNode.nodeType === 'DEMO' && n.nodeType === 'REAL') {
+                  alert('Traversal blocked: DEMO → REAL paths are prohibited.');
+                  setConnectorSourceNode(null); setVisualConnectMode(false); return;
+                }
+                setCreatingEdgeData({ sourceId: connectorSourceNode.id, targetId: n.id });
+                setVisualConnectMode(false); setConnectorSourceNode(null);
+              }
+            } else {
+              if (event && event.detail === 2) {
+                // Double click: open big detail modal directly
+                selectNode(n);
+                setActiveSmallCardNode(null);
+              } else {
+                // Single click: open small summary card popover
+                setActiveSmallCardNode(n);
+              }
+            }
+          }}
+          onNodeHover={(node: any) => {
+            setHoveredNode(node ? (node as GraphNode) : null);
+            document.body.style.cursor = node ? 'pointer' : 'default';
+          }}
+          onNodeDrag={(node: any) => {
+            node.fx = node.x;
+            node.fy = node.y;
+          }}
+          onNodeDragEnd={(node: any) => {
+            // Unpin node so spring/repulsion forces pull it back elastically & auto-correct layout
+            node.fx = undefined;
