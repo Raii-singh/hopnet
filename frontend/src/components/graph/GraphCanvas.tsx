@@ -423,3 +423,88 @@ export default function GraphCanvas() {
     const isHighlighted = highlightedEdgeIds.size === 0 || highlightedEdgeIds.has(e.id);
     const isHovered = hoveredEdge?.id === e.id;
     const isTraced = highlightedEdgeIds.has(e.id) && highlightedEdgeIds.size > 0;
+    const isConnectedToSelected = selectedNodeConnections.edgeIds.has(e.id);
+    const hasActiveSelection = activeSelectedNode !== null;
+
+    if (isTraced) return isImdb ? accentColor : '#ffffff';
+    if (isHovered || isConnectedToSelected) return isImdb ? `${accentColor}cc` : 'rgba(255,255,255,0.95)';
+    if (hasActiveSelection && !isConnectedToSelected) return 'rgba(255,255,255,0.15)';
+    if (e.edgeType === 'REAL_EDGE') {
+      if (!isHighlighted) return 'rgba(255,255,255,0.08)';
+      return isImdb ? hexToRgba(accentColor, 0.22 + e.weight * 0.28) : `rgba(255,255,255,${0.22 + e.weight * 0.25})`;
+    }
+    if (!isHighlighted) return 'rgba(255,255,255,0.04)';
+    return `rgba(255,255,255,${0.10 + e.weight * 0.10})`;
+  }, [highlightedEdgeIds, hoveredEdge, activeSelectedNode, selectedNodeConnections, isImdb, accentColor]);
+
+  const getLinkWidth = useCallback((link: any) => {
+    if (link.isLayoutAnchor || link.edgeKind === 'LAYOUT_ANCHOR') return 0;
+    const e = link as GraphEdge;
+    const isHovered = hoveredEdge?.id === e.id;
+    const isTraced = highlightedEdgeIds.has(e.id) && highlightedEdgeIds.size > 0;
+    const isConnected = selectedNodeConnections.edgeIds.has(e.id);
+    if (isTraced) return 3;
+    const base = e.edgeType === 'REAL_EDGE' ? 0.8 + e.weight * 0.9 : 0.5 + e.weight * 0.4;
+    return (isHovered || isConnected) ? base * 2 : base;
+  }, [hoveredEdge, highlightedEdgeIds, selectedNodeConnections]);
+
+  // ── Generous Node Pointer Area for Cursor Accuracy ───────────────────────
+  const paintNodePointerArea = useCallback((node: any, color: string, ctx: CanvasRenderingContext2D, globalScale: number) => {
+    const n = node as GraphNode;
+    if (!isFinite(node.x) || !isFinite(node.y)) return;
+    const r = getNodeSize(n);
+    // Generous hit radius (at least 14 screen pixels or 2.2x node size) so cursor clicks never miss
+    const hitRadius = Math.max(14 / globalScale, r * 2.2);
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(node.x, node.y, hitRadius, 0, 2 * Math.PI);
+    ctx.fill();
+  }, [getNodeSize]);
+
+  // ── Live Rubber-Band Connection Line for Visual Connect Mode ─────────────
+  const drawVisualConnectorOverlay = useCallback((ctx: CanvasRenderingContext2D, globalScale: number) => {
+    if (!visualConnectMode || !connectorSourceNode || !mouseGraphPos) return;
+    const sx = (connectorSourceNode as any).x;
+    const sy = (connectorSourceNode as any).y;
+    if (typeof sx !== 'number' || typeof sy !== 'number' || !isFinite(sx) || !isFinite(sy)) return;
+
+    ctx.save();
+
+    // 1. Draw glowing rubber-band connection line from source node to cursor
+    ctx.beginPath();
+    ctx.moveTo(sx, sy);
+    ctx.lineTo(mouseGraphPos.x, mouseGraphPos.y);
+
+    // Glow background
+    ctx.strokeStyle = 'rgba(59, 130, 246, 0.4)';
+    ctx.lineWidth = 4 / globalScale;
+    ctx.stroke();
+
+    // Animated dashed stroke
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2 / globalScale;
+    ctx.setLineDash([6 / globalScale, 4 / globalScale]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // 2. Pulse target ring at current cursor position
+    const pulseR = (10 + Math.sin(Date.now() * 0.008) * 3) / globalScale;
+    ctx.beginPath();
+    ctx.arc(mouseGraphPos.x, mouseGraphPos.y, pulseR, 0, 2 * Math.PI);
+    ctx.strokeStyle = '#3b82f6';
+    ctx.lineWidth = 1.5 / globalScale;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(mouseGraphPos.x, mouseGraphPos.y, 3 / globalScale, 0, 2 * Math.PI);
+    ctx.fillStyle = '#ffffff';
+    ctx.fill();
+
+    ctx.restore();
+  }, [visualConnectMode, connectorSourceNode, mouseGraphPos]);
+
+  // Memoize graphData to preserve particle animation state continuously across re-renders
+  const graphData = useMemo(() => ({
+    nodes: visibleNodes as any,
+    links: physicsLinks as any,
+  }), [visibleNodes, physicsLinks]);
