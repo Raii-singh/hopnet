@@ -593,3 +593,88 @@ export default function GraphCanvas() {
           onNodeDragEnd={(node: any) => {
             // Unpin node so spring/repulsion forces pull it back elastically & auto-correct layout
             node.fx = undefined;
+            node.fy = undefined;
+            graphRef.current?.d3ReheatSimulation?.();
+          }}
+          onLinkClick={(link: any) => setEditingEdge(link as GraphEdge)}
+          onLinkHover={(link: any) => {
+            setHoveredEdge(link ? (link as GraphEdge) : null);
+            document.body.style.cursor = link ? 'pointer' : 'default';
+          }}
+          enableNodeDrag={!visualConnectMode}
+          enableZoomInteraction
+          enablePanInteraction
+          minZoom={0.15}
+          maxZoom={10}
+        />
+      )}
+
+      {isLoading && (
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(2,2,2,0.65)', backdropFilter: 'blur(10px)', zIndex: 50 }}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ width: 32, height: 32, border: `2px solid ${accentColor}30`, borderTopColor: accentColor, borderRadius: '50%', animation: 'spin 0.7s linear infinite', margin: '0 auto 10px' }} />
+            <span className="text-label" style={{ color: 'var(--silver-400)' }}>
+              {activeProvider === 'imdb' ? 'Building Actor Network…' : 'Expanding Subgraph…'}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Small Card Summary Popover (Single Click) */}
+      {activeSmallCardNode && !selectedNode && (
+        <div
+          className="glass-panel animate-fade-in-scale"
+          style={{
+            position: 'fixed',
+            bottom: 80,
+            left: 268,
+            zIndex: 500,
+            width: 240,
+            padding: '14px',
+            background: 'rgba(10, 15, 30, 0.92)',
+            border: '1px solid rgba(255, 255, 255, 0.18)',
+            borderRadius: '10px',
+            boxShadow: '0 12px 36px rgba(0, 0, 0, 0.6)',
+            backdropFilter: 'blur(16px)',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{
+                width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.08)',
+                border: '1px solid rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '13px', fontWeight: 700, color: '#ffffff'
+              }}>
+                {activeSmallCardNode.fullName.charAt(0)}
+              </div>
+              <div>
+                <div style={{ fontSize: '13px', fontWeight: 700, color: '#ffffff', lineHeight: 1.2 }}>
+                  {activeSmallCardNode.fullName}
+                </div>
+                <div style={{ fontSize: '10px', color: 'var(--silver-400)', fontFamily: 'monospace' }}>
+                  {activeSmallCardNode.publicId}
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={() => setActiveSmallCardNode(null)}
+              style={{ background: 'transparent', border: 'none', color: 'var(--silver-400)', cursor: 'pointer', fontSize: '12px' }}
+            >
+              ✕
+            </button>
+          </div>
+
+          <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '10px' }}>
+            <span style={{
+              fontSize: '9px', padding: '1px 6px', borderRadius: '100px',
+              background: activeSmallCardNode.nodeType === 'REAL' ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(255,255,255,0.15)', color: 'var(--silver-200)'
+            }}>
+              {activeSmallCardNode.nodeType}
+            </span>
+            {activeSmallCardNode.cluster && (
+              <span style={{
+                fontSize: '9px', padding: '1px 6px', borderRadius: '100px',
+                background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: 'var(--silver-300)'
+              }}>
+                {activeSmallCardNode.cluster}
