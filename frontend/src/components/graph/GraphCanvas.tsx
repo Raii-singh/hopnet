@@ -678,3 +678,90 @@ export default function GraphCanvas() {
                 background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: 'var(--silver-300)'
               }}>
                 {activeSmallCardNode.cluster}
+              </span>
+            )}
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', marginBottom: '12px', background: 'rgba(0,0,0,0.25)', padding: '6px 8px', borderRadius: '6px' }}>
+            <div>
+              <div style={{ fontSize: '8px', color: 'var(--silver-500)', textTransform: 'uppercase' }}>Connections</div>
+              <div style={{ fontSize: '12px', fontWeight: 700, color: '#ffffff', fontFamily: 'monospace' }}>
+                {activeSmallCardNode.connectionCount || 0}
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: '8px', color: 'var(--silver-500)', textTransform: 'uppercase' }}>Influence</div>
+              <div style={{ fontSize: '12px', fontWeight: 700, color: '#ffffff', fontFamily: 'monospace' }}>
+                {activeSmallCardNode.influenceScore || 0}%
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <button
+              className="glass-button font-semibold"
+              onClick={() => {
+                selectNode(activeSmallCardNode);
+                setActiveSmallCardNode(null);
+              }}
+              style={{ width: '100%', fontSize: '10.5px', padding: '5px 8px', background: 'rgba(255,255,255,0.08)', color: '#ffffff' }}
+            >
+              🔍 View Full Details Modal
+            </button>
+            <button
+              className="glass-button"
+              onClick={() => {
+                setPrimaryNode(activeSmallCardNode.id);
+              }}
+              style={{ width: '100%', fontSize: '10px', padding: '4px 8px', color: '#eab308', borderColor: 'rgba(234,179,8,0.3)' }}
+            >
+              🎯 Center & Focus Graph
+            </button>
+          </div>
+          <div style={{ fontSize: '8.5px', color: 'var(--silver-500)', textAlign: 'center', marginTop: '6px', fontStyle: 'italic' }}>
+            Tip: Double-click any node to directly open full details.
+          </div>
+        </div>
+      )}
+
+      {/* Empty Graph Canvas Overlay with + Add First Person CTA (ONLY shown when database is truly empty) */}
+      {(activeProvider === 'college' ? (databaseNodes.length === 0 && !isLoading && isApiHealthy) : (visibleNodes.length === 0 && !isLoading)) && (
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', zIndex: 30 }}>
+          <div className="glass-panel" style={{ padding: '32px 40px', textAlign: 'center', maxWidth: 400, pointerEvents: 'auto', border: '1px solid rgba(255, 255, 255, 0.15)' }}>
+            <div style={{ fontSize: '36px', marginBottom: '12px' }}>🌐</div>
+            <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--silver-100)', marginBottom: '6px' }}>
+              The Graph is Empty
+            </div>
+            <div style={{ fontSize: '13px', color: 'var(--silver-400)', marginBottom: '20px', lineHeight: 1.5 }}>
+              Your database currently contains 0 records. Add your first person to populate the graph network.
+            </div>
+            {!isImdb && (
+              <button
+                className="glass-button font-semibold"
+                onClick={() => setShowCreateModal(true)}
+                style={{
+                  margin: '0 auto',
+                  padding: '10px 20px',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  borderColor: 'rgba(255, 255, 255, 0.3)',
+                  color: '#ffffff',
+                  boxShadow: '0 0 16px rgba(255, 255, 255, 0.1)',
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                + Add First Person
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {selectedNode && <NodeProfileModal node={selectedNode} onClose={() => selectNode(null)} />}
+      {editingEdge && <EdgeEditorModal edge={editingEdge} onClose={() => setEditingEdge(null)} />}
+      {creatingEdgeData && <EdgeEditorModal createData={creatingEdgeData} onClose={() => setCreatingEdgeData(null)} />}
+      {showCreateModal && <NodeCreateModal onClose={() => setShowCreateModal(false)} />}
+    </div>
+  );
+}
