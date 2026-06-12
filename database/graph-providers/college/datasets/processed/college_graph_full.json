@@ -1,0 +1,2063 @@
+{
+  "_meta": {
+    "provider": "college",
+    "version": "1.0.0",
+    "description": "Full college graph preprocessed dataset",
+    "nodeCount": 45,
+    "edgeCount": 65
+  },
+  "nodes": [
+    {
+      "id": "HNP-000001",
+      "publicId": "HNP-000001",
+      "fullName": "Aryan Singh",
+      "username": "aryan_singh",
+      "email": "aryan_singh@hopnet.io",
+      "phone": "+91 98300 00001",
+      "linkedinUrl": "https://linkedin.com/in/aryan-singh-dev",
+      "twitterHandle": "@aryan_dev",
+      "company": "HOPNet Technologies",
+      "cluster": "Tech",
+      "influenceScore": 94,
+      "connectionCount": 7,
+      "realConnections": 6,
+      "demoConnections": 1,
+      "tags": [
+        "Graph Engines",
+        "AI Architecture",
+        "SaaS"
+      ],
+      "sourceConnectors": [
+        "LinkedIn",
+        "Manual"
+      ],
+      "nodeType": "REAL",
+      "metadata": {
+        "verified": true,
+        "role": "Root Administrator"
+      }
+    },
+    {
+      "id": "HNP-000002",
+      "publicId": "HNP-000002",
+      "fullName": "Priya Mehta",
+      "username": "priya_mehta",
+      "email": "priya_mehta@hopnet.io",
+      "phone": "+91 98300 00002",
+      "linkedinUrl": "https://linkedin.com/in/priyamehta",
+      "twitterHandle": "@priya_ml",
+      "company": "Nexus AI",
+      "cluster": "Tech",
+      "influenceScore": 78,
+      "connectionCount": 5,
+      "realConnections": 4,
+      "demoConnections": 1,
+      "tags": [
+        "Data Science",
+        "Machine Learning",
+        "NextJS"
+      ],
+      "sourceConnectors": [
+        "LinkedIn",
+        "Manual"
+      ],
+      "nodeType": "REAL",
+      "metadata": {
+        "verified": true,
+        "role": "Member"
+      }
+    },
+    {
+      "id": "HNP-000003",
+      "publicId": "HNP-000003",
+      "fullName": "Rohan Verma",
+      "username": "rohan_verma",
+      "email": "rohan_verma@hopnet.io",
+      "phone": "+91 98300 00003",
+      "linkedinUrl": "https://linkedin.com/in/rohanverma",
+      "twitterHandle": "@rohan_vc",
+      "company": "Vertex Capital",
+      "cluster": "Finance",
+      "influenceScore": 72,
+      "connectionCount": 6,
+      "realConnections": 5,
+      "demoConnections": 1,
+      "tags": [
+        "Venture Capital",
+        "Fintech",
+        "Advisory"
+      ],
+      "sourceConnectors": [
+        "LinkedIn",
+        "Manual"
+      ],
+      "nodeType": "REAL",
+      "metadata": {
+        "verified": true,
+        "role": "Member"
+      }
+    },
+    {
+      "id": "HNP-000004",
+      "publicId": "HNP-000004",
+      "fullName": "Sneha Kapoor",
+      "username": "sneha_kapoor",
+      "email": "sneha_kapoor@hopnet.io",
+      "phone": "+91 98300 00004",
+      "linkedinUrl": "https://linkedin.com/in/snehakapoor",
+      "twitterHandle": "@sneha_ux",
+      "company": "Deco Creative",
+      "cluster": "Design",
+      "influenceScore": 68,
+      "connectionCount": 5,
+      "realConnections": 4,
+      "demoConnections": 1,
+      "tags": [
+        "UX Strategy",
+        "Product Design",
+        "Figma"
+      ],
+      "sourceConnectors": [
+        "LinkedIn",
+        "Manual"
+      ],
+      "nodeType": "REAL",
+      "metadata": {
+        "verified": true,
+        "role": "Member"
+      }
+    },
+    {
+      "id": "HNP-000005",
+      "publicId": "HNP-000005",
+      "fullName": "Karan Nair",
+      "username": "karan_nair",
+      "email": "karan_nair@hopnet.io",
+      "phone": "+91 98300 00005",
+      "linkedinUrl": "https://linkedin.com/in/karannair",
+      "twitterHandle": "@karan_sec",
+      "company": "CyberSafe",
+      "cluster": "Tech",
+      "influenceScore": 65,
+      "connectionCount": 4,
+      "realConnections": 3,
+      "demoConnections": 1,
+      "tags": [
+        "Cybersecurity",
+        "Networks",
+        "Cryptography"
+      ],
+      "sourceConnectors": [
+        "LinkedIn",
+        "Manual"
+      ],
+      "nodeType": "REAL",
+      "metadata": {
+        "verified": true,
+        "role": "Member"
+      }
+    },
+    {
+      "id": "HNP-000006",
+      "publicId": "HNP-000006",
+      "fullName": "Ananya Rao",
+      "username": "ananya_rao",
+      "email": "ananya_rao@hopnet.io",
+      "phone": "+91 98300 00006",
+      "linkedinUrl": "https://linkedin.com/in/ananyarao",
+      "twitterHandle": "@ananya_research",
+      "company": "Stanford University",
+      "cluster": "Academia",
+      "influenceScore": 61,
+      "connectionCount": 4,
+      "realConnections": 3,
+      "demoConnections": 1,
+      "tags": [
+        "Research",
+        "Algorithms",
+        "Network Science"
+      ],
+      "sourceConnectors": [
+        "LinkedIn",
+        "Manual"
+      ],
+      "nodeType": "REAL",
+      "metadata": {
+        "verified": true,
+        "role": "Member"
+      }
+    },
+    {
+      "id": "HNP-000007",
+      "publicId": "HNP-000007",
+      "fullName": "Vikram Sharma",
+      "username": "vikram_sharma",
+      "email": "vikram_sharma@hopnet.io",
+      "phone": "+91 98300 00007",
+      "linkedinUrl": "https://linkedin.com/in/vikramsharma",
+      "twitterHandle": "@vikram_biz",
+      "company": "ScaleUp Ventures",
+      "cluster": "Business",
+      "influenceScore": 59,
+      "connectionCount": 7,
+      "realConnections": 6,
+      "demoConnections": 1,
+      "tags": [
+        "Operations",
+        "Growth Strategy",
+        "Strategy"
+      ],
+      "sourceConnectors": [
+        "LinkedIn",
+        "Manual"
+      ],
+      "nodeType": "REAL",
+      "metadata": {
+        "verified": true,
+        "role": "Member"
+      }
+    },
+    {
+      "id": "HNP-000008",
+      "publicId": "HNP-000008",
+      "fullName": "Meera Joshi",
+      "username": "meera_joshi",
+      "email": "meera_joshi@hopnet.io",
+      "phone": "+91 98300 00008",
+      "linkedinUrl": "https://linkedin.com/in/meerajoshi",
+      "twitterHandle": "@meera_mktg",
+      "company": "AdGlow Digital",
+      "cluster": "Marketing",
+      "influenceScore": 54,
+      "connectionCount": 5,
+      "realConnections": 4,
+      "demoConnections": 1,
+      "tags": [
+        "Growth Hacking",
+        "Branding",
+        "SEO"
+      ],
+      "sourceConnectors": [
+        "LinkedIn",
+        "Manual"
+      ],
+      "nodeType": "REAL",
+      "metadata": {
+        "verified": true,
+        "role": "Member"
+      }
+    },
+    {
+      "id": "HNP-000009",
+      "publicId": "HNP-000009",
+      "fullName": "Aditya Kumar",
+      "username": "aditya_kumar",
+      "email": "aditya_kumar@hopnet.io",
+      "phone": "+91 98300 00009",
+      "linkedinUrl": "https://linkedin.com/in/adityakumar",
+      "twitterHandle": "@aditya_pg",
+      "company": "HOPNet Technologies",
+      "cluster": "Tech",
+      "influenceScore": 50,
+      "connectionCount": 5,
+      "realConnections": 4,
+      "demoConnections": 1,
+      "tags": [
+        "Backend Systems",
+        "PostgreSQL",
+        "ExpressJS"
+      ],
+      "sourceConnectors": [
+        "LinkedIn",
+        "Manual"
+      ],
+      "nodeType": "REAL",
+      "metadata": {
+        "verified": true,
+        "role": "Member"
+      }
+    },
+    {
+      "id": "HNP-000010",
+      "publicId": "HNP-000010",
+      "fullName": "Ishaan Malhotra",
+      "username": "ishaan_malhotra",
+      "email": "ishaan_malhotra@hopnet.io",
+      "phone": "+91 98300 00010",
+      "linkedinUrl": "https://linkedin.com/in/ishaanmalhotra",
+      "twitterHandle": "@ishaan_quant",
+      "company": "Alpha Trading Group",
+      "cluster": "Finance",
+      "influenceScore": 47,
+      "connectionCount": 3,
+      "realConnections": 2,
+      "demoConnections": 1,
+      "tags": [
+        "Algorithms",
+        "Hedge Funds",
+        "Quant"
+      ],
+      "sourceConnectors": [
+        "LinkedIn",
+        "Manual"
+      ],
+      "nodeType": "REAL",
+      "metadata": {
+        "verified": true,
+        "role": "Member"
+      }
+    },
+    {
+      "id": "HNP-000011",
+      "publicId": "HNP-000011",
+      "fullName": "Divya Patel",
+      "username": "divya_patel",
+      "email": "divya_patel@hopnet.io",
+      "phone": "+91 98300 00011",
+      "linkedinUrl": "https://linkedin.com/in/divyapatel",
+      "twitterHandle": "@divya_ui",
+      "company": "Deco Creative",
+      "cluster": "Design",
+      "influenceScore": 44,
+      "connectionCount": 3,
+      "realConnections": 2,
+      "demoConnections": 1,
+      "tags": [
+        "Visual Arts",
+        "UI Prototyping",
+        "Design Systems"
+      ],
+      "sourceConnectors": [
+        "LinkedIn",
+        "Manual"
+      ],
+      "nodeType": "REAL",
+      "metadata": {
+        "verified": true,
+        "role": "Member"
+      }
+    },
+    {
+      "id": "HNP-000012",
+      "publicId": "HNP-000012",
+      "fullName": "Rahul Bose",
+      "username": "rahul_bose",
+      "email": "rahul_bose@hopnet.io",
+      "phone": "+91 98300 00012",
+      "linkedinUrl": "https://linkedin.com/in/rahulbose",
+      "twitterHandle": "@rahul_math",
+      "company": "IIT Bombay",
+      "cluster": "Academia",
+      "influenceScore": 42,
+      "connectionCount": 3,
+      "realConnections": 2,
+      "demoConnections": 1,
+      "tags": [
+        "Graph Theory",
+        "Discrete Maths",
+        "Teaching"
+      ],
+      "sourceConnectors": [
+        "LinkedIn",
+        "Manual"
+      ],
+      "nodeType": "REAL",
+      "metadata": {
+        "verified": true,
+        "role": "Member"
+      }
+    },
+    {
+      "id": "HNP-000013",
+      "publicId": "HNP-000013",
+      "fullName": "Neha Gupta",
+      "username": "neha_gupta",
+      "email": "neha_gupta@hopnet.io",
+      "phone": "+91 98300 00013",
+      "linkedinUrl": "https://linkedin.com/in/nehagupta",
+      "twitterHandle": "@neha_front",
+      "company": "Nexus AI",
+      "cluster": "Tech",
+      "influenceScore": 39,
+      "connectionCount": 5,
+      "realConnections": 4,
+      "demoConnections": 1,
+      "tags": [
+        "Frontend Apps",
+        "React Native",
+        "TypeScript"
+      ],
+      "sourceConnectors": [
+        "LinkedIn",
+        "Manual"
+      ],
+      "nodeType": "REAL",
+      "metadata": {
+        "verified": true,
+        "role": "Member"
+      }
+    },
+    {
+      "id": "HNP-000014",
+      "publicId": "HNP-000014",
+      "fullName": "Siddharth Rao",
+      "username": "siddharth_rao",
+      "email": "siddharth_rao@hopnet.io",
+      "phone": "+91 98300 00014",
+      "linkedinUrl": "https://linkedin.com/in/siddharthrao",
+      "twitterHandle": "@sid_biz",
+      "company": "ScaleUp Ventures",
+      "cluster": "Business",
+      "influenceScore": 36,
+      "connectionCount": 5,
+      "realConnections": 4,
+      "demoConnections": 1,
+      "tags": [
+        "Partnerships",
+        "Legal Compliance",
+        "BizDev"
+      ],
+      "sourceConnectors": [
+        "LinkedIn",
+        "Manual"
+      ],
+      "nodeType": "REAL",
+      "metadata": {
+        "verified": true,
+        "role": "Member"
+      }
+    },
+    {
+      "id": "HNP-000015",
+      "publicId": "HNP-000015",
+      "fullName": "Tanvi Shah",
+      "username": "tanvi_shah",
+      "email": "tanvi_shah@hopnet.io",
+      "phone": "+91 98300 00015",
+      "linkedinUrl": "https://linkedin.com/in/tanvishah",
+      "twitterHandle": "@tanvi_pr",
+      "company": "AdGlow Digital",
+      "cluster": "Marketing",
+      "influenceScore": 33,
+      "connectionCount": 3,
+      "realConnections": 2,
+      "demoConnections": 1,
+      "tags": [
+        "Public Relations",
+        "Copywriting",
+        "Campaigns"
+      ],
+      "sourceConnectors": [
+        "LinkedIn",
+        "Manual"
+      ],
+      "nodeType": "REAL",
+      "metadata": {
+        "verified": true,
+        "role": "Member"
+      }
+    },
+    {
+      "id": "HNP-000016",
+      "publicId": "HNP-000016",
+      "fullName": "Kabir Sen",
+      "username": "kabir_sen",
+      "email": "kabir_sen@hopnet.io",
+      "phone": "+91 98300 00016",
+      "linkedinUrl": "https://linkedin.com/in/kabirsen",
+      "twitterHandle": "@kabir_devops",
+      "company": "CloudCore Inc.",
+      "cluster": "Tech",
+      "influenceScore": 30,
+      "connectionCount": 1,
+      "realConnections": 1,
+      "demoConnections": 0,
+      "tags": [
+        "DevOps",
+        "Docker",
+        "Kubernetes"
+      ],
+      "sourceConnectors": [
+        "LinkedIn",
+        "Manual"
+      ],
+      "nodeType": "REAL",
+      "metadata": {
+        "verified": true,
+        "role": "Member"
+      }
+    },
+    {
+      "id": "HNP-000017",
+      "publicId": "HNP-000017",
+      "fullName": "Aisha Siddiqui",
+      "username": "aisha_siddiqui",
+      "email": "aisha_siddiqui@hopnet.io",
+      "phone": "+91 98300 00017",
+      "linkedinUrl": "https://linkedin.com/in/aishasiddiqui",
+      "twitterHandle": "@aisha_creative",
+      "company": "Studio 99",
+      "cluster": "Design",
+      "influenceScore": 28,
+      "connectionCount": 1,
+      "realConnections": 1,
+      "demoConnections": 0,
+      "tags": [
+        "Motion Design",
+        "Cinema 4D",
+        "Creative Direction"
+      ],
+      "sourceConnectors": [
+        "LinkedIn",
+        "Manual"
+      ],
+      "nodeType": "REAL",
+      "metadata": {
+        "verified": true,
+        "role": "Member"
+      }
+    },
+    {
+      "id": "HNP-000018",
+      "publicId": "HNP-000018",
+      "fullName": "Neil Malhotra",
+      "username": "neil_malhotra",
+      "email": "neil_malhotra@hopnet.io",
+      "phone": "+91 98300 00018",
+      "linkedinUrl": "https://linkedin.com/in/neilmalhotra",
+      "twitterHandle": "@neil_val",
+      "company": "Vertex Capital",
+      "cluster": "Finance",
+      "influenceScore": 26,
+      "connectionCount": 2,
+      "realConnections": 2,
+      "demoConnections": 0,
+      "tags": [
+        "Equity Research",
+        "Valuation",
+        "M&A"
+      ],
+      "sourceConnectors": [
+        "LinkedIn",
+        "Manual"
+      ],
+      "nodeType": "REAL",
+      "metadata": {
+        "verified": true,
+        "role": "Member"
+      }
+    },
+    {
+      "id": "HNP-000019",
+      "publicId": "HNP-000019",
+      "fullName": "Riya Sen",
+      "username": "riya_sen",
+      "email": "riya_sen@hopnet.io",
+      "phone": "+91 98300 00019",
+      "linkedinUrl": "https://linkedin.com/in/riyasen",
+      "twitterHandle": "@riya_social",
+      "company": "BrandFocus",
+      "cluster": "Marketing",
+      "influenceScore": 24,
+      "connectionCount": 1,
+      "realConnections": 1,
+      "demoConnections": 0,
+      "tags": [
+        "Influencer Marketing",
+        "Events",
+        "Social Media"
+      ],
+      "sourceConnectors": [
+        "LinkedIn",
+        "Manual"
+      ],
+      "nodeType": "REAL",
+      "metadata": {
+        "verified": true,
+        "role": "Member"
+      }
+    },
+    {
+      "id": "HNP-000020",
+      "publicId": "HNP-000020",
+      "fullName": "Sameer Dixit",
+      "username": "sameer_dixit",
+      "email": "sameer_dixit@hopnet.io",
+      "phone": "+91 98300 00020",
+      "linkedinUrl": "https://linkedin.com/in/sameerdixit",
+      "twitterHandle": "@sameer_tax",
+      "company": "Prestige Advisory",
+      "cluster": "Business",
+      "influenceScore": 22,
+      "connectionCount": 0,
+      "realConnections": 0,
+      "demoConnections": 0,
+      "tags": [
+        "Corporate Structuring",
+        "Turnaround",
+        "Taxation"
+      ],
+      "sourceConnectors": [
+        "LinkedIn",
+        "Manual"
+      ],
+      "nodeType": "REAL",
+      "metadata": {
+        "verified": true,
+        "role": "Member"
+      }
+    },
+    {
+      "id": "HNP-000021",
+      "publicId": "HNP-000021",
+      "fullName": "Tara Deshmukh",
+      "username": "tara_deshmukh",
+      "email": "tara_deshmukh@hopnet.io",
+      "phone": "+91 98300 00021",
+      "linkedinUrl": "https://linkedin.com/in/taradeshmukh",
+      "twitterHandle": "@tara_bio",
+      "company": "IISc Bangalore",
+      "cluster": "Academia",
+      "influenceScore": 20,
+      "connectionCount": 1,
+      "realConnections": 1,
+      "demoConnections": 0,
+      "tags": [
+        "Neural Networks",
+        "AI Ethics",
+        "Bioinformatics"
+      ],
+      "sourceConnectors": [
+        "LinkedIn",
+        "Manual"
+      ],
+      "nodeType": "REAL",
+      "metadata": {
+        "verified": true,
+        "role": "Member"
+      }
+    },
+    {
+      "id": "HNP-000022",
+      "publicId": "HNP-000022",
+      "fullName": "Dev Sharma",
+      "username": "dev_sharma",
+      "email": "dev_sharma@hopnet.io",
+      "phone": "+91 98300 00022",
+      "linkedinUrl": "https://linkedin.com/in/devsharma",
+      "twitterHandle": "@dev_aws",
+      "company": "CloudCore Inc.",
+      "cluster": "Tech",
+      "influenceScore": 18,
+      "connectionCount": 2,
+      "realConnections": 2,
+      "demoConnections": 0,
+      "tags": [
+        "SRE",
+        "Server Performance",
+        "AWS"
+      ],
+      "sourceConnectors": [
+        "LinkedIn",
+        "Manual"
+      ],
+      "nodeType": "REAL",
+      "metadata": {
+        "verified": true,
+        "role": "Member"
+      }
+    },
+    {
+      "id": "HNP-000023",
+      "publicId": "HNP-000023",
+      "fullName": "Avani Patel",
+      "username": "avani_patel",
+      "email": "avani_patel@hopnet.io",
+      "phone": "+91 98300 00023",
+      "linkedinUrl": "https://linkedin.com/in/avanipatel",
+      "twitterHandle": "@avani_art",
+      "company": "Studio 99",
+      "cluster": "Design",
+      "influenceScore": 16,
+      "connectionCount": 1,
+      "realConnections": 1,
+      "demoConnections": 0,
+      "tags": [
+        "Brand Identity",
+        "Typography",
+        "Illustration"
+      ],
+      "sourceConnectors": [
+        "LinkedIn",
+        "Manual"
+      ],
+      "nodeType": "REAL",
+      "metadata": {
+        "verified": true,
+        "role": "Member"
+      }
+    },
+    {
+      "id": "HNP-000024",
+      "publicId": "HNP-000024",
+      "fullName": "Yash Vardhan",
+      "username": "yash_vardhan",
+      "email": "yash_vardhan@hopnet.io",
+      "phone": "+91 98300 00024",
+      "linkedinUrl": "https://linkedin.com/in/yashvardhan",
+      "twitterHandle": "@yash_invest",
+      "company": "Vertex Capital",
+      "cluster": "Finance",
+      "influenceScore": 15,
+      "connectionCount": 2,
+      "realConnections": 2,
+      "demoConnections": 0,
+      "tags": [
+        "Angel Investing",
+        "Pitch Decks",
+        "Dealflow"
+      ],
+      "sourceConnectors": [
+        "LinkedIn",
+        "Manual"
+      ],
+      "nodeType": "REAL",
+      "metadata": {
+        "verified": true,
+        "role": "Member"
+      }
+    },
+    {
+      "id": "HNP-000025",
+      "publicId": "HNP-000025",
+      "fullName": "Zoya Khan",
+      "username": "zoya_khan",
+      "email": "zoya_khan@hopnet.io",
+      "phone": "+91 98300 00025",
+      "linkedinUrl": "https://linkedin.com/in/zoyakhan",
+      "twitterHandle": "@zoya_lead",
+      "company": "BrandFocus",
+      "cluster": "Marketing",
+      "influenceScore": 14,
+      "connectionCount": 1,
+      "realConnections": 1,
+      "demoConnections": 0,
+      "tags": [
+        "B2B Marketing",
+        "Lead Generation",
+        "HubSpot"
+      ],
+      "sourceConnectors": [
+        "LinkedIn",
+        "Manual"
+      ],
+      "nodeType": "REAL",
+      "metadata": {
+        "verified": true,
+        "role": "Member"
+      }
+    },
+    {
+      "id": "HNP-000026",
+      "publicId": "HNP-000026",
+      "fullName": "Arjun Mehta",
+      "username": "arjun_mehta",
+      "email": "arjun_mehta@hopnet.io",
+      "phone": "+91 98300 00026",
+      "linkedinUrl": "https://linkedin.com/in/arjunmehta",
+      "twitterHandle": "@arjun_ventures",
+      "company": "ScaleUp Ventures",
+      "cluster": "Business",
+      "influenceScore": 12,
+      "connectionCount": 1,
+      "realConnections": 1,
+      "demoConnections": 0,
+      "tags": [
+        "Incubation",
+        "Founders Support",
+        "Talent"
+      ],
+      "sourceConnectors": [
+        "LinkedIn",
+        "Manual"
+      ],
+      "nodeType": "REAL",
+      "metadata": {
+        "verified": true,
+        "role": "Member"
+      }
+    },
+    {
+      "id": "HNP-000027",
+      "publicId": "HNP-000027",
+      "fullName": "Nikita Roy",
+      "username": "nikita_roy",
+      "email": "nikita_roy@hopnet.io",
+      "phone": "+91 98300 00027",
+      "linkedinUrl": "https://linkedin.com/in/nikitaroy",
+      "twitterHandle": "@nikita_web",
+      "company": "IIT Bombay",
+      "cluster": "Academia",
+      "influenceScore": 10,
+      "connectionCount": 0,
+      "realConnections": 0,
+      "demoConnections": 0,
+      "tags": [
+        "Graph Database",
+        "SQL Optimization",
+        "Semantic Web"
+      ],
+      "sourceConnectors": [
+        "LinkedIn",
+        "Manual"
+      ],
+      "nodeType": "REAL",
+      "metadata": {
+        "verified": true,
+        "role": "Member"
+      }
+    },
+    {
+      "id": "HNP-000028",
+      "publicId": "HNP-000028",
+      "fullName": "Varun Dhawan",
+      "username": "varun_dhawan",
+      "email": "varun_dhawan@hopnet.io",
+      "phone": "+91 98300 00028",
+      "linkedinUrl": "https://linkedin.com/in/varundhawan",
+      "twitterHandle": "@varun_qa",
+      "company": "Vertex Capital",
+      "cluster": "Tech",
+      "influenceScore": 8,
+      "connectionCount": 0,
+      "realConnections": 0,
+      "demoConnections": 0,
+      "tags": [
+        "Automation",
+        "Python Scripting",
+        "QA Engineering"
+      ],
+      "sourceConnectors": [
+        "LinkedIn",
+        "Manual"
+      ],
+      "nodeType": "REAL",
+      "metadata": {
+        "verified": true,
+        "role": "Member"
+      }
+    },
+    {
+      "id": "HNP-000029",
+      "publicId": "HNP-000029",
+      "fullName": "Kavya Iyer",
+      "username": "kavya_iyer",
+      "email": "kavya_iyer@hopnet.io",
+      "phone": "+91 98300 00029",
+      "linkedinUrl": "https://linkedin.com/in/kavyaiyer",
+      "twitterHandle": "@kavya_ixd",
+      "company": "Deco Creative",
+      "cluster": "Design",
+      "influenceScore": 6,
+      "connectionCount": 1,
+      "realConnections": 1,
+      "demoConnections": 0,
+      "tags": [
+        "Interaction Design",
+        "Storyboarding",
+        "User Testing"
+      ],
+      "sourceConnectors": [
+        "LinkedIn",
+        "Manual"
+      ],
+      "nodeType": "REAL",
+      "metadata": {
+        "verified": true,
+        "role": "Member"
+      }
+    },
+    {
+      "id": "HNP-000030",
+      "publicId": "HNP-000030",
+      "fullName": "Shreya Ghoshal",
+      "username": "shreya_ghoshal",
+      "email": "shreya_ghoshal@hopnet.io",
+      "phone": "+91 98300 00030",
+      "linkedinUrl": "https://linkedin.com/in/shreyaghoshal",
+      "twitterHandle": "@shreya_write",
+      "company": "AdGlow Digital",
+      "cluster": "Marketing",
+      "influenceScore": 5,
+      "connectionCount": 1,
+      "realConnections": 1,
+      "demoConnections": 0,
+      "tags": [
+        "Content Strategy",
+        "SEO Audit",
+        "Copy"
+      ],
+      "sourceConnectors": [
+        "LinkedIn",
+        "Manual"
+      ],
+      "nodeType": "REAL",
+      "metadata": {
+        "verified": true,
+        "role": "Member"
+      }
+    },
+    {
+      "id": "DNP-000001",
+      "publicId": "DNP-000001",
+      "fullName": "Alex Chen",
+      "username": "alex_chen",
+      "email": "alex_chen@demo.hopnet.io",
+      "phone": "+1 555 019 001",
+      "linkedinUrl": "https://linkedin.com/in/demo-alex_chen",
+      "twitterHandle": "@demo_alex_chen",
+      "company": "SynthCorp Demo",
+      "cluster": "Tech",
+      "influenceScore": 55,
+      "connectionCount": 5,
+      "realConnections": 2,
+      "demoConnections": 3,
+      "tags": [
+        "Virtual Agents",
+        "APIs",
+        "Simulations"
+      ],
+      "sourceConnectors": [
+        "DemoGenerator"
+      ],
+      "nodeType": "DEMO",
+      "metadata": {
+        "demoNode": true,
+        "simulated": true
+      }
+    },
+    {
+      "id": "DNP-000002",
+      "publicId": "DNP-000002",
+      "fullName": "Maria Rodriguez",
+      "username": "maria_rodriguez",
+      "email": "maria_rodriguez@demo.hopnet.io",
+      "phone": "+1 555 019 002",
+      "linkedinUrl": "https://linkedin.com/in/demo-maria_rodriguez",
+      "twitterHandle": "@demo_maria_rodriguez",
+      "company": "Global Solutions",
+      "cluster": "Business",
+      "influenceScore": 48,
+      "connectionCount": 6,
+      "realConnections": 2,
+      "demoConnections": 4,
+      "tags": [
+        "Cross Border Sales",
+        "Integration",
+        "Franchise"
+      ],
+      "sourceConnectors": [
+        "DemoGenerator"
+      ],
+      "nodeType": "DEMO",
+      "metadata": {
+        "demoNode": true,
+        "simulated": true
+      }
+    },
+    {
+      "id": "DNP-000003",
+      "publicId": "DNP-000003",
+      "fullName": "James Wright",
+      "username": "james_wright",
+      "email": "james_wright@demo.hopnet.io",
+      "phone": "+1 555 019 003",
+      "linkedinUrl": "https://linkedin.com/in/demo-james_wright",
+      "twitterHandle": "@demo_james_wright",
+      "company": "Delta Assets",
+      "cluster": "Finance",
+      "influenceScore": 41,
+      "connectionCount": 5,
+      "realConnections": 2,
+      "demoConnections": 3,
+      "tags": [
+        "Risk Management",
+        "Fixed Income",
+        "Real Estate"
+      ],
+      "sourceConnectors": [
+        "DemoGenerator"
+      ],
+      "nodeType": "DEMO",
+      "metadata": {
+        "demoNode": true,
+        "simulated": true
+      }
+    },
+    {
+      "id": "DNP-000004",
+      "publicId": "DNP-000004",
+      "fullName": "Yuki Tanaka",
+      "username": "yuki_tanaka",
+      "email": "yuki_tanaka@demo.hopnet.io",
+      "phone": "+1 555 019 004",
+      "linkedinUrl": "https://linkedin.com/in/demo-yuki_tanaka",
+      "twitterHandle": "@demo_yuki_tanaka",
+      "company": "Pixel Craft",
+      "cluster": "Design",
+      "influenceScore": 38,
+      "connectionCount": 3,
+      "realConnections": 2,
+      "demoConnections": 1,
+      "tags": [
+        "3D Modeling",
+        "Rendering",
+        "VR Interface"
+      ],
+      "sourceConnectors": [
+        "DemoGenerator"
+      ],
+      "nodeType": "DEMO",
+      "metadata": {
+        "demoNode": true,
+        "simulated": true
+      }
+    },
+    {
+      "id": "DNP-000005",
+      "publicId": "DNP-000005",
+      "fullName": "Lena Müller",
+      "username": "lena_müller",
+      "email": "lena_müller@demo.hopnet.io",
+      "phone": "+1 555 019 005",
+      "linkedinUrl": "https://linkedin.com/in/demo-lena_müller",
+      "twitterHandle": "@demo_lena_müller",
+      "company": "Munich Science",
+      "cluster": "Academia",
+      "influenceScore": 35,
+      "connectionCount": 3,
+      "realConnections": 2,
+      "demoConnections": 1,
+      "tags": [
+        "Cognitive Systems",
+        "Humanities",
+        "Data Analytics"
+      ],
+      "sourceConnectors": [
+        "DemoGenerator"
+      ],
+      "nodeType": "DEMO",
+      "metadata": {
+        "demoNode": true,
+        "simulated": true
+      }
+    },
+    {
+      "id": "DNP-000006",
+      "publicId": "DNP-000006",
+      "fullName": "Omar Hassan",
+      "username": "omar_hassan",
+      "email": "omar_hassan@demo.hopnet.io",
+      "phone": "+1 555 019 006",
+      "linkedinUrl": "https://linkedin.com/in/demo-omar_hassan",
+      "twitterHandle": "@demo_omar_hassan",
+      "company": "Middle East Tech",
+      "cluster": "Tech",
+      "influenceScore": 33,
+      "connectionCount": 4,
+      "realConnections": 2,
+      "demoConnections": 2,
+      "tags": [
+        "Cloud Strategy",
+        "FaaS",
+        "Microservices"
+      ],
+      "sourceConnectors": [
+        "DemoGenerator"
+      ],
+      "nodeType": "DEMO",
+      "metadata": {
+        "demoNode": true,
+        "simulated": true
+      }
+    },
+    {
+      "id": "DNP-000007",
+      "publicId": "DNP-000007",
+      "fullName": "Sofia Andreev",
+      "username": "sofia_andreev",
+      "email": "sofia_andreev@demo.hopnet.io",
+      "phone": "+1 555 019 007",
+      "linkedinUrl": "https://linkedin.com/in/demo-sofia_andreev",
+      "twitterHandle": "@demo_sofia_andreev",
+      "company": "MediaSphere",
+      "cluster": "Marketing",
+      "influenceScore": 30,
+      "connectionCount": 4,
+      "realConnections": 2,
+      "demoConnections": 2,
+      "tags": [
+        "Ad Campaigns",
+        "Conversion Rate",
+        "Funnel Optimization"
+      ],
+      "sourceConnectors": [
+        "DemoGenerator"
+      ],
+      "nodeType": "DEMO",
+      "metadata": {
+        "demoNode": true,
+        "simulated": true
+      }
+    },
+    {
+      "id": "DNP-000008",
+      "publicId": "DNP-000008",
+      "fullName": "Carlos Lima",
+      "username": "carlos_lima",
+      "email": "carlos_lima@demo.hopnet.io",
+      "phone": "+1 555 019 008",
+      "linkedinUrl": "https://linkedin.com/in/demo-carlos_lima",
+      "twitterHandle": "@demo_carlos_lima",
+      "company": "LatAm Partners",
+      "cluster": "Business",
+      "influenceScore": 28,
+      "connectionCount": 4,
+      "realConnections": 1,
+      "demoConnections": 3,
+      "tags": [
+        "Regional Scale",
+        "Operations",
+        "Negotiation"
+      ],
+      "sourceConnectors": [
+        "DemoGenerator"
+      ],
+      "nodeType": "DEMO",
+      "metadata": {
+        "demoNode": true,
+        "simulated": true
+      }
+    },
+    {
+      "id": "DNP-000009",
+      "publicId": "DNP-000009",
+      "fullName": "Nina Popova",
+      "username": "nina_popova",
+      "email": "nina_popova@demo.hopnet.io",
+      "phone": "+1 555 019 009",
+      "linkedinUrl": "https://linkedin.com/in/demo-nina_popova",
+      "twitterHandle": "@demo_nina_popova",
+      "company": "Neva Capital",
+      "cluster": "Finance",
+      "influenceScore": 26,
+      "connectionCount": 2,
+      "realConnections": 0,
+      "demoConnections": 2,
+      "tags": [
+        "Venture Capital",
+        "Liquidity Pools",
+        "Defi"
+      ],
+      "sourceConnectors": [
+        "DemoGenerator"
+      ],
+      "nodeType": "DEMO",
+      "metadata": {
+        "demoNode": true,
+        "simulated": true
+      }
+    },
+    {
+      "id": "DNP-000010",
+      "publicId": "DNP-000010",
+      "fullName": "Thomas Bauer",
+      "username": "thomas_bauer",
+      "email": "thomas_bauer@demo.hopnet.io",
+      "phone": "+1 555 019 010",
+      "linkedinUrl": "https://linkedin.com/in/demo-thomas_bauer",
+      "twitterHandle": "@demo_thomas_bauer",
+      "company": "Munich Science",
+      "cluster": "Tech",
+      "influenceScore": 24,
+      "connectionCount": 3,
+      "realConnections": 0,
+      "demoConnections": 3,
+      "tags": [
+        "Embedded Systems",
+        "IoT Nodes",
+        "C++"
+      ],
+      "sourceConnectors": [
+        "DemoGenerator"
+      ],
+      "nodeType": "DEMO",
+      "metadata": {
+        "demoNode": true,
+        "simulated": true
+      }
+    },
+    {
+      "id": "DNP-000011",
+      "publicId": "DNP-000011",
+      "fullName": "Aiko Watanabe",
+      "username": "aiko_watanabe",
+      "email": "aiko_watanabe@demo.hopnet.io",
+      "phone": "+1 555 019 011",
+      "linkedinUrl": "https://linkedin.com/in/demo-aiko_watanabe",
+      "twitterHandle": "@demo_aiko_watanabe",
+      "company": "Tokyo Graph Lab",
+      "cluster": "Academia",
+      "influenceScore": 22,
+      "connectionCount": 2,
+      "realConnections": 0,
+      "demoConnections": 2,
+      "tags": [
+        "Algorithmic Geometry",
+        "Heuristics",
+        "Citations"
+      ],
+      "sourceConnectors": [
+        "DemoGenerator"
+      ],
+      "nodeType": "DEMO",
+      "metadata": {
+        "demoNode": true,
+        "simulated": true
+      }
+    },
+    {
+      "id": "DNP-000012",
+      "publicId": "DNP-000012",
+      "fullName": "Lucas Petit",
+      "username": "lucas_petit",
+      "email": "lucas_petit@demo.hopnet.io",
+      "phone": "+1 555 019 012",
+      "linkedinUrl": "https://linkedin.com/in/demo-lucas_petit",
+      "twitterHandle": "@demo_lucas_petit",
+      "company": "Parisian Design",
+      "cluster": "Design",
+      "influenceScore": 20,
+      "connectionCount": 2,
+      "realConnections": 0,
+      "demoConnections": 2,
+      "tags": [
+        "Aesthetics",
+        "Ergonomics",
+        "Material Science"
+      ],
+      "sourceConnectors": [
+        "DemoGenerator"
+      ],
+      "nodeType": "DEMO",
+      "metadata": {
+        "demoNode": true,
+        "simulated": true
+      }
+    },
+    {
+      "id": "DNP-000013",
+      "publicId": "DNP-000013",
+      "fullName": "Emily Watson",
+      "username": "emily_watson",
+      "email": "emily_watson@demo.hopnet.io",
+      "phone": "+1 555 019 013",
+      "linkedinUrl": "https://linkedin.com/in/demo-emily_watson",
+      "twitterHandle": "@demo_emily_watson",
+      "company": "MediaSphere",
+      "cluster": "Marketing",
+      "influenceScore": 18,
+      "connectionCount": 0,
+      "realConnections": 0,
+      "demoConnections": 0,
+      "tags": [
+        "Media Relations",
+        "Crisis PR",
+        "Copy"
+      ],
+      "sourceConnectors": [
+        "DemoGenerator"
+      ],
+      "nodeType": "DEMO",
+      "metadata": {
+        "demoNode": true,
+        "simulated": true
+      }
+    },
+    {
+      "id": "DNP-000014",
+      "publicId": "DNP-000014",
+      "fullName": "Hans Schmidt",
+      "username": "hans_schmidt",
+      "email": "hans_schmidt@demo.hopnet.io",
+      "phone": "+1 555 019 014",
+      "linkedinUrl": "https://linkedin.com/in/demo-hans_schmidt",
+      "twitterHandle": "@demo_hans_schmidt",
+      "company": "Munich Science",
+      "cluster": "Business",
+      "influenceScore": 15,
+      "connectionCount": 1,
+      "realConnections": 0,
+      "demoConnections": 1,
+      "tags": [
+        "Project Management",
+        "Agile",
+        "ScrumMaster"
+      ],
+      "sourceConnectors": [
+        "DemoGenerator"
+      ],
+      "nodeType": "DEMO",
+      "metadata": {
+        "demoNode": true,
+        "simulated": true
+      }
+    },
+    {
+      "id": "DNP-000015",
+      "publicId": "DNP-000015",
+      "fullName": "Chloe Dubois",
+      "username": "chloe_dubois",
+      "email": "chloe_dubois@demo.hopnet.io",
+      "phone": "+1 555 019 015",
+      "linkedinUrl": "https://linkedin.com/in/demo-chloe_dubois",
+      "twitterHandle": "@demo_chloe_dubois",
+      "company": "Parisian Design",
+      "cluster": "Design",
+      "influenceScore": 12,
+      "connectionCount": 1,
+      "realConnections": 0,
+      "demoConnections": 1,
+      "tags": [
+        "Haute Couture",
+        "Jewelry Styling",
+        "Luxury Branding"
+      ],
+      "sourceConnectors": [
+        "DemoGenerator"
+      ],
+      "nodeType": "DEMO",
+      "metadata": {
+        "demoNode": true,
+        "simulated": true
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-seed-001",
+      "source": "HNP-000001",
+      "target": "HNP-000002",
+      "relationshipType": "cofounder",
+      "trustScore": 0.95,
+      "interactionFrequency": 0.9,
+      "connectorSource": "LinkedIn",
+      "edgeType": "REAL_EDGE",
+      "weight": 0.93
+    },
+    {
+      "id": "e-seed-002",
+      "source": "HNP-000001",
+      "target": "HNP-000003",
+      "relationshipType": "advisor",
+      "trustScore": 0.85,
+      "interactionFrequency": 0.6,
+      "connectorSource": "Manual",
+      "edgeType": "REAL_EDGE",
+      "weight": 0.75
+    },
+    {
+      "id": "e-seed-003",
+      "source": "HNP-000001",
+      "target": "HNP-000004",
+      "relationshipType": "colleague",
+      "trustScore": 0.88,
+      "interactionFrequency": 0.8,
+      "connectorSource": "LinkedIn",
+      "edgeType": "REAL_EDGE",
+      "weight": 0.85
+    },
+    {
+      "id": "e-seed-004",
+      "source": "HNP-000001",
+      "target": "HNP-000005",
+      "relationshipType": "friend",
+      "trustScore": 0.75,
+      "interactionFrequency": 0.5,
+      "connectorSource": "Manual",
+      "edgeType": "REAL_EDGE",
+      "weight": 0.65
+    },
+    {
+      "id": "e-seed-005",
+      "source": "HNP-000001",
+      "target": "HNP-000007",
+      "relationshipType": "partner",
+      "trustScore": 0.8,
+      "interactionFrequency": 0.7,
+      "connectorSource": "LinkedIn",
+      "edgeType": "REAL_EDGE",
+      "weight": 0.76
+    },
+    {
+      "id": "e-seed-006",
+      "source": "HNP-000001",
+      "target": "HNP-000009",
+      "relationshipType": "colleague",
+      "trustScore": 0.9,
+      "interactionFrequency": 0.95,
+      "connectorSource": "LinkedIn",
+      "edgeType": "REAL_EDGE",
+      "weight": 0.92
+    },
+    {
+      "id": "e-seed-007",
+      "source": "HNP-000002",
+      "target": "HNP-000004",
+      "relationshipType": "friend",
+      "trustScore": 0.7,
+      "interactionFrequency": 0.6,
+      "connectorSource": "LinkedIn",
+      "edgeType": "REAL_EDGE",
+      "weight": 0.66
+    },
+    {
+      "id": "e-seed-008",
+      "source": "HNP-000002",
+      "target": "HNP-000007",
+      "relationshipType": "colleague",
+      "trustScore": 0.75,
+      "interactionFrequency": 0.5,
+      "connectorSource": "LinkedIn",
+      "edgeType": "REAL_EDGE",
+      "weight": 0.65
+    },
+    {
+      "id": "e-seed-009",
+      "source": "HNP-000002",
+      "target": "HNP-000013",
+      "relationshipType": "partner",
+      "trustScore": 0.82,
+      "interactionFrequency": 0.7,
+      "connectorSource": "LinkedIn",
+      "edgeType": "REAL_EDGE",
+      "weight": 0.77
+    },
+    {
+      "id": "e-seed-010",
+      "source": "HNP-000003",
+      "target": "HNP-000010",
+      "relationshipType": "investor",
+      "trustScore": 0.9,
+      "interactionFrequency": 0.5,
+      "connectorSource": "Manual",
+      "edgeType": "REAL_EDGE",
+      "weight": 0.74
+    },
+    {
+      "id": "e-seed-011",
+      "source": "HNP-000003",
+      "target": "HNP-000007",
+      "relationshipType": "partner",
+      "trustScore": 0.68,
+      "interactionFrequency": 0.4,
+      "connectorSource": "LinkedIn",
+      "edgeType": "REAL_EDGE",
+      "weight": 0.57
+    },
+    {
+      "id": "e-seed-012",
+      "source": "HNP-000003",
+      "target": "HNP-000018",
+      "relationshipType": "colleague",
+      "trustScore": 0.85,
+      "interactionFrequency": 0.75,
+      "connectorSource": "LinkedIn",
+      "edgeType": "REAL_EDGE",
+      "weight": 0.81
+    },
+    {
+      "id": "e-seed-013",
+      "source": "HNP-000003",
+      "target": "HNP-000024",
+      "relationshipType": "advisor",
+      "trustScore": 0.92,
+      "interactionFrequency": 0.6,
+      "connectorSource": "Manual",
+      "edgeType": "REAL_EDGE",
+      "weight": 0.79
+    },
+    {
+      "id": "e-seed-014",
+      "source": "HNP-000004",
+      "target": "HNP-000011",
+      "relationshipType": "colleague",
+      "trustScore": 0.88,
+      "interactionFrequency": 0.85,
+      "connectorSource": "LinkedIn",
+      "edgeType": "REAL_EDGE",
+      "weight": 0.87
+    },
+    {
+      "id": "e-seed-015",
+      "source": "HNP-000004",
+      "target": "HNP-000029",
+      "relationshipType": "friend",
+      "trustScore": 0.65,
+      "interactionFrequency": 0.3,
+      "connectorSource": "Manual",
+      "edgeType": "REAL_EDGE",
+      "weight": 0.51
+    },
+    {
+      "id": "e-seed-016",
+      "source": "HNP-000005",
+      "target": "HNP-000006",
+      "relationshipType": "advisor",
+      "trustScore": 0.72,
+      "interactionFrequency": 0.4,
+      "connectorSource": "Manual",
+      "edgeType": "REAL_EDGE",
+      "weight": 0.59
+    },
+    {
+      "id": "e-seed-017",
+      "source": "HNP-000005",
+      "target": "HNP-000022",
+      "relationshipType": "colleague",
+      "trustScore": 0.9,
+      "interactionFrequency": 0.88,
+      "connectorSource": "LinkedIn",
+      "edgeType": "REAL_EDGE",
+      "weight": 0.89
+    },
+    {
+      "id": "e-seed-018",
+      "source": "HNP-000006",
+      "target": "HNP-000012",
+      "relationshipType": "partner",
+      "trustScore": 0.8,
+      "interactionFrequency": 0.6,
+      "connectorSource": "LinkedIn",
+      "edgeType": "REAL_EDGE",
+      "weight": 0.72
+    },
+    {
+      "id": "e-seed-019",
+      "source": "HNP-000006",
+      "target": "HNP-000021",
+      "relationshipType": "colleague",
+      "trustScore": 0.78,
+      "interactionFrequency": 0.5,
+      "connectorSource": "LinkedIn",
+      "edgeType": "REAL_EDGE",
+      "weight": 0.67
+    },
+    {
+      "id": "e-seed-020",
+      "source": "HNP-000007",
+      "target": "HNP-000008",
+      "relationshipType": "friend",
+      "trustScore": 0.6,
+      "interactionFrequency": 0.4,
+      "connectorSource": "Manual",
+      "edgeType": "REAL_EDGE",
+      "weight": 0.52
+    },
+    {
+      "id": "e-seed-021",
+      "source": "HNP-000007",
+      "target": "HNP-000014",
+      "relationshipType": "colleague",
+      "trustScore": 0.85,
+      "interactionFrequency": 0.8,
+      "connectorSource": "LinkedIn",
+      "edgeType": "REAL_EDGE",
+      "weight": 0.83
+    },
+    {
+      "id": "e-seed-022",
+      "source": "HNP-000007",
+      "target": "HNP-000026",
+      "relationshipType": "partner",
+      "trustScore": 0.88,
+      "interactionFrequency": 0.7,
+      "connectorSource": "LinkedIn",
+      "edgeType": "REAL_EDGE",
+      "weight": 0.81
+    },
+    {
+      "id": "e-seed-023",
+      "source": "HNP-000008",
+      "target": "HNP-000009",
+      "relationshipType": "colleague",
+      "trustScore": 0.65,
+      "interactionFrequency": 0.3,
+      "connectorSource": "LinkedIn",
+      "edgeType": "REAL_EDGE",
+      "weight": 0.51
+    },
+    {
+      "id": "e-seed-024",
+      "source": "HNP-000008",
+      "target": "HNP-000015",
+      "relationshipType": "friend",
+      "trustScore": 0.72,
+      "interactionFrequency": 0.6,
+      "connectorSource": "Manual",
+      "edgeType": "REAL_EDGE",
+      "weight": 0.67
+    },
+    {
+      "id": "e-seed-025",
+      "source": "HNP-000008",
+      "target": "HNP-000030",
+      "relationshipType": "colleague",
+      "trustScore": 0.8,
+      "interactionFrequency": 0.75,
+      "connectorSource": "LinkedIn",
+      "edgeType": "REAL_EDGE",
+      "weight": 0.78
+    },
+    {
+      "id": "e-seed-026",
+      "source": "HNP-000009",
+      "target": "HNP-000011",
+      "relationshipType": "partner",
+      "trustScore": 0.55,
+      "interactionFrequency": 0.4,
+      "connectorSource": "LinkedIn",
+      "edgeType": "REAL_EDGE",
+      "weight": 0.49
+    },
+    {
+      "id": "e-seed-027",
+      "source": "HNP-000009",
+      "target": "HNP-000013",
+      "relationshipType": "colleague",
+      "trustScore": 0.78,
+      "interactionFrequency": 0.7,
+      "connectorSource": "LinkedIn",
+      "edgeType": "REAL_EDGE",
+      "weight": 0.75
+    },
+    {
+      "id": "e-seed-028",
+      "source": "HNP-000010",
+      "target": "HNP-000014",
+      "relationshipType": "investor",
+      "trustScore": 0.88,
+      "interactionFrequency": 0.4,
+      "connectorSource": "Manual",
+      "edgeType": "REAL_EDGE",
+      "weight": 0.69
+    },
+    {
+      "id": "e-seed-029",
+      "source": "HNP-000012",
+      "target": "HNP-000013",
+      "relationshipType": "friend",
+      "trustScore": 0.6,
+      "interactionFrequency": 0.3,
+      "connectorSource": "Manual",
+      "edgeType": "REAL_EDGE",
+      "weight": 0.48
+    },
+    {
+      "id": "e-seed-030",
+      "source": "HNP-000013",
+      "target": "HNP-000014",
+      "relationshipType": "colleague",
+      "trustScore": 0.7,
+      "interactionFrequency": 0.5,
+      "connectorSource": "LinkedIn",
+      "edgeType": "REAL_EDGE",
+      "weight": 0.62
+    },
+    {
+      "id": "e-seed-031",
+      "source": "HNP-000014",
+      "target": "HNP-000015",
+      "relationshipType": "partner",
+      "trustScore": 0.65,
+      "interactionFrequency": 0.4,
+      "connectorSource": "LinkedIn",
+      "edgeType": "REAL_EDGE",
+      "weight": 0.55
+    },
+    {
+      "id": "e-seed-032",
+      "source": "HNP-000016",
+      "target": "HNP-000022",
+      "relationshipType": "colleague",
+      "trustScore": 0.85,
+      "interactionFrequency": 0.9,
+      "connectorSource": "LinkedIn",
+      "edgeType": "REAL_EDGE",
+      "weight": 0.87
+    },
+    {
+      "id": "e-seed-033",
+      "source": "HNP-000017",
+      "target": "HNP-000023",
+      "relationshipType": "friend",
+      "trustScore": 0.78,
+      "interactionFrequency": 0.5,
+      "connectorSource": "Manual",
+      "edgeType": "REAL_EDGE",
+      "weight": 0.67
+    },
+    {
+      "id": "e-seed-034",
+      "source": "HNP-000018",
+      "target": "HNP-000024",
+      "relationshipType": "advisor",
+      "trustScore": 0.9,
+      "interactionFrequency": 0.7,
+      "connectorSource": "Manual",
+      "edgeType": "REAL_EDGE",
+      "weight": 0.82
+    },
+    {
+      "id": "e-seed-035",
+      "source": "HNP-000019",
+      "target": "HNP-000025",
+      "relationshipType": "colleague",
+      "trustScore": 0.8,
+      "interactionFrequency": 0.6,
+      "connectorSource": "LinkedIn",
+      "edgeType": "REAL_EDGE",
+      "weight": 0.72
+    },
+    {
+      "id": "e-seed-036",
+      "source": "HNP-000001",
+      "target": "DNP-000001",
+      "relationshipType": "acquaintance",
+      "trustScore": 0.5,
+      "interactionFrequency": 0.3,
+      "connectorSource": "DemoGenerator",
+      "edgeType": "DEMO_EDGE",
+      "weight": 0.42
+    },
+    {
+      "id": "e-seed-037",
+      "source": "HNP-000002",
+      "target": "DNP-000002",
+      "relationshipType": "acquaintance",
+      "trustScore": 0.45,
+      "interactionFrequency": 0.2,
+      "connectorSource": "DemoGenerator",
+      "edgeType": "DEMO_EDGE",
+      "weight": 0.35
+    },
+    {
+      "id": "e-seed-038",
+      "source": "HNP-000003",
+      "target": "DNP-000003",
+      "relationshipType": "acquaintance",
+      "trustScore": 0.48,
+      "interactionFrequency": 0.4,
+      "connectorSource": "DemoGenerator",
+      "edgeType": "DEMO_EDGE",
+      "weight": 0.45
+    },
+    {
+      "id": "e-seed-039",
+      "source": "HNP-000004",
+      "target": "DNP-000004",
+      "relationshipType": "acquaintance",
+      "trustScore": 0.4,
+      "interactionFrequency": 0.3,
+      "connectorSource": "DemoGenerator",
+      "edgeType": "DEMO_EDGE",
+      "weight": 0.36
+    },
+    {
+      "id": "e-seed-040",
+      "source": "HNP-000005",
+      "target": "DNP-000001",
+      "relationshipType": "acquaintance",
+      "trustScore": 0.52,
+      "interactionFrequency": 0.2,
+      "connectorSource": "DemoGenerator",
+      "edgeType": "DEMO_EDGE",
+      "weight": 0.39
+    },
+    {
+      "id": "e-seed-041",
+      "source": "HNP-000006",
+      "target": "DNP-000005",
+      "relationshipType": "acquaintance",
+      "trustScore": 0.42,
+      "interactionFrequency": 0.35,
+      "connectorSource": "DemoGenerator",
+      "edgeType": "DEMO_EDGE",
+      "weight": 0.39
+    },
+    {
+      "id": "e-seed-042",
+      "source": "HNP-000007",
+      "target": "DNP-000002",
+      "relationshipType": "acquaintance",
+      "trustScore": 0.4,
+      "interactionFrequency": 0.15,
+      "connectorSource": "DemoGenerator",
+      "edgeType": "DEMO_EDGE",
+      "weight": 0.3
+    },
+    {
+      "id": "e-seed-043",
+      "source": "HNP-000008",
+      "target": "DNP-000007",
+      "relationshipType": "acquaintance",
+      "trustScore": 0.38,
+      "interactionFrequency": 0.2,
+      "connectorSource": "DemoGenerator",
+      "edgeType": "DEMO_EDGE",
+      "weight": 0.31
+    },
+    {
+      "id": "e-seed-044",
+      "source": "HNP-000009",
+      "target": "DNP-000006",
+      "relationshipType": "acquaintance",
+      "trustScore": 0.35,
+      "interactionFrequency": 0.1,
+      "connectorSource": "DemoGenerator",
+      "edgeType": "DEMO_EDGE",
+      "weight": 0.25
+    },
+    {
+      "id": "e-seed-045",
+      "source": "HNP-000010",
+      "target": "DNP-000003",
+      "relationshipType": "acquaintance",
+      "trustScore": 0.45,
+      "interactionFrequency": 0.25,
+      "connectorSource": "DemoGenerator",
+      "edgeType": "DEMO_EDGE",
+      "weight": 0.37
+    },
+    {
+      "id": "e-seed-046",
+      "source": "HNP-000011",
+      "target": "DNP-000004",
+      "relationshipType": "acquaintance",
+      "trustScore": 0.4,
+      "interactionFrequency": 0.3,
+      "connectorSource": "DemoGenerator",
+      "edgeType": "DEMO_EDGE",
+      "weight": 0.36
+    },
+    {
+      "id": "e-seed-047",
+      "source": "HNP-000012",
+      "target": "DNP-000005",
+      "relationshipType": "acquaintance",
+      "trustScore": 0.38,
+      "interactionFrequency": 0.1,
+      "connectorSource": "DemoGenerator",
+      "edgeType": "DEMO_EDGE",
+      "weight": 0.27
+    },
+    {
+      "id": "e-seed-048",
+      "source": "HNP-000013",
+      "target": "DNP-000006",
+      "relationshipType": "acquaintance",
+      "trustScore": 0.35,
+      "interactionFrequency": 0.2,
+      "connectorSource": "DemoGenerator",
+      "edgeType": "DEMO_EDGE",
+      "weight": 0.29
+    },
+    {
+      "id": "e-seed-049",
+      "source": "HNP-000014",
+      "target": "DNP-000007",
+      "relationshipType": "acquaintance",
+      "trustScore": 0.3,
+      "interactionFrequency": 0.15,
+      "connectorSource": "DemoGenerator",
+      "edgeType": "DEMO_EDGE",
+      "weight": 0.24
+    },
+    {
+      "id": "e-seed-050",
+      "source": "HNP-000015",
+      "target": "DNP-000008",
+      "relationshipType": "acquaintance",
+      "trustScore": 0.32,
+      "interactionFrequency": 0.1,
+      "connectorSource": "DemoGenerator",
+      "edgeType": "DEMO_EDGE",
+      "weight": 0.23
+    },
+    {
+      "id": "e-seed-051",
+      "source": "DNP-000001",
+      "target": "DNP-000006",
+      "relationshipType": "synthetic",
+      "trustScore": 0.55,
+      "interactionFrequency": 0.4,
+      "connectorSource": "DemoGenerator",
+      "edgeType": "DEMO_EDGE",
+      "weight": 0.49
+    },
+    {
+      "id": "e-seed-052",
+      "source": "DNP-000001",
+      "target": "DNP-000010",
+      "relationshipType": "synthetic",
+      "trustScore": 0.48,
+      "interactionFrequency": 0.3,
+      "connectorSource": "DemoGenerator",
+      "edgeType": "DEMO_EDGE",
+      "weight": 0.41
+    },
+    {
+      "id": "e-seed-053",
+      "source": "DNP-000001",
+      "target": "DNP-000002",
+      "relationshipType": "synthetic",
+      "trustScore": 0.5,
+      "interactionFrequency": 0.5,
+      "connectorSource": "DemoGenerator",
+      "edgeType": "DEMO_EDGE",
+      "weight": 0.5
+    },
+    {
+      "id": "e-seed-054",
+      "source": "DNP-000002",
+      "target": "DNP-000008",
+      "relationshipType": "synthetic",
+      "trustScore": 0.46,
+      "interactionFrequency": 0.4,
+      "connectorSource": "DemoGenerator",
+      "edgeType": "DEMO_EDGE",
+      "weight": 0.44
+    },
+    {
+      "id": "e-seed-055",
+      "source": "DNP-000002",
+      "target": "DNP-000007",
+      "relationshipType": "synthetic",
+      "trustScore": 0.42,
+      "interactionFrequency": 0.2,
+      "connectorSource": "DemoGenerator",
+      "edgeType": "DEMO_EDGE",
+      "weight": 0.33
+    },
+    {
+      "id": "e-seed-056",
+      "source": "DNP-000002",
+      "target": "DNP-000014",
+      "relationshipType": "synthetic",
+      "trustScore": 0.4,
+      "interactionFrequency": 0.3,
+      "connectorSource": "DemoGenerator",
+      "edgeType": "DEMO_EDGE",
+      "weight": 0.36
+    },
+    {
+      "id": "e-seed-057",
+      "source": "DNP-000003",
+      "target": "DNP-000009",
+      "relationshipType": "synthetic",
+      "trustScore": 0.52,
+      "interactionFrequency": 0.35,
+      "connectorSource": "DemoGenerator",
+      "edgeType": "DEMO_EDGE",
+      "weight": 0.45
+    },
+    {
+      "id": "e-seed-058",
+      "source": "DNP-000003",
+      "target": "DNP-000008",
+      "relationshipType": "synthetic",
+      "trustScore": 0.45,
+      "interactionFrequency": 0.2,
+      "connectorSource": "DemoGenerator",
+      "edgeType": "DEMO_EDGE",
+      "weight": 0.35
+    },
+    {
+      "id": "e-seed-059",
+      "source": "DNP-000004",
+      "target": "DNP-000012",
+      "relationshipType": "synthetic",
+      "trustScore": 0.48,
+      "interactionFrequency": 0.45,
+      "connectorSource": "DemoGenerator",
+      "edgeType": "DEMO_EDGE",
+      "weight": 0.47
+    },
+    {
+      "id": "e-seed-060",
+      "source": "DNP-000005",
+      "target": "DNP-000011",
+      "relationshipType": "synthetic",
+      "trustScore": 0.44,
+      "interactionFrequency": 0.3,
+      "connectorSource": "DemoGenerator",
+      "edgeType": "DEMO_EDGE",
+      "weight": 0.38
+    },
+    {
+      "id": "e-seed-061",
+      "source": "DNP-000006",
+      "target": "DNP-000010",
+      "relationshipType": "synthetic",
+      "trustScore": 0.42,
+      "interactionFrequency": 0.25,
+      "connectorSource": "DemoGenerator",
+      "edgeType": "DEMO_EDGE",
+      "weight": 0.35
+    },
+    {
+      "id": "e-seed-062",
+      "source": "DNP-000007",
+      "target": "DNP-000008",
+      "relationshipType": "synthetic",
+      "trustScore": 0.38,
+      "interactionFrequency": 0.2,
+      "connectorSource": "DemoGenerator",
+      "edgeType": "DEMO_EDGE",
+      "weight": 0.31
+    },
+    {
+      "id": "e-seed-063",
+      "source": "DNP-000009",
+      "target": "DNP-000003",
+      "relationshipType": "synthetic",
+      "trustScore": 0.4,
+      "interactionFrequency": 0.3,
+      "connectorSource": "DemoGenerator",
+      "edgeType": "DEMO_EDGE",
+      "weight": 0.36
+    },
+    {
+      "id": "e-seed-064",
+      "source": "DNP-000010",
+      "target": "DNP-000015",
+      "relationshipType": "synthetic",
+      "trustScore": 0.45,
+      "interactionFrequency": 0.35,
+      "connectorSource": "DemoGenerator",
+      "edgeType": "DEMO_EDGE",
+      "weight": 0.41
+    },
+    {
+      "id": "e-seed-065",
+      "source": "DNP-000011",
+      "target": "DNP-000012",
+      "relationshipType": "synthetic",
+      "trustScore": 0.38,
+      "interactionFrequency": 0.2,
+      "connectorSource": "DemoGenerator",
+      "edgeType": "DEMO_EDGE",
+      "weight": 0.31
+    }
+  ]
+}
