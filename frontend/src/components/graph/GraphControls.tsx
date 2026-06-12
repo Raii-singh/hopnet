@@ -253,3 +253,88 @@ export default function GraphControls() {
               padding: '2px 6px', borderRadius: '100px',
               background: showDemoNodes ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.03)',
               color: showDemoNodes ? '#ffffff' : 'var(--silver-500)',
+              border: `1px solid ${showDemoNodes ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.06)'}`
+            }}>
+              {showDemoNodes ? 'ON' : 'OFF'}
+            </span>
+          </button>
+        )}
+
+        {/* ── IMDb read-only badge ── */}
+        {isImdb && (
+          <div style={{
+            padding: '6px 10px',
+            background: `${accentColor}10`,
+            border: `1px solid ${accentColor}30`,
+            borderRadius: '6px',
+            marginBottom: '8px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+          }}>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={accentColor} strokeWidth="2">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <span style={{ fontSize: '10px', color: accentColor, fontWeight: 500 }}>
+              Read-only — Actor collaboration network
+            </span>
+          </div>
+        )}
+
+        {/* ── Search Node ── */}
+        <button
+          id="search-node-btn"
+          className={`glass-button ${showSearch ? 'active' : ''}`}
+          onClick={() => setShowSearch(s => !s)}
+          style={{ width: '100%', marginBottom: '8px' }}
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          Search {providerCapabilities.nodeLabel}
+        </button>
+
+        {/* Search panel */}
+        {showSearch && (
+          <div style={{ marginBottom: '8px' }}>
+            <input
+              autoFocus
+              className="glass-input"
+              placeholder={isImdb ? 'Actor name or decade…' : 'Name or cluster…'}
+              value={searchQuery}
+              onChange={e => setStartQuery(e.target.value)}
+              style={{ marginBottom: '6px' }}
+            />
+            {searchResults.length > 0 && (
+              <div className="glass-panel" style={{
+                padding: '4px',
+                maxHeight: 200,
+                overflowY: 'auto',
+                background: 'var(--bg-surface)',
+              }}>
+                {searchResults.map(node => (
+                  <button
+                    key={node.id}
+                    onClick={() => selectSearchResult(node.id)}
+                    style={{
+                      width: '100%',
+                      padding: '8px 10px',
+                      background: 'transparent',
+                      border: 'none',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      borderRadius: '6px',
+                      transition: 'background 0.15s',
+                      textAlign: 'left',
+                    }}
+                    onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-glass)')}
+                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                  >
+                    <span style={{
+                      width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
+                      background: accentColor,
+                      boxShadow: `0 0 5px ${accentColor}80`,
+                    }} />
+                    <span style={{ color: 'var(--silver-200)', fontSize: '12px', fontWeight: 500, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
