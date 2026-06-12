@@ -168,3 +168,88 @@ export default function GraphControls() {
   }
 
   if (focusMode) return null;
+
+  return (
+    <div
+      className="animate-slide-in-right"
+      style={{
+        position: 'fixed',
+        top: 90,
+        right: 24,
+        zIndex: 400,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '8px',
+        width: 230,
+        maxHeight: 'calc(100vh - 110px)',
+        overflowY: 'auto',
+        paddingRight: '2px',
+      }}
+    >
+      <div className="glass-panel" style={{ padding: '16px' }}>
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '14px' }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={accentColor} strokeWidth="2">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+          </svg>
+          <span className="text-label" style={{ color: '#ffffff' }}>Graph Controls</span>
+          {/* Provider badge */}
+          <span style={{
+            marginLeft: 'auto', fontSize: '8px', padding: '1px 6px', borderRadius: '100px',
+            background: `${accentColor}20`, color: accentColor,
+            border: `1px solid ${accentColor}40`, fontWeight: 700, letterSpacing: '0.04em',
+          }}>
+            {providerCapabilities.icon} {isImdb ? 'IMDB' : 'COLLEGE'}
+          </span>
+        </div>
+
+        {/* ── Hop Depth Slider ── */}
+        <div style={{ marginBottom: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <span className="text-label">Hop Depth</span>
+            <span className="text-mono" style={{ fontSize: '14px', fontWeight: 700, color: accentColor }}>
+              {hopDepth}
+            </span>
+          </div>
+          <input
+            type="range"
+            min={1} max={3} step={1}
+            value={hopDepth}
+            onChange={e => setHopDepth(Number(e.target.value))}
+            className="hop-slider"
+            id="hop-depth-slider"
+            style={{
+              background: `linear-gradient(to right, ${accentColor} 0%, ${accentColor} ${((hopDepth - 1) / 2) * 100}%, rgba(255,255,255,0.06) ${((hopDepth - 1) / 2) * 100}%, rgba(255,255,255,0.06) 100%)`,
+            }}
+          />
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+            {[1, 2, 3].map(d => (
+              <span key={d} className="text-label" style={{ color: hopDepth >= d ? accentColor : 'var(--silver-700)' }}>
+                {d}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <div className="divider" />
+
+        {/* ── Toggle Demo Nodes ── */}
+        {providerCapabilities.hasDemoNodes && (
+          <button
+            id="toggle-demo-btn"
+            className={`glass-button ${showDemoNodes ? 'active' : ''}`}
+            onClick={toggleDemoNodes}
+            style={{ width: '100%', justifyContent: 'space-between', marginBottom: '8px' }}
+          >
+            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
+              </svg>
+              Demo Nodes
+            </span>
+            <span style={{
+              fontSize: '10px', fontWeight: 600,
+              padding: '2px 6px', borderRadius: '100px',
+              background: showDemoNodes ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.03)',
+              color: showDemoNodes ? '#ffffff' : 'var(--silver-500)',
