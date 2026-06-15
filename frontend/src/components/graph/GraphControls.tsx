@@ -508,3 +508,88 @@ export default function GraphControls() {
                       <span style={{ width: 5, height: 5, borderRadius: '50%', background: node.nodeType === 'REAL' ? '#ffffff' : 'var(--silver-500)' }} />
                       <span style={{ fontSize: '10px', color: 'var(--silver-200)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {node.fullName}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Target Node Input */}
+            <div style={{ position: 'relative' }}>
+              <label className="text-label" style={{ fontSize: '8.5px', marginBottom: '3px', display: 'block' }}>
+                {isImdb ? 'Target Actor' : 'Traverse Target Node'}
+              </label>
+              <input
+                className="glass-input"
+                style={{ padding: '4px 8px', fontSize: '11px' }}
+                placeholder={isImdb ? 'Target actor...' : 'Target person name...'}
+                value={targetQuery}
+                onChange={e => setTargetQuery(e.target.value)}
+              />
+              {targetResults.length > 0 && (
+                <div className="glass-panel" style={{
+                  position: 'absolute', top: '100%', left: 0, right: 0,
+                  maxHeight: 120, overflowY: 'auto', zIndex: 500, padding: 3,
+                  background: 'var(--bg-surface)', marginTop: '2px'
+                }}>
+                  {targetResults.map(node => (
+                    <button
+                      key={node.id}
+                      onClick={() => {
+                        setSelectedTarget(node);
+                        setTargetQuery(node.fullName);
+                        setTargetResults([]);
+                      }}
+                      style={{
+                        width: '100%', padding: '5px 8px', background: 'transparent',
+                        border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center',
+                        gap: '6px', borderRadius: '4px', textAlign: 'left',
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                    >
+                      <span style={{ width: 5, height: 5, borderRadius: '50%', background: node.nodeType === 'REAL' ? '#ffffff' : 'var(--silver-500)' }} />
+                      <span style={{ fontSize: '10px', color: 'var(--silver-200)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {node.fullName}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Trace buttons */}
+            <div style={{ display: 'flex', gap: '6px', marginTop: '4px' }}>
+              {tracedPath.length > 0 && (
+                <button
+                  className="glass-button"
+                  onClick={handleResetPath}
+                  style={{
+                    flex: 1, fontSize: '10px', padding: '4px 6px',
+                    borderColor: 'rgba(244,63,94,0.3)', color: 'rgba(244,63,94,0.8)'
+                  }}
+                >
+                  Clear
+                </button>
+              )}
+              <button
+                className="glass-button font-semibold"
+                onClick={handleTracePath}
+                disabled={!selectedStart || !selectedTarget}
+                style={{
+                  flex: 2, fontSize: '10px', padding: '4px 8px',
+                  borderColor: `${accentColor}60`,
+                  color: accentColor,
+                  background: `${accentColor}10`,
+                  opacity: (!selectedStart || !selectedTarget) ? 0.5 : 1,
+                }}
+              >
+                Trace Path
+              </button>
+            </div>
+
+            {/* Traced results */}
+            {tracedPath.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '4px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: 'var(--silver-500)' }}>
