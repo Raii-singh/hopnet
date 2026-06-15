@@ -423,3 +423,88 @@ export default function GraphControls() {
                           : [...activeEdgeTypes, type];
                         setGraphFilters(newTypes, minTrustFilter);
                       }}
+                      style={{
+                        fontSize: '9.5px',
+                        padding: '2px 6px',
+                        borderRadius: '4px',
+                        background: isActive ? `${accentColor}30` : 'rgba(255,255,255,0.05)',
+                        color: isActive ? accentColor : 'var(--silver-500)',
+                        border: `1px solid ${isActive ? `${accentColor}80` : 'rgba(255,255,255,0.1)'}`,
+                        cursor: 'pointer',
+                        transition: 'all 0.15s'
+                      }}
+                    >
+                      {type}
+                    </button>
+                  );
+                })}
+              </div>
+              {activeEdgeTypes.length === 0 && (
+                <div style={{ fontSize: '9.5px', color: 'var(--silver-500)', marginTop: '4px', fontStyle: 'italic' }}>
+                  All types shown
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ── PATHFINDER ENGINE CARD ── */}
+      <div className="glass-panel" style={{ padding: '12px 14px', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
+        <div
+          onClick={() => setIsPathfinderOpen(!isPathfinderOpen)}
+          style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={accentColor} strokeWidth="2.5">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
+            </svg>
+            <span style={{ fontSize: '11px', fontWeight: 700, color: '#ffffff', letterSpacing: '0.04em' }}>
+              {isImdb ? 'COLLABORATION PATH' : 'PATHFINDER ENGINE'}
+            </span>
+          </div>
+          <span style={{ fontSize: '10px', color: 'var(--silver-500)' }}>
+            {isPathfinderOpen ? '▼' : '▲'}
+          </span>
+        </div>
+
+        {isPathfinderOpen && (
+          <div className="animate-fade-in" style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {/* Start Node Input */}
+            <div style={{ position: 'relative' }}>
+              <label className="text-label" style={{ fontSize: '8.5px', marginBottom: '3px', display: 'block' }}>
+                {isImdb ? 'Start Actor' : 'Traverse Start Node'}
+              </label>
+              <input
+                className="glass-input"
+                style={{ padding: '4px 8px', fontSize: '11px' }}
+                placeholder={isImdb ? 'Actor name...' : 'Start person name...'}
+                value={startQuery}
+                onChange={e => setStartQuery(e.target.value)}
+              />
+              {startResults.length > 0 && (
+                <div className="glass-panel" style={{
+                  position: 'absolute', top: '100%', left: 0, right: 0,
+                  maxHeight: 120, overflowY: 'auto', zIndex: 500, padding: 3,
+                  background: 'var(--bg-surface)', marginTop: '2px'
+                }}>
+                  {startResults.map(node => (
+                    <button
+                      key={node.id}
+                      onClick={() => {
+                        setSelectedStart(node);
+                        setStartQuery(node.fullName);
+                        setStartResults([]);
+                      }}
+                      style={{
+                        width: '100%', padding: '5px 8px', background: 'transparent',
+                        border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center',
+                        gap: '6px', borderRadius: '4px', textAlign: 'left',
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                    >
+                      <span style={{ width: 5, height: 5, borderRadius: '50%', background: node.nodeType === 'REAL' ? '#ffffff' : 'var(--silver-500)' }} />
+                      <span style={{ fontSize: '10px', color: 'var(--silver-200)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {node.fullName}
