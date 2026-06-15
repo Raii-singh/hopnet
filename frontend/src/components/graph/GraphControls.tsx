@@ -338,3 +338,88 @@ export default function GraphControls() {
                       boxShadow: `0 0 5px ${accentColor}80`,
                     }} />
                     <span style={{ color: 'var(--silver-200)', fontSize: '12px', fontWeight: 500, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {node.fullName}
+                    </span>
+                    {node.cluster && (
+                      <span className="text-label" style={{ fontSize: '9px', color: accentColor, opacity: 0.7, flexShrink: 0 }}>
+                        {node.cluster}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Reset Graph ── */}
+        <button
+          id="reset-graph-btn"
+          className="glass-button"
+          onClick={resetGraph}
+          style={{ width: '100%' }}
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <polyline points="1 4 1 10 7 10"/>
+            <path d="M3.51 15a9 9 0 1 0 .49-4.5"/>
+          </svg>
+          Reset Graph
+        </button>
+      </div>
+
+      {/* ── ADVANCED FILTERS CARD (Dropdown) ── */}
+      <div className="glass-panel" style={{ padding: '12px 14px', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
+        <div
+          onClick={() => setIsFiltersOpen(!isFiltersOpen)}
+          style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={accentColor} strokeWidth="2.5">
+              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+            </svg>
+            <span style={{ fontSize: '11px', fontWeight: 700, color: '#ffffff', letterSpacing: '0.04em' }}>
+              ADVANCED FILTERS
+            </span>
+          </div>
+          <span style={{ fontSize: '10px', color: 'var(--silver-500)' }}>
+            {isFiltersOpen ? '▼' : '▲'}
+          </span>
+        </div>
+
+        {isFiltersOpen && (
+          <div className="animate-fade-in" style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {/* Min Trust Score */}
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                <span className="text-label" style={{ color: '#ffffff', fontSize: '10px' }}>Min Trust Score</span>
+                <span className="text-mono" style={{ fontSize: '11px', color: accentColor }}>
+                  {minTrustFilter.toFixed(1)}
+                </span>
+              </div>
+              <input
+                type="range"
+                min={0} max={1} step={0.1}
+                value={minTrustFilter}
+                onChange={e => setGraphFilters(activeEdgeTypes, parseFloat(e.target.value))}
+                className="hop-slider"
+                style={{
+                  background: `linear-gradient(to right, ${accentColor} 0%, ${accentColor} ${minTrustFilter * 100}%, rgba(255,255,255,0.06) ${minTrustFilter * 100}%, rgba(255,255,255,0.06) 100%)`,
+                }}
+              />
+            </div>
+
+            {/* Relationship Types */}
+            <div>
+              <span className="text-label" style={{ color: '#ffffff', display: 'block', marginBottom: '6px', fontSize: '10px' }}>Relationship Types</span>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                {RELATIONSHIP_TYPES.map(type => {
+                  const isActive = activeEdgeTypes.includes(type);
+                  return (
+                    <button
+                      key={type}
+                      onClick={() => {
+                        const newTypes = isActive
+                          ? activeEdgeTypes.filter(t => t !== type)
+                          : [...activeEdgeTypes, type];
+                        setGraphFilters(newTypes, minTrustFilter);
+                      }}
