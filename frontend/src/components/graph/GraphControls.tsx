@@ -593,3 +593,61 @@ export default function GraphControls() {
             {tracedPath.length > 0 ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '4px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: 'var(--silver-500)' }}>
+                  <span>Optimal Route</span>
+                  <span className="text-mono" style={{ color: accentColor, fontWeight: 700 }}>Hops: {pathCost}</span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: 100, overflowY: 'auto' }}>
+                  {tracedPath.map((pNode, index) => (
+                    <div key={pNode.id} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ fontSize: '9px', color: 'var(--silver-500)' }}>{index + 1}.</span>
+                      <span style={{ fontSize: '10px', color: '#ffffff', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {pNode.fullName}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : traversalError ? (
+              <div style={{ fontSize: '9px', color: 'rgba(244,63,94,0.9)', textAlign: 'center', padding: '4px' }}>
+                DEMO to REAL path traversal blocked.
+              </div>
+            ) : null}
+          </div>
+        )}
+      </div>
+
+      {/* Hop depth legend */}
+      <div className="glass-panel" style={{ padding: '10px 14px' }}>
+        <div className="text-label" style={{ marginBottom: '8px' }}>Expansion</div>
+        {[
+          { label: '1 hop', desc: isImdb ? 'Direct co-stars' : 'Direct connections', depth: 1 },
+          { label: '2 hops', desc: isImdb ? 'Friends of co-stars' : 'Second degree', depth: 2 },
+          { label: '3 hops', desc: isImdb ? 'Full network' : 'Full network', depth: 3 },
+        ].map(item => (
+          <div
+            key={item.depth}
+            onClick={() => setHopDepth(item.depth)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '8px',
+              padding: '4px 6px', borderRadius: '6px', cursor: 'pointer',
+              background: hopDepth === item.depth ? `${accentColor}12` : 'transparent',
+              transition: 'background 0.15s',
+            }}
+          >
+            <span style={{
+              width: 16, height: 2, borderRadius: 1,
+              background: hopDepth >= item.depth ? accentColor : 'var(--silver-800)',
+              transition: 'background 0.3s',
+            }} />
+            <span style={{ color: hopDepth >= item.depth ? 'var(--silver-300)' : 'var(--silver-600)', fontSize: '11px' }}>
+              {item.label}
+            </span>
+            <span style={{ color: 'var(--silver-700)', fontSize: '10px', marginLeft: 'auto' }}>
+              {item.desc}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
