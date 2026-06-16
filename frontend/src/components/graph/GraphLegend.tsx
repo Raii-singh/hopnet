@@ -83,3 +83,93 @@ export default function GraphLegend() {
             }} />
             <span style={{ fontSize: '10.5px', color: 'var(--silver-400)' }}>
               {isImdb ? 'Actor Node' : 'Real Node'}
+            </span>
+          </div>
+
+          {/* Demo node — only college */}
+          {!isImdb && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{
+                width: 8, height: 8, borderRadius: '50%',
+                border: '2px solid #64748b',
+                background: 'transparent',
+                flexShrink: 0,
+              }} />
+              <span style={{ fontSize: '10.5px', color: 'var(--silver-400)' }}>Demo Node</span>
+            </div>
+          )}
+
+          {/* Primary edge */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{
+              width: 14, height: 2, borderRadius: 1,
+              background: isImdb ? hexToRgba(accentColor, 0.6) : 'rgba(255,255,255,0.4)',
+              flexShrink: 0,
+            }} />
+            <span style={{ fontSize: '10.5px', color: 'var(--silver-400)' }}>
+              {isImdb ? 'Collaboration Edge' : 'Real Edge'}
+            </span>
+          </div>
+
+          {/* Demo edge — only college */}
+          {!isImdb && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ width: 14, height: 2, borderRadius: 1, background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
+              <span style={{ fontSize: '10.5px', color: 'var(--silver-400)' }}>Demo Edge</span>
+            </div>
+          )}
+        </div>
+
+        <div className="divider" style={{ margin: '6px 0' }} />
+
+        {/* ── Clusters ── */}
+        <div className="text-label" style={{ marginBottom: '6px', fontSize: '9px', color: 'var(--silver-500)' }}>
+          {isImdb ? 'BIRTH DECADES' : 'COMMUNITIES'}
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', marginBottom: '6px' }}>
+          {clusterList.map(c => (
+            <div key={c.label} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+              <div style={{
+                width: 6, height: 6, borderRadius: '50%',
+                background: c.color,
+                boxShadow: `0 0 4px ${hexToRgba(c.color, 0.4)}`,
+                flexShrink: 0,
+              }} />
+              <span style={{ fontSize: '9px', color: 'var(--silver-400)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {c.label}
+              </span>
+            </div>
+          ))}
+          {/* Bridge nodes */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '5px', gridColumn: 'span 2' }}>
+            <div style={{
+              width: 7, height: 7, borderRadius: '50%',
+              background: 'transparent',
+              border: '1.5px double #ffffff',
+              boxShadow: '0 0 4px rgba(255,255,255,0.3)',
+              flexShrink: 0,
+            }} />
+            <span style={{ fontSize: '9px', color: 'var(--silver-300)', fontWeight: 600 }}>
+            </span>
+          </div>
+        </div>
+
+        {/* ── Provider-specific note ── */}
+        <div style={{
+          padding: '4px 6px',
+          background: `${accentColor}08`,
+          border: `1px solid ${accentColor}20`,
+          borderRadius: '4px',
+          fontSize: '9px',
+          color: 'var(--silver-400)',
+          lineHeight: 1.3,
+          textAlign: 'center',
+        }}>
+          {isImdb
+            ? '🎬 Movies → Edges Only (Actors = Nodes)'
+            : ''}
+        </div>
+      </div>
+    </div>
+  );
+}
