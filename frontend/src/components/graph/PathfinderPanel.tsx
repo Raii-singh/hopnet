@@ -168,3 +168,88 @@ export default function PathfinderPanel() {
             <div style={{ position: 'relative' }}>
               <label className="text-label" style={{ fontSize: '8.5px', marginBottom: '3px', display: 'block' }}>{isImdb ? 'Start Actor' : 'Traverse Start'}</label>
               <input
+                className="glass-input"
+                style={{ padding: '4px 8px', fontSize: '11px' }}
+                placeholder={isImdb ? 'Actor name...' : 'Start node name...'}
+                value={startQuery}
+                onChange={e => handleStartSearch(e.target.value)}
+              />
+              {startResults.length > 0 && (
+                <div className="glass-panel" style={{
+                  position: 'absolute', bottom: '105%', left: 0, right: 0,
+                  maxHeight: 120, overflowY: 'auto', zIndex: 500, padding: 3,
+                  background: 'var(--bg-surface)',
+                }}>
+                  {startResults.map(node => (
+                    <button
+                      key={node.id}
+                      onClick={() => {
+                        setSelectedStart(node);
+                        setStartQuery(node.fullName);
+                        setStartResults([]);
+                      }}
+                      style={{
+                        width: '100%', padding: '5px 8px', background: 'transparent',
+                        border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center',
+                        gap: '6px', borderRadius: '4px', textAlign: 'left',
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                    >
+                      <span style={{ width: 5, height: 5, borderRadius: '50%', background: node.nodeType === 'REAL' ? '#ffffff' : 'var(--silver-500)' }} />
+                      <span style={{ fontSize: '10px', color: 'var(--silver-200)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {node.fullName}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Target Node Input */}
+            <div style={{ position: 'relative' }}>
+              <label className="text-label" style={{ fontSize: '8.5px', marginBottom: '3px', display: 'block' }}>{isImdb ? 'Target Actor' : 'Traverse Target'}</label>
+              <input
+                className="glass-input"
+                style={{ padding: '4px 8px', fontSize: '11px' }}
+                placeholder={isImdb ? 'Actor name...' : 'Target node name...'}
+                value={targetQuery}
+                onChange={e => handleTargetSearch(e.target.value)}
+              />
+              {targetResults.length > 0 && (
+                <div className="glass-panel" style={{
+                  position: 'absolute', bottom: '105%', left: 0, right: 0,
+                  maxHeight: 120, overflowY: 'auto', zIndex: 500, padding: 3,
+                  background: 'var(--bg-surface)',
+                }}>
+                  {targetResults.map(node => (
+                    <button
+                      key={node.id}
+                      onClick={() => {
+                        setSelectedTarget(node);
+                        setTargetQuery(node.fullName);
+                        setTargetResults([]);
+                      }}
+                      style={{
+                        width: '100%', padding: '5px 8px', background: 'transparent',
+                        border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center',
+                        gap: '6px', borderRadius: '4px', textAlign: 'left',
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                    >
+                      <span style={{ width: 5, height: 5, borderRadius: '50%', background: node.nodeType === 'REAL' ? '#ffffff' : 'var(--silver-500)' }} />
+                      <span style={{ fontSize: '10px', color: 'var(--silver-200)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {node.fullName}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Active Trace Controls */}
+            <div style={{ display: 'flex', gap: '6px', marginTop: '4px' }}>
+              {tracedPath.length > 0 && (
+                <button
+                  className="glass-button"
