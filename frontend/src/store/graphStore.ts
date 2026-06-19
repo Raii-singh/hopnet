@@ -20,7 +20,14 @@ import {
   deleteRelationship,
   mergeIdentities,
   fetchPath,
+  fetchImdbGraph,
 } from '@/services/api';
+import {
+  ProviderId,
+  DEFAULT_PROVIDER,
+  getCapabilities,
+  ProviderCapabilities,
+} from '@/providers/graphProvider';
 
 // ── Type adapters: API → internal GraphNode/GraphEdge ─────────
 
@@ -76,6 +83,11 @@ interface GraphState {
   visibleLinks: GraphEdge[];
   meta: SubgraphMeta | null;
 
+  // ── PROVIDER SYSTEM (V4.0) ──────────────────────────────────
+  activeProvider: ProviderId;
+  providerCapabilities: ProviderCapabilities;
+  switchProvider: (id: ProviderId) => Promise<void>;
+
   // Source mode
   dataSource: 'dummy' | 'api';
   isApiHealthy: boolean;
@@ -91,10 +103,11 @@ interface GraphState {
   highlightedNodeIds: Set<string>;
   highlightedEdgeIds: Set<string>;
 
-  // WORKSPACE MODE (V2.5)
+  // WORKSPACE MODE (V2.5) — only available for providers with hasCRUD
   workspaceMode: boolean;
   visualConnectMode: boolean;
   connectorSourceNode: GraphNode | null;
+  focusMode: boolean;
 
   // UI state
   isLoading: boolean;
@@ -115,6 +128,7 @@ interface GraphState {
 
   // WORKSPACE ACTIONS (V2.5)
   toggleWorkspaceMode: () => void;
+  toggleFocusMode: () => void;
   setVisualConnectMode: (val: boolean) => void;
   setConnectorSourceNode: (node: GraphNode | null) => void;
   createNewNode: (data: any) => Promise<void>;
@@ -136,15 +150,22 @@ interface GraphState {
 
 const ROOT_DUMMY = 'r-001';
 
-function buildDummySubgraph(rootNodeId: string, hopDepth: number, showDemoNodes: boolean) {
-  const { nodes, links } = getDummySubgraph(rootNodeId, hopDepth, showDemoNodes, ALL_NODES, ALL_EDGES);
+function buildDummySubgraph(
+  rootNodeId: string,
+  hopDepth: number,
+  showDemoNodes: boolean,
+  allNodes: GraphNode[],
+  allEdges: GraphEdge[]
+) {
+  const { nodes, links } = getDummySubgraph(rootNodeId, hopDepth, showDemoNodes, allNodes, allEdges);
   const meta = computeMeta(nodes, links, rootNodeId, hopDepth);
   return { nodes, links, meta };
 }
 
 // ── Store ─────────────────────────────────────────────────────
 
-const { nodes: initNodes, links: initLinks, meta: initMeta } = buildDummySubgraph(ROOT_DUMMY, 1, true);
+const { nodes: initNodes, links: initLinks, meta: initMeta } = buildDummySubgraph(ROOT_DUMMY, 1, true, ALL_NODES, ALL_EDGES);
+
 
 export const useGraphStore = create<GraphState>((set, get) => ({
   allNodes: ALL_NODES,
@@ -152,6 +173,10 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   visibleNodes: initNodes,
   visibleLinks: initLinks,
   meta: initMeta,
+
+  // Provider defaults
+  activeProvider: DEFAULT_PROVIDER,
+  providerCapabilities: getCapabilities(DEFAULT_PROVIDER),
 
   dataSource: 'dummy',
   isApiHealthy: false,
@@ -170,6 +195,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   workspaceMode: false,
   visualConnectMode: false,
   connectorSourceNode: null,
+  focusMode: false,
 
   isLoading: false,
 
@@ -177,38 +203,139 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   tracedPath: [],
   pathCost: null,
 
+  // ── PROVIDER SWITCHING (V4.0) ───────────────────────────────
+  switchProvider: async (id: ProviderId) => {
+    const caps = getCapabilities(id);
+
+    // Reset everything and apply new provider
+    set({
+      activeProvider: id,
+      providerCapabilities: caps,
+
+      // Reset graph state
+      allNodes: [],
+      allEdges: [],
+      visibleNodes: [],
+      visibleLinks: [],
+      meta: null,
+      selectedNode: null,
+      hoveredNode: null,
+      hoveredEdge: null,
+      tracedPath: [],
+      pathCost: null,
+      highlightedNodeIds: new Set(),
+      highlightedEdgeIds: new Set(),
+      searchQuery: '',
+      hopDepth: 1,
+
+      // Reset workspace (only available for providers with CRUD)
+      workspaceMode: false,
+      visualConnectMode: false,
+      connectorSourceNode: null,
+
+      // Demo nodes only available for college
+      showDemoNodes: caps.hasDemoNodes,
+    });
+
+    // Load data for the new provider
+    await get().initGraph();
+  },
+
   // ── Init: probe API, load live data if available ────────────
   initGraph: async () => {
+    const { activeProvider } = get();
     const healthy = await checkHealth();
     set({ isApiHealthy: healthy });
 
-    if (!healthy) {
-      set({ dataSource: 'dummy' });
-      return;
-    }
+    if (activeProvider === 'college') {
+      if (!healthy) {
+        // Fall back to dummy college data
+        const { nodes: initN, links: initL, meta: initM } = buildDummySubgraph(ROOT_DUMMY, 1, true, ALL_NODES, ALL_EDGES);
+        set({
+          dataSource: 'dummy',
+          allNodes: ALL_NODES,
+          allEdges: ALL_EDGES,
+          visibleNodes: initN,
+          visibleLinks: initL,
+          meta: initM,
+          rootNodeId: ROOT_DUMMY,
+        });
+        return;
+      }
 
-    try {
-      const { users } = await fetchUsers();
-      const allNodes = users.map(apiNodeToGraph);
-      const firstReal = allNodes.find(n => n.nodeType === 'REAL');
-      const rootNodeId = firstReal?.id ?? allNodes[0]?.id ?? ROOT_DUMMY;
+      try {
+        const { users } = await fetchUsers();
+        const allNodes = users.map(apiNodeToGraph);
+        const firstReal = allNodes.find(n => n.nodeType === 'REAL');
+        const rootNodeId = firstReal?.id ?? allNodes[0]?.id ?? ROOT_DUMMY;
 
-      set({ allNodes, dataSource: 'api', rootNodeId });
-      await get().refreshSubgraph();
-    } catch (err) {
-      console.warn('[HOPNet] API init failed, using dummy data:', err);
-      set({ dataSource: 'dummy', isApiHealthy: false });
+        set({ allNodes, dataSource: 'api', rootNodeId });
+        await get().refreshSubgraph();
+      } catch (err) {
+        console.warn('[HOPNet] College API init failed, using dummy data:', err);
+        const { nodes: initN, links: initL, meta: initM } = buildDummySubgraph(ROOT_DUMMY, 1, true, ALL_NODES, ALL_EDGES);
+        set({
+          dataSource: 'dummy',
+          allNodes: ALL_NODES,
+          allEdges: ALL_EDGES,
+          visibleNodes: initN,
+          visibleLinks: initL,
+          meta: initM,
+          rootNodeId: ROOT_DUMMY,
+          isApiHealthy: false,
+        });
+      }
+    } else if (activeProvider === 'imdb') {
+      try {
+        set({ isLoading: true });
+        // fetchImdbGraph handles offline fallback internally
+        const data = await fetchImdbGraph();
+        if (data && data.nodes.length > 0) {
+          const allNodes = data.nodes.map(apiNodeToGraph);
+          const allEdges = data.links.map(apiEdgeToGraph);
+          
+          // Set Robert Downey Jr as default root if present
+          const rdj = allNodes.find(n => n.fullName?.toLowerCase().includes('robert downey jr'));
+          const rootNodeId = rdj?.id ?? allNodes[0]?.id ?? '';
+
+          set({
+            allNodes,
+            allEdges,
+            dataSource: healthy ? 'api' : 'dummy',
+            rootNodeId,
+            hopDepth: 3, // Default to showing full network
+          });
+
+          await get().refreshSubgraph();
+        } else {
+          console.warn('[HOPNet] IMDb graph empty — run the preprocessing pipeline first.');
+          set({ dataSource: 'api', isLoading: false });
+        }
+      } catch (err) {
+        console.warn('[HOPNet] IMDb init failed completely:', err);
+        set({ dataSource: 'api', isLoading: false, isApiHealthy: false });
+      }
     }
   },
 
   // ── Refresh subgraph from API or dummy ──────────────────────
   refreshSubgraph: async () => {
-    const { rootNodeId, hopDepth, showDemoNodes, dataSource } = get();
+    const { rootNodeId, hopDepth, showDemoNodes, dataSource, activeProvider } = get();
     set({ isLoading: true });
 
     try {
-      if (dataSource === 'api') {
-        const data = await fetchGraph(rootNodeId, hopDepth, showDemoNodes);
+      if (activeProvider === 'imdb') {
+        // IMDb uses client-side BFS traversal from loaded allNodes & allEdges
+        if (hopDepth === 3) {
+          // Show full network (no BFS depth limit)
+          const meta = computeMeta(get().allNodes, get().allEdges, rootNodeId, hopDepth);
+          set({ visibleNodes: get().allNodes, visibleLinks: get().allEdges, meta });
+        } else {
+          const { nodes, links, meta } = buildDummySubgraph(rootNodeId, hopDepth, false, get().allNodes, get().allEdges);
+          set({ visibleNodes: nodes, visibleLinks: links, meta });
+        }
+      } else if (dataSource === 'api') {
+        const data = await fetchGraph(rootNodeId, hopDepth, showDemoNodes, activeProvider);
         const visibleNodes = data.nodes.map(apiNodeToGraph);
         const visibleLinks = data.links.map(apiEdgeToGraph);
         const meta: SubgraphMeta = {
@@ -223,13 +350,18 @@ export const useGraphStore = create<GraphState>((set, get) => ({
         };
         set({ visibleNodes, visibleLinks, meta });
       } else {
-        const { nodes, links, meta } = buildDummySubgraph(rootNodeId, hopDepth, showDemoNodes);
+        const { nodes, links, meta } = buildDummySubgraph(rootNodeId, hopDepth, showDemoNodes, get().allNodes, get().allEdges);
         set({ visibleNodes: nodes, visibleLinks: links, meta });
       }
     } catch (err) {
       console.error('[refreshSubgraph]', err);
-      const { nodes, links, meta } = buildDummySubgraph(ROOT_DUMMY, 1, true);
-      set({ visibleNodes: nodes, visibleLinks: links, meta });
+      if (activeProvider === 'college') {
+        const { nodes, links, meta } = buildDummySubgraph(ROOT_DUMMY, 1, true, ALL_NODES, ALL_EDGES);
+        set({ visibleNodes: nodes, visibleLinks: links, meta });
+      } else if (activeProvider === 'imdb') {
+        const { nodes, links, meta } = buildDummySubgraph(rootNodeId, hopDepth, false, get().allNodes, get().allEdges);
+        set({ visibleNodes: nodes, visibleLinks: links, meta });
+      }
     } finally {
       set({ isLoading: false });
     }
@@ -256,14 +388,15 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   setSearchQuery: (q) => set({ searchQuery: q }),
 
   resetGraph: () => {
-    const rootNodeId = get().dataSource === 'dummy'
+    const { dataSource, allNodes, activeProvider } = get();
+    const rootNodeId = dataSource === 'dummy'
       ? ROOT_DUMMY
-      : get().allNodes.find(n => n.nodeType === 'REAL')?.id ?? ROOT_DUMMY;
+      : allNodes.find(n => n.nodeType === 'REAL')?.id ?? ROOT_DUMMY;
 
     set({
       rootNodeId,
       hopDepth: 1,
-      showDemoNodes: true,
+      showDemoNodes: getCapabilities(activeProvider).hasDemoNodes,
       selectedNode: null,
       hoveredNode: null,
       hoveredEdge: null,
@@ -292,7 +425,12 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   clearHighlights: () => set({ highlightedNodeIds: new Set(), highlightedEdgeIds: new Set() }),
 
   // ── WORKSPACE ACTIONS ──
-  toggleWorkspaceMode: () => set(s => ({ workspaceMode: !s.workspaceMode, visualConnectMode: false, connectorSourceNode: null })),
+  toggleWorkspaceMode: () => {
+    const { providerCapabilities } = get();
+    if (!providerCapabilities.hasWorkspaceMode) return; // Guard: read-only providers
+    set(s => ({ workspaceMode: !s.workspaceMode, visualConnectMode: false, connectorSourceNode: null }));
+  },
+  toggleFocusMode: () => set(s => ({ focusMode: !s.focusMode })),
   setVisualConnectMode: (val) => set({ visualConnectMode: val, connectorSourceNode: null }),
   setConnectorSourceNode: (node) => set({ connectorSourceNode: node }),
 
@@ -301,7 +439,6 @@ export const useGraphStore = create<GraphState>((set, get) => ({
       await createUserNode(data);
       await get().initGraph();
     } else {
-      // Simulate local push
       const count = get().allNodes.length;
       const publicId = data.nodeType === 'REAL' ? `HNP-000${count + 1}` : `DNP-000${count + 1}`;
       const newNode: GraphNode = {
@@ -364,7 +501,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
       const srcNode = get().allNodes.find(n => n.id === data.sourceId)!;
       const tgtNode = get().allNodes.find(n => n.id === data.targetId)!;
       const isReal = srcNode.nodeType === 'REAL' && tgtNode.nodeType === 'REAL';
-      
+
       const newLink: GraphEdge = {
         id: `local-edge-${count + 1}`,
         source: data.sourceId,
@@ -422,11 +559,10 @@ export const useGraphStore = create<GraphState>((set, get) => ({
       await mergeIdentities(sourceId, targetId);
       await get().initGraph();
     } else {
-      // Simulate local merge
       const sourceUser = get().allNodes.find(n => n.id === sourceId)!;
       const targetUser = get().allNodes.find(n => n.id === targetId)!;
       const combinedTags = Array.from(new Set([...(sourceUser.tags || []), ...(targetUser.tags || [])]));
-      
+
       set(s => ({
         allNodes: s.allNodes
           .map(n => n.id === targetId ? { ...n, tags: combinedTags } : n)
@@ -442,7 +578,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
           .filter(e => {
             const src = typeof e.source === 'string' ? e.source : (e.source as any).id;
             const tgt = typeof e.target === 'string' ? e.target : (e.target as any).id;
-            return src !== tgt; // filter loops
+            return src !== tgt;
           })
       }));
       await get().refreshSubgraph();
@@ -457,10 +593,10 @@ export const useGraphStore = create<GraphState>((set, get) => ({
         const mappedPath = res.path
           .map(id => get().allNodes.find(n => n.id === id))
           .filter(Boolean) as GraphNode[];
-        
+
         const nodeIds = new Set(res.path);
         const edgeIds = new Set<string>();
-        
+
         for (let i = 0; i < res.path.length - 1; i++) {
           const src = res.path[i];
           const tgt = res.path[i + 1];
@@ -471,7 +607,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
           });
           if (edge) edgeIds.add(edge.id);
         }
-        
+
         set({
           tracedPath: mappedPath,
           pathCost: res.totalCost,
@@ -498,6 +634,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
       set({ isLoading: false });
     }
   },
+
   clearTracedPath: () => {
     set({
       tracedPath: [],
