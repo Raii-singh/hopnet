@@ -253,3 +253,93 @@ export default function PathfinderPanel() {
               {tracedPath.length > 0 && (
                 <button
                   className="glass-button"
+                  onClick={handleReset}
+                  style={{
+                    flex: 1, fontSize: '10px', padding: '4px 8px',
+                    borderColor: 'rgba(244,63,94,0.3)', color: 'rgba(244,63,94,0.8)'
+                  }}
+                >
+                  Clear Path
+                </button>
+              )}
+              <button
+                className="glass-button font-semibold"
+                onClick={handleTrace}
+                disabled={!selectedStart || !selectedTarget}
+                style={{
+                  flex: 2, fontSize: '10px', padding: '4px 8px',
+                  borderColor: `${accentColor}60`,
+                  color: accentColor,
+                  background: `${accentColor}10`,
+                  opacity: (!selectedStart || !selectedTarget) ? 0.5 : 1,
+                }}
+              >
+                {isImdb ? '🎬 Find Collaboration Path' : '⚡ Trace Dijkstra Route'}
+              </button>
+            </div>
+
+            <div className="divider" style={{ margin: '6px 0 2px' }} />
+
+            {/* Path Tracer results list */}
+            {tracedPath.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: 'var(--silver-500)' }}>
+                  <span>Active traversal route</span>
+                  <span className="text-mono" style={{ color: 'var(--silver-400)', fontWeight: 700 }}>Weight: {pathCost}</span>
+                </div>
+
+                <div style={{
+                  display: 'flex', flexDirection: 'column', gap: '4px',
+                  maxHeight: 120, overflowY: 'auto', paddingRight: '4px'
+                }}>
+                  {tracedPath.map((pNode, index) => {
+                    const isTarget = pNode.id === selectedTarget?.id;
+                    const isRoot = pNode.id === selectedStart?.id;
+                    return (
+                      <div key={pNode.id} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 10 }}>
+                          <div style={{
+                            width: 6, height: 6, borderRadius: '50%',
+                            background: isRoot ? '#ffffff' : isTarget ? 'var(--silver-200)' : 'var(--silver-600)',
+                            boxShadow: isRoot || isTarget ? '0 0 4px currentColor' : 'none',
+                          }} />
+                          {index < tracedPath.length - 1 && (
+                            <div style={{ width: 1, height: 16, background: 'rgba(255,255,255,0.08)' }} />
+                          )}
+                        </div>
+                        <div style={{ flex: 1, display: 'flex', justifyContent: 'space-between', fontSize: '10px' }}>
+                          <span style={{ color: isRoot || isTarget ? 'var(--silver-200)' : 'var(--silver-400)', fontWeight: isRoot || isTarget ? 600 : 400 }}>
+                            {pNode.fullName}
+                          </span>
+                          <span className="text-mono" style={{ fontSize: '8.5px', color: 'var(--silver-600)' }}>
+                            {pNode.publicId}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : traversalError ? (
+              <div style={{
+                textAlign: 'center', padding: '10px 8px', background: 'rgba(244,63,94,0.04)',
+                border: '1px solid rgba(244,63,94,0.15)', borderRadius: '6px', color: 'rgba(244,63,94,0.85)'
+              }}>
+                <div style={{ fontSize: '10px', fontWeight: 600 }}>Traversal Blocked</div>
+                <div style={{ fontSize: '9px', marginTop: '2px', lineHeight: 1.3 }}>
+                  Dijkstra tracer forbids pathfinding from DEMO expansion nodes into REAL database nodes.
+                </div>
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', color: 'var(--silver-600)', padding: '10px 0', fontSize: '10px', lineHeight: 1.3 }}>
+                {isImdb
+                  ? 'Find the shortest collaboration chain between any two actors.'
+                  : 'Search and select any node from the explorer to trace optimal secure connection chains.'}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
