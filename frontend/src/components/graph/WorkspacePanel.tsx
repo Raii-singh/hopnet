@@ -168,3 +168,88 @@ export default function WorkspacePanel() {
                   <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
                 </svg>
                 Add User Node
+              </button>
+
+              {/* Action: Visual Connector */}
+              <button
+                id="workspace-connect-btn"
+                className="glass-button"
+                onClick={() => {
+                  const nextVal = !visualConnectMode;
+                  setVisualConnectMode(nextVal);
+                  if (!nextVal) setConnectorSourceNode(null);
+                }}
+                disabled={!effectiveIsAdmin}
+                style={{
+                  width: '100%', justifyContent: 'flex-start',
+                  borderColor: visualConnectMode ? 'rgba(255, 255, 255, 0.3)' : 'var(--glass-border)',
+                  color: visualConnectMode ? '#ffffff' : 'var(--silver-400)',
+                  background: visualConnectMode ? 'rgba(255, 255, 255, 0.08)' : 'var(--bg-glass)',
+                  boxShadow: visualConnectMode ? '0 0 10px rgba(255, 255, 255, 0.1)' : 'none',
+                }}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/>
+                </svg>
+                Connect Nodes Visually
+              </button>
+
+              {/* Connect Mode Active Visual Help Box */}
+              {visualConnectMode && (
+                <div
+                  className="glass-panel"
+                  style={{
+                    padding: '10px 12px',
+                    background: 'rgba(255, 255, 255, 0.03)',
+                    border: '1px dashed rgba(255, 255, 255, 0.2)',
+                    animation: 'pulseGlow 2s ease-in-out infinite',
+                  }}
+                >
+                  <div style={{ fontSize: '9.5px', fontWeight: 600, color: '#ffffff', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Visual Linking Active
+                  </div>
+                  <div style={{ fontSize: '10px', color: 'var(--silver-300)', marginTop: '4px', lineHeight: 1.3 }}>
+                    {!connectorSourceNode ? (
+                      '1. Click the first node (Source) on the canvas.'
+                    ) : (
+                      <span>
+                        Source: <strong style={{ color: 'var(--silver-100)' }}>{connectorSourceNode.fullName}</strong>.
+                        <br />
+                        2. Click another node (Target) to create a link.
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => {
+                      setVisualConnectMode(false);
+                      setConnectorSourceNode(null);
+                    }}
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      color: 'rgba(244,63,94,0.8)',
+                      cursor: 'pointer',
+                      fontSize: '9.5px',
+                      fontWeight: 600,
+                      marginTop: '6px',
+                      padding: 0,
+                      textDecoration: 'underline',
+                    }}
+                  >
+                    Cancel Linking
+                  </button>
+                </div>
+              )}
+
+              {/* Action: Resolve Duplicate Merges */}
+              <button
+                id="workspace-merge-btn"
+                className="glass-button"
+                onClick={() => setShowMergeModal(true)}
+                disabled={!effectiveIsAdmin}
+                style={{
+                  width: '100%', justifyContent: 'flex-start',
+                  borderColor: dupCount > 0 ? 'rgba(255, 255, 255, 0.25)' : 'var(--glass-border)',
+                  color: dupCount > 0 ? '#ffffff' : 'var(--silver-400)',
+                }}
+              >
