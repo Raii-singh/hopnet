@@ -253,3 +253,74 @@ export default function WorkspacePanel() {
                   color: dupCount > 0 ? '#ffffff' : 'var(--silver-400)',
                 }}
               >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                </svg>
+                Resolve Duplicates
+                {dupCount > 0 && (
+                  <span style={{
+                    marginLeft: 'auto', fontSize: '9px', fontWeight: 700,
+                    background: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.25)',
+                    padding: '1px 5px', borderRadius: '100px', color: '#ffffff',
+                  }}>
+                    {dupCount}
+                  </span>
+                )}
+              </button>
+            </div>
+
+            {/* Enable SUDO Mode CTA when !effectiveIsAdmin */}
+            {!effectiveIsAdmin ? (
+              <button
+                onClick={() => setShowSudoModal(true)}
+                className="glass-button font-semibold"
+                style={{
+                  width: '100%',
+                  marginTop: '10px',
+                  padding: '7px 10px',
+                  fontSize: '11px',
+                  background: 'rgba(59, 130, 246, 0.15)',
+                  border: '1px solid rgba(59, 130, 246, 0.4)',
+                  color: '#ffffff',
+                  boxShadow: '0 0 10px rgba(59, 130, 246, 0.2)',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                }}
+              >
+                🔑 Enable SUDO Mode to Edit
+              </button>
+            ) : (
+              <div style={{ marginTop: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '9.5px', color: '#3b82f6', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#3b82f6', boxShadow: '0 0 6px #3b82f6' }} />
+                  SUDO UNLOCKED
+                </span>
+                <button
+                  onClick={logout}
+                  style={{
+                    background: 'transparent', border: 'none', color: 'var(--silver-500)',
+                    fontSize: '9.5px', cursor: 'pointer', textDecoration: 'underline',
+                  }}
+                >
+                  Lock
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {showCreateModal && (
+        <NodeCreateModal onClose={() => setShowCreateModal(false)} />
+      )}
+
+      {showMergeModal && (
+        <MergeEditorModal onClose={() => setShowMergeModal(false)} />
+      )}
+
+      {showSudoModal && (
+        <SudoLoginModal onClose={() => setShowSudoModal(false)} />
+      )}
+    </>
+  );
+}
