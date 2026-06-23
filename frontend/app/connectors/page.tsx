@@ -83,3 +83,88 @@ export default function ConnectorsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const consoleEndRef = useRef<HTMLDivElement>(null);
 
+  async function loadHistory() {
+    try {
+      const res = await fetchImportHistory();
+      if (res && res.logs) setHistory(res.logs);
+    } catch (err) {
+      console.warn('Failed to load history:', err);
+    } finally {
+      setLoadingHistory(false);
+    }
+  }
+
+  useEffect(() => {
+    loadHistory();
+  }, []);
+
+  useEffect(() => {
+    if (showConsole && consoleEndRef.current) {
+      consoleEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [successLogs, showConsole]);
+
+  function handleConnectorSelect(connector: typeof CONNECTORS[0]) {
+    setSelectedConnector(connector);
+    setProgress(null);
+    setProgressText('');
+    setFileDetails(null);
+    setPreviewData(null);
+    setSuccessLogs([]);
+    setShowConsole(false);
+
+    // Trigger file picker
+    setTimeout(() => {
+      fileInputRef.current?.click();
+    }, 100);
+  }
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !selectedConnector) return;
+
+    setProgress(0);
+    setProgressText('Reading local exported file…');
+
+    const reader = new FileReader();
+
+    reader.onprogress = (event) => {
+      if (event.lengthComputable) {
+        const pct = Math.round((event.loaded / event.total) * 40);
+        setProgress(pct);
+      }
+    };
+
+    reader.onload = async (event) => {
+      const text = event.target?.result as string;
+      setFileDetails({
+        name: file.name,
+        content: text,
+      });
+
+      setProgress(50);
+      setProgressText('Applying Identity Resolution checks…');
+
+      try {
+        const preview = await previewConnectorImport(selectedConnector.id, text);
+        setProgress(100);
+        setProgressText('Parsing complete.');
+        setTimeout(() => {
+          setPreviewData(preview);
+          setProgress(null);
+        }, 500);
+      } catch (err: any) {
+        setProgress(null);
+        setProgressText('');
+        alert(`Error parsing file: ${err.message || 'The data structure was non-compliant.'}`);
+      }
+    };
+
+    reader.onerror = () => {
+      setProgress(null);
+      setProgressText('');
+      alert('Failed to read file locally.');
+    };
+
+    reader.readAsText(file);
+  }
