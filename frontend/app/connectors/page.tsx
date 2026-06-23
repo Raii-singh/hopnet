@@ -253,3 +253,88 @@ export default function ConnectorsPage() {
                 style={{
                   width: '100%',
                   marginTop: '12px',
+                  borderColor: connector.border,
+                  color: connector.color,
+                }}
+              >
+                📥 Choose File to Import
+              </button>
+            </div>
+          ))}
+        </div>
+
+        {/* Hidden File input */}
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileChange}
+          accept=".csv,.js,.json,.txt"
+          style={{ display: 'none' }}
+        />
+
+        {/* PROGRESS BOX */}
+        {progress !== null && selectedConnector && (
+          <div className="glass-panel animate-fade-in" style={{ padding: '20px 24px', marginBottom: '24px', border: '1px solid rgba(255, 255, 255, 0.15)', background: 'rgba(255, 255, 255, 0.02)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <span className="text-label" style={{ color: '#ffffff', fontWeight: 600 }}>
+                {selectedConnector.name} Ingestion Active
+              </span>
+              <span className="text-mono animate-pulse" style={{ fontSize: '12px', color: '#ffffff', fontWeight: 700 }}>
+                {progress}%
+              </span>
+            </div>
+            <div className="progress-bar" style={{ height: 8, background: 'rgba(255,255,255,0.05)' }}>
+              <div className="progress-fill progress-fill-cyan" style={{ width: `${progress}%`, background: 'linear-gradient(90deg, #ffffff, #cbd5e1)' }} />
+            </div>
+            <div style={{ fontSize: '11px', color: 'var(--silver-400)', marginTop: '8px', fontStyle: 'italic' }}>
+              {progressText}
+            </div>
+          </div>
+        )}
+
+        {/* RUNNING SUCCESS CONSOLE LOGS */}
+        {showConsole && successLogs.length > 0 && (
+          <div className="glass-panel animate-fade-in" style={{ padding: '16px', marginBottom: '24px', border: '1px solid rgba(255, 255, 255, 0.15)', background: '#020202' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ display: 'block', width: 6, height: 6, borderRadius: '50%', background: '#ffffff', boxShadow: '0 0 6px rgba(255, 255, 255, 0.8)' }} />
+                <span style={{ fontSize: '11px', fontWeight: 700, color: '#ffffff', letterSpacing: '0.04em' }}>GRAPH INGESTION OUTPUT REPORT</span>
+              </div>
+              <button
+                onClick={() => setShowConsole(false)}
+                style={{
+                  background: 'transparent', border: 'none', color: 'var(--silver-500)',
+                  fontSize: '10px', cursor: 'pointer', textDecoration: 'underline'
+                }}
+              >
+                Clear Console
+              </button>
+            </div>
+            <div style={{
+              background: 'rgba(0,0,0,0.5)',
+              border: '1px solid rgba(255,255,255,0.04)',
+              borderRadius: '6px',
+              padding: '10px 14px',
+              fontFamily: 'Consolas, monospace',
+              fontSize: '11px',
+              color: '#ffffff',
+              maxHeight: 180,
+              overflowY: 'auto',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '4px',
+            }}>
+              {successLogs.map((log, idx) => (
+                <div key={idx} className="animate-fade-in" style={{ animationDelay: `${idx * 0.05}s` }}>
+                  {log.includes('Failed') || log.includes('Error') ? (
+                    <span style={{ color: '#fb7185' }}>❌ {log}</span>
+                  ) : log.includes('bridged') || log.includes('Success') || log.includes('established') ? (
+                    <span style={{ color: 'var(--silver-300)' }}>✅ {log}</span>
+                  ) : (
+                    <span>🔹 {log}</span>
+                  )}
+                </div>
+              ))}
+              <div ref={consoleEndRef} />
+            </div>
+          </div>
