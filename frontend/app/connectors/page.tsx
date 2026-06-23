@@ -168,3 +168,88 @@ export default function ConnectorsPage() {
 
     reader.readAsText(file);
   }
+
+  function handleIngestSuccess(logs: string[]) {
+    setPreviewData(null);
+    setSuccessLogs(logs);
+    setShowConsole(true);
+    // Reload history list
+    loadHistory();
+  }
+
+  return (
+    <div className="page-layout" style={{ overflowY: 'auto', height: 'calc(100vh - 64px)' }}>
+      <div className="page-content" style={{ maxWidth: '1100px', margin: '0 auto', padding: '24px 20px 48px' }}>
+        
+        {/* Header Section */}
+        <div style={{ marginBottom: '24px' }}>
+          <h1 style={{ fontSize: '24px', fontWeight: 800, color: 'var(--silver-100)', letterSpacing: '-0.02em', margin: '0 0 6px' }}>
+            Data Import & Platform Connectors
+          </h1>
+          <p style={{ color: 'var(--silver-400)', fontSize: '13px', lineHeight: 1.5, margin: 0 }}>
+            Bridge your local contact ledgers and social networks into the HOPNet database. Upload files explicitly exported from external networks to expand your human relation graphs securely.
+          </p>
+        </div>
+
+        {/* CONNECTORS GRID */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px', marginBottom: '24px' }}>
+          {CONNECTORS.map(connector => (
+            <div
+              key={connector.id}
+              className="glass-panel"
+              style={{
+                padding: '20px',
+                borderColor: connector.border,
+                background: `linear-gradient(135deg, rgba(255,255,255,0.01), ${connector.glow})`,
+                position: 'relative',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                height: 220,
+              }}
+            >
+              <div>
+                {/* Icon & title */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+                  <div style={{ fontSize: '26px' }}>{connector.icon}</div>
+                  <span
+                    className="badge"
+                    style={{
+                      fontSize: '9.5px',
+                      background: 'rgba(255,255,255,0.02)',
+                      border: '1px solid var(--glass-border)',
+                      color: 'var(--silver-400)',
+                      padding: '2px 8px',
+                    }}
+                  >
+                    {connector.status}
+                  </span>
+                </div>
+
+                <h3 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--silver-100)', margin: '0 0 6px' }}>
+                  {connector.name}
+                </h3>
+                <p style={{ color: 'var(--silver-400)', fontSize: '11px', lineHeight: 1.4, margin: '0 0 12px' }}>
+                  {connector.desc}
+                </p>
+                <div style={{
+                  fontSize: '9.5px',
+                  color: 'var(--silver-500)',
+                  lineHeight: 1.3,
+                  whiteSpace: 'pre-wrap',
+                  background: 'rgba(0,0,0,0.15)',
+                  border: '1px solid rgba(255,255,255,0.02)',
+                  borderRadius: '4px',
+                  padding: '6px 8px',
+                }}>
+                  {connector.instructions}
+                </div>
+              </div>
+
+              {/* Upload Action Button */}
+              <button
+                className="glass-button"
+                onClick={() => handleConnectorSelect(connector)}
+                style={{
+                  width: '100%',
+                  marginTop: '12px',
