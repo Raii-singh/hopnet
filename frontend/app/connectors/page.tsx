@@ -338,3 +338,86 @@ export default function ConnectorsPage() {
               <div ref={consoleEndRef} />
             </div>
           </div>
+        )}
+
+        {/* IMPORT HISTORY TABLE */}
+        <div className="glass-panel" style={{ padding: '20px 24px' }}>
+          <h3 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--silver-100)', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            📥 Platform Import History Logs
+          </h3>
+
+          {loadingHistory ? (
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '30px 0' }}>
+              <div style={{ width: 22, height: 22, border: '2px solid #ffffff', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+            </div>
+          ) : history.length === 0 ? (
+            <div style={{ textAlign: 'center', color: 'var(--silver-600)', padding: '24px 0', fontSize: '12px' }}>
+              No platform imports have been performed yet. Drop a Connections.csv file above to begin.
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {history.map((log) => (
+                <div
+                  key={log.id}
+                  className="glass-panel"
+                  style={{
+                    padding: '12px 16px',
+                    background: 'rgba(255,255,255,0.005)',
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    gap: '10px',
+                  }}
+                >
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <strong style={{ fontSize: '13px', color: 'var(--silver-200)' }}>{log.connectorSource}</strong>
+                      <span className="text-mono" style={{ fontSize: '10px', color: 'var(--silver-500)' }}>({log.filename})</span>
+                    </div>
+                    <div style={{ fontSize: '11px', color: 'var(--silver-500)', marginTop: '4px' }}>
+                      Timestamp: {new Date(log.createdAt).toLocaleString()} · Confidence: {Math.round(log.confidenceScore * 100)}%
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '12px' }}>
+                    <div style={{ textAlign: 'right' }}>
+                      <div className="text-mono" style={{ fontSize: '12px', fontWeight: 700, color: '#ffffff' }}>
+                        +{log.nodesCreated} Nodes
+                      </div>
+                      <div className="text-mono" style={{ fontSize: '11px', color: 'var(--silver-400)', marginTop: '2px' }}>
+                        +{log.edgesCreated} Edges
+                      </div>
+                    </div>
+
+                    <button
+                      className="glass-button"
+                      onClick={() => {
+                        setSuccessLogs(log.importLogs);
+                        setShowConsole(true);
+                      }}
+                      style={{ fontSize: '10.5px', padding: '4px 10px', alignSelf: 'center' }}
+                    >
+                      View Logs
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+      </div>
+
+      {previewData && selectedConnector && fileDetails && (
+        <ImportPreviewModal
+          connectorType={selectedConnector.name}
+          filename={fileDetails.name}
+          previewData={previewData}
+          onClose={() => setPreviewData(null)}
+          onSuccess={handleIngestSuccess}
+        />
+      )}
+    </div>
+  );
+}
