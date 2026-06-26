@@ -338,3 +338,88 @@ export default function DatabasePage() {
                             </div>
                           </td>
 
+                          {/* Type */}
+                          <td style={{ padding: '12px 14px' }}>
+                            <span className={`badge ${isReal ? 'badge-real' : 'badge-demo'}`}>
+                              {isReal ? '● REAL' : '○ DEMO'}
+                            </span>
+                          </td>
+
+                          {/* Company & Cluster */}
+                          <td style={{ padding: '12px 14px', minWidth: 160 }}>
+                            <div style={{ fontSize: '12px', color: 'var(--silver-200)', fontWeight: 500 }}>{node.company || '—'}</div>
+                            <div style={{ fontSize: '10px', color: 'var(--silver-400)', fontWeight: 600 }}>{node.cluster || '—'}</div>
+                          </td>
+
+                          {/* Connections */}
+                          <td style={{ padding: '12px 14px', textAlign: 'center' }}>
+                            <span className="text-mono" style={{ color: 'var(--silver-200)', fontWeight: 700 }}>{node.connectionCount}</span>
+                          </td>
+
+                          {/* Real */}
+                          <td style={{ padding: '12px 14px', textAlign: 'center' }}>
+                            <span className="text-mono" style={{ color: '#ffffff', fontWeight: 700 }}>{node.realConnections}</span>
+                          </td>
+
+                          {/* Influence */}
+                          <td style={{ padding: '12px 14px', minWidth: 120 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <span className="text-mono" style={{ color: '#ffffff', minWidth: 28, fontSize: '12px' }}>
+                                {node.influenceScore}
+                              </span>
+                              <div style={{ flex: 1 }}>
+                                <div className="progress-bar">
+                                  <div className="progress-fill" style={{ width: `${node.influenceScore}%`, background: 'linear-gradient(90deg, #cbd5e1, #475569)' }} />
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* Avg Hop */}
+                          <td style={{ padding: '12px 14px', textAlign: 'center' }}>
+                            <span className="text-mono" style={{ color: 'var(--silver-400)', fontSize: '12px' }}>
+                              {node.avgPathDistance?.toFixed(1) || '—'}
+                            </span>
+                          </td>
+
+                          {/* Actions */}
+                          <td style={{ padding: '12px 14px', textAlign: 'right' }}>
+                            <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+                              <button
+                                className="glass-button"
+                                style={{ padding: '4px 8px', fontSize: '11px', color: '#eab308', borderColor: 'rgba(234, 179, 8, 0.25)' }}
+                                title="Focus & Center Graph on this Person"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setPrimaryNode(node.id);
+                                  router.push('/');
+                                }}
+                              >
+                                Focus Graph
+                              </button>
+                              {(primaryNodeId !== node.id && primaryNodeId !== node.publicId) && (
+                                <button
+                                  className="glass-button"
+                                  style={{ padding: '4px 8px', fontSize: '11px' }}
+                                  title="Set as Global Primary Node"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setPrimaryNode(node.id);
+                                  }}
+                                >
+                                  Set Primary
+                                </button>
+                              )}
+                              <button
+                                className="glass-button"
+                                style={{ padding: '4px 8px', fontSize: '11px' }}
+                                title="View Node Profile"
+                                onClick={(e) => { e.stopPropagation(); setSelectedNode(isSelected ? null : node); }}
+                              >
+                                {isSelected ? 'Hide' : 'View'}
+                              </button>
+                              <button
+                                className="glass-button"
+                                disabled={!isAdmin}
+                                title={!isAdmin ? 'SUDO Mode Required' : 'Edit Person Details'}
+                                style={{
