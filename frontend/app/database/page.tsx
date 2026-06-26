@@ -168,3 +168,88 @@ export default function DatabasePage() {
           {/* Type filter */}
           <div style={{ display: 'flex', gap: '4px' }}>
             {(['All', 'REAL', 'DEMO'] as TypeFilter[]).map(t => (
+              <button
+                key={t}
+                className={`glass-button ${typeFilter === t ? 'active' : ''}`}
+                onClick={() => { setTypeFilter(t); setPage(0); }}
+                style={{ padding: '6px 12px' }}
+              >
+                {t === 'REAL' && <span style={{ color: '#ffffff' }}>●</span>}
+                {t === 'DEMO' && <span style={{ color: 'var(--silver-500)' }}>○</span>}
+                {t}
+              </button>
+            ))}
+          </div>
+
+          {/* Cluster filter */}
+          <select
+            className="glass-input"
+            value={clusterFilter}
+            onChange={e => { setClusterFilter(e.target.value); setPage(0); }}
+            style={{ width: 'auto', background: 'var(--bg-glass)', cursor: 'pointer' }}
+          >
+            {clusters.map(c => <option key={c} value={c} style={{ background: '#020202' }}>{c} Cluster</option>)}
+          </select>
+
+          {/* Lock state badge */}
+          <div style={{
+            padding: '4px 10px', borderRadius: '100px', fontSize: '11px', fontWeight: 600,
+            background: isAdmin ? 'rgba(34,197,94,0.1)' : 'rgba(255,255,255,0.05)',
+            color: isAdmin ? '#4ade80' : 'var(--silver-400)',
+            border: `1px solid ${isAdmin ? 'rgba(34,197,94,0.3)' : 'rgba(255,255,255,0.1)'}`,
+            display: 'flex', alignItems: 'center', gap: '6px'
+          }}>
+            <span>{isAdmin ? '🔓 SUDO ACTIVE' : '🔒 SUDO LOCKED'}</span>
+          </div>
+
+          <span className="text-label" style={{ whiteSpace: 'nowrap' }}>
+            {filtered.length} result{filtered.length !== 1 ? 's' : ''}
+          </span>
+
+          {/* Add Person CTA */}
+          <button
+            id="db-add-person-btn"
+            className="glass-button font-semibold"
+            onClick={() => setShowCreateModal(true)}
+            disabled={!isAdmin}
+            title={!isAdmin ? 'SUDO Authentication Required' : 'Add new person'}
+            style={{
+              padding: '6px 14px',
+              background: !isAdmin ? 'rgba(255, 255, 255, 0.03)' : 'rgba(255, 255, 255, 0.08)',
+              borderColor: !isAdmin ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.25)',
+              color: '#ffffff',
+              opacity: !isAdmin ? 0.4 : 1,
+              cursor: !isAdmin ? 'not-allowed' : 'pointer',
+              marginLeft: 'auto',
+            }}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            + Add Person {!isAdmin && '🔒'}
+          </button>
+        </div>
+
+        {/* ── Table ── */}
+        <div className="glass-panel" style={{ overflow: 'hidden', marginBottom: '16px' }}>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ borderBottom: '1px solid var(--glass-border)' }}>
+                  <th style={colStyle('rank')} onClick={() => toggleSort('rank')}>Rank (Connections) <SortIcon k="rank" /></th>
+                  <th style={colStyle('name')} onClick={() => toggleSort('name')}>Public ID & Name <SortIcon k="name" /></th>
+                  <th style={{ ...colStyle('rank'), cursor: 'default' }}>Type</th>
+                  <th style={{ ...colStyle('rank'), cursor: 'default' }}>Company Footprint</th>
+                  <th style={colStyle('connectionCount')} onClick={() => toggleSort('connectionCount')}>Connections <SortIcon k="connectionCount" /></th>
+                  <th style={colStyle('realConnections')} onClick={() => toggleSort('realConnections')}>Real <SortIcon k="realConnections" /></th>
+                  <th style={colStyle('influenceScore')} onClick={() => toggleSort('influenceScore')}>Influence <SortIcon k="influenceScore" /></th>
+                  <th style={colStyle('avgPathDistance')} onClick={() => toggleSort('avgPathDistance')}>Avg Hop <SortIcon k="avgPathDistance" /></th>
+                  <th style={{ ...colStyle('rank'), cursor: 'default', textAlign: 'right' }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {isLoading || !isMounted ? (
+                  Array.from({ length: 6 }).map((_, idx) => (
+                    <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', height: '56px' }}>
+                      <td style={{ padding: '12px 14px' }}><div className="animate-pulse" style={{ width: 30, height: 12, background: 'rgba(255,255,255,0.05)', borderRadius: 3 }} /></td>
+                      <td style={{ padding: '12px 14px' }}>
