@@ -253,3 +253,88 @@ export default function DatabasePage() {
                     <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', height: '56px' }}>
                       <td style={{ padding: '12px 14px' }}><div className="animate-pulse" style={{ width: 30, height: 12, background: 'rgba(255,255,255,0.05)', borderRadius: 3 }} /></td>
                       <td style={{ padding: '12px 14px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <div className="animate-pulse" style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(255,255,255,0.05)' }} />
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <div className="animate-pulse" style={{ width: 120, height: 12, background: 'rgba(255,255,255,0.05)', borderRadius: 3 }} />
+                            <div className="animate-pulse" style={{ width: 60, height: 8, background: 'rgba(255,255,255,0.03)', borderRadius: 2 }} />
+                          </div>
+                        </div>
+                      </td>
+                      <td style={{ padding: '12px 14px' }}><div className="animate-pulse" style={{ width: 45, height: 16, background: 'rgba(255,255,255,0.04)', borderRadius: 4 }} /></td>
+                      <td style={{ padding: '12px 14px' }}>
+                        <div className="animate-pulse" style={{ width: 80, height: 12, background: 'rgba(255,255,255,0.05)', borderRadius: 3 }} />
+                        <div className="animate-pulse" style={{ width: 40, height: 8, background: 'rgba(255,255,255,0.03)', borderRadius: 2, marginTop: 4 }} />
+                      </td>
+                      <td style={{ padding: '12px 14px' }}><div className="animate-pulse" style={{ width: 30, height: 12, background: 'rgba(255,255,255,0.05)', borderRadius: 3 }} /></td>
+                      <td style={{ padding: '12px 14px' }}><div className="animate-pulse" style={{ width: 20, height: 12, background: 'rgba(255,255,255,0.05)', borderRadius: 3 }} /></td>
+                      <td style={{ padding: '12px 14px' }}><div className="animate-pulse" style={{ width: 100, height: 10, background: 'rgba(255,255,255,0.04)', borderRadius: 2 }} /></td>
+                      <td style={{ padding: '12px 14px' }}><div className="animate-pulse" style={{ width: 20, height: 12, background: 'rgba(255,255,255,0.05)', borderRadius: 3 }} /></td>
+                    </tr>
+                  ))
+                ) : filtered.length === 0 ? (
+                  <tr>
+                    <td colSpan={9} style={{ padding: '48px', textAlign: 'center', color: 'var(--silver-500)', fontSize: '13px' }}>
+                      🚫 No matching professional intelligence footprints found in the directory.
+                    </td>
+                  </tr>
+                ) : (
+                  paginated.map((node) => {
+                    const globalRank = ranked.findIndex(n => n.id === node.id) + 1;
+                    const isReal = node.nodeType === 'REAL';
+                    const isSelected = selectedNode?.id === node.id;
+                    return (
+                      <React.Fragment key={node.id}>
+                        <tr
+                          onClick={() => setSelectedNode(isSelected ? null : node)}
+                          style={{
+                            borderBottom: '1px solid rgba(255,255,255,0.04)',
+                            cursor: 'pointer',
+                            background: isSelected ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
+                            transition: 'background 0.15s',
+                          }}
+                          onMouseEnter={e => { if (!isSelected) (e.currentTarget as HTMLElement).style.background = 'var(--bg-glass)'; }}
+                          onMouseLeave={e => { if (!isSelected) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+                        >
+                          {/* Rank */}
+                          <td style={{ padding: '12px 14px', minWidth: 60 }}>
+                            <span className="text-mono" style={{
+                              fontSize: '13px', fontWeight: 700,
+                              color: globalRank <= 3 ? '#ffffff' : 'var(--silver-600)',
+                            }}>
+                              {globalRank === 1 ? '🏆 #1' : globalRank <= 3 ? ['🥈 #2','🥉 #3'][globalRank - 2] : `#${globalRank}`}
+                            </span>
+                          </td>
+
+                          {/* Public ID & Name */}
+                          <td style={{ padding: '12px 14px', minWidth: 200 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <div style={{
+                                width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
+                                background: isReal ? 'rgba(255,255,255,0.06)' : 'rgba(100,116,139,0.15)',
+                                border: `1px solid ${isReal ? 'rgba(255,255,255,0.25)' : 'rgba(100,116,139,0.3)'}`,
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                fontSize: '11px', fontWeight: 700,
+                                color: isReal ? '#ffffff' : 'var(--silver-500)',
+                              }}>
+                                {node.fullName.charAt(0)}
+                              </div>
+                              <div>
+                                <div style={{ fontWeight: 600, color: 'var(--silver-100)', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                  {node.fullName}
+                                  {(primaryNodeId === node.id || primaryNodeId === node.publicId) && (
+                                    <span style={{
+                                      padding: '1px 6px', borderRadius: '100px', fontSize: '9.5px', fontWeight: 700,
+                                      background: 'rgba(234, 179, 8, 0.15)', color: '#eab308', border: '1px solid rgba(234, 179, 8, 0.3)',
+                                    }}>
+                                      ⭐ Primary
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="text-mono" style={{ fontSize: '10px', color: 'var(--silver-500)' }}>
+                                  {node.publicId}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+
