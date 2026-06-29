@@ -508,3 +508,88 @@ export default function DatabasePage() {
                                       disabled={!isAdmin}
                                       title={!isAdmin ? 'SUDO Mode Required' : ''}
                                       onClick={() => setCreatingEdgeSourceId(node.id)}
+                                      style={{
+                                        padding: '4px 10px', fontSize: '11px', color: '#ffffff',
+                                        borderColor: 'rgba(255, 255, 255, 0.25)', background: 'rgba(255,255,255,0.06)',
+                                        opacity: !isAdmin ? 0.4 : 1, cursor: !isAdmin ? 'not-allowed' : 'pointer'
+                                      }}
+                                    >
+                                      + Add Relationship {!isAdmin && '🔒'}
+                                    </button>
+                                  </div>
+
+                                  {visibleLinks.filter(e => {
+                                    const src = typeof e.source === 'string' ? e.source : (e.source as any).id;
+                                    const tgt = typeof e.target === 'string' ? e.target : (e.target as any).id;
+                                    return src === node.id || tgt === node.id;
+                                  }).length === 0 ? (
+                                    <div style={{ fontSize: '11px', color: 'var(--silver-500)', fontStyle: 'italic' }}>
+                                      No direct graph relationships registered for this profile.
+                                    </div>
+                                  ) : (
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                      {visibleLinks.filter(e => {
+                                        const src = typeof e.source === 'string' ? e.source : (e.source as any).id;
+                                        const tgt = typeof e.target === 'string' ? e.target : (e.target as any).id;
+                                        return src === node.id || tgt === node.id;
+                                      }).map(edge => {
+                                        const srcId = typeof edge.source === 'string' ? edge.source : (edge.source as any).id;
+                                        const tgtId = typeof edge.target === 'string' ? edge.target : (edge.target as any).id;
+                                        const otherId = srcId === node.id ? tgtId : srcId;
+                                        const otherPerson = databaseNodes.find(n => n.id === otherId);
+                                        return (
+                                          <div key={edge.id} style={{
+                                            display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 12px',
+                                            background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px',
+                                          }}>
+                                            <span style={{ fontSize: '12px', color: 'var(--silver-200)', fontWeight: 600 }}>
+                                              {otherPerson ? otherPerson.fullName : otherId}
+                                            </span>
+                                            <span style={{ fontSize: '10px', padding: '1px 6px', borderRadius: '4px', background: 'rgba(255,255,255,0.06)', color: 'var(--silver-400)', textTransform: 'lowercase' }}>
+                                              {edge.relationshipType}
+                                            </span>
+                                            <span className="text-mono" style={{ fontSize: '10px', color: 'var(--silver-500)' }}>
+                                              {Math.round(edge.trustScore * 100)}
+                                            </span>
+                                            <button
+                                              className="glass-button"
+                                              disabled={!isAdmin}
+                                              style={{ padding: '2px 6px', fontSize: '10px', opacity: !isAdmin ? 0.4 : 1 }}
+                                              onClick={() => setEditingEdge(edge)}
+                                            >
+                                              Edit
+                                            </button>
+                                            <button
+                                              className="glass-button"
+                                              disabled={!isAdmin}
+                                              style={{ padding: '2px 6px', fontSize: '10px', color: 'rgba(244,63,94,0.9)', borderColor: 'rgba(244,63,94,0.3)', opacity: !isAdmin ? 0.4 : 1 }}
+                                              onClick={() => {
+                                                if (confirm(`Sever relationship with ${otherPerson?.fullName}?`)) {
+                                                  removeEdge(edge.id);
+                                                }
+                                              }}
+                                            >
+                                              Sever
+                                            </button>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* ── Pagination ── */}
+        {totalPages > 1 && (
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
