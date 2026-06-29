@@ -423,3 +423,88 @@ export default function DatabasePage() {
                                 disabled={!isAdmin}
                                 title={!isAdmin ? 'SUDO Mode Required' : 'Edit Person Details'}
                                 style={{
+                                  padding: '4px 8px', fontSize: '11px', color: '#ffffff',
+                                  opacity: !isAdmin ? 0.4 : 1, cursor: !isAdmin ? 'not-allowed' : 'pointer'
+                                }}
+                                onClick={(e) => { e.stopPropagation(); setEditingNode(node); }}
+                              >
+                                Edit {!isAdmin && '🔒'}
+                              </button>
+                              <button
+                                className="glass-button"
+                                disabled={!isAdmin}
+                                title={!isAdmin ? 'SUDO Mode Required' : 'Delete Person'}
+                                style={{
+                                  padding: '4px 8px', fontSize: '11px', color: 'rgba(244,63,94,0.9)', borderColor: 'rgba(244,63,94,0.3)',
+                                  opacity: !isAdmin ? 0.4 : 1, cursor: !isAdmin ? 'not-allowed' : 'pointer'
+                                }}
+                                onClick={(e) => { e.stopPropagation(); setDeletingNode(node); }}
+                              >
+                                Delete {!isAdmin && '🔒'}
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+
+                        {/* Inline Expandable Details Panel directly under clicked row */}
+                        {isSelected && (
+                          <tr style={{ background: 'rgba(15, 23, 42, 0.85)', borderBottom: '1px solid rgba(255, 255, 255, 0.12)' }}>
+                            <td colSpan={9} style={{ padding: '20px 24px' }}>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flexWrap: 'wrap' }}>
+                                  <div style={{ flex: 1, minWidth: 280 }}>
+                                    <div className="text-label" style={{ marginBottom: '4px' }}>Professional Footprint Tags</div>
+                                    <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', marginBottom: '8px' }}>
+                                      {node.tags && node.tags.length > 0 ? (
+                                        node.tags.map(t => (
+                                          <span key={t} style={{ padding: '2px 8px', borderRadius: '100px', fontSize: '10px', background: 'var(--bg-glass)', border: '1px solid var(--glass-border)', color: 'var(--silver-300)' }}>{t}</span>
+                                        ))
+                                      ) : (
+                                        <span style={{ fontSize: '11px', color: 'var(--silver-500)' }}>No tags registered</span>
+                                      )}
+                                    </div>
+                                    <div className="text-mono" style={{ fontSize: '11px', color: 'var(--silver-500)' }}>
+                                      Footprint Sources: <span style={{ color: '#ffffff' }}>{node.sourceConnectors?.join(', ') || 'Manual Workspace'}</span>
+                                    </div>
+                                  </div>
+                                  
+                                  <div style={{ display: 'flex', gap: '8px' }}>
+                                    <button
+                                      className="glass-button"
+                                      disabled={!isAdmin}
+                                      title={!isAdmin ? 'SUDO Mode Required' : ''}
+                                      style={{ color: '#ffffff', opacity: !isAdmin ? 0.4 : 1, cursor: !isAdmin ? 'not-allowed' : 'pointer' }}
+                                      onClick={() => setEditingNode(node)}
+                                    >
+                                      ✏️ Edit Person {!isAdmin && '🔒'}
+                                    </button>
+                                    <Link href={`/profile/${node.publicId}`} style={{ textDecoration: 'none' }}>
+                                      <button className="glass-button">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3"/>
+                                        </svg>
+                                        Full Profile
+                                      </button>
+                                    </Link>
+                                    <button className="glass-button" onClick={() => { setRootNode(node.id); setPrimaryNode(node.id); router.push('/'); }}>
+                                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/>
+                                      </svg>
+                                      Focus Graph
+                                    </button>
+                                  </div>
+                                </div>
+
+                                {/* Direct Relationships Manager */}
+                                <div style={{ borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: '16px' }}>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                                    <div className="text-label" style={{ color: '#ffffff', fontWeight: 700 }}>Direct Graph Relationships ({visibleLinks.filter(e => {
+                                      const src = typeof e.source === 'string' ? e.source : (e.source as any).id;
+                                      const tgt = typeof e.target === 'string' ? e.target : (e.target as any).id;
+                                      return src === node.id || tgt === node.id;
+                                    }).length})</div>
+                                    <button
+                                      className="glass-button font-semibold"
+                                      disabled={!isAdmin}
+                                      title={!isAdmin ? 'SUDO Mode Required' : ''}
+                                      onClick={() => setCreatingEdgeSourceId(node.id)}
