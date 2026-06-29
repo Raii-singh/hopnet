@@ -593,3 +593,67 @@ export default function DatabasePage() {
         {/* ── Pagination ── */}
         {totalPages > 1 && (
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
+            <button className="glass-button" onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0} style={{ opacity: page === 0 ? 0.3 : 1 }}>
+              ← Prev
+            </button>
+            {Array.from({ length: totalPages }, (_, i) => (
+              <button
+                key={i}
+                className={`glass-button ${page === i ? 'active' : ''}`}
+                onClick={() => setPage(i)}
+                style={{ minWidth: 36, justifyContent: 'center' }}
+              >
+                {i + 1}
+              </button>
+            ))}
+            <button className="glass-button" onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))} disabled={page === totalPages - 1} style={{ opacity: page === totalPages - 1 ? 0.3 : 1 }}>
+              Next →
+            </button>
+          </div>
+        )}
+
+      </div>
+
+      {/* ── SHARED MODALS (GUI CRUD) ── */}
+      {showCreateModal && <NodeCreateModal onClose={() => setShowCreateModal(false)} />}
+      {editingNode && <NodeProfileModal node={editingNode} onClose={() => setEditingNode(null)} />}
+      {editingEdge && <EdgeEditorModal edge={editingEdge} onClose={() => setEditingEdge(null)} />}
+      {creatingEdgeSourceId && (
+        <EdgeEditorModal
+          createData={{ sourceId: creatingEdgeSourceId, targetId: '' }}
+          onClose={() => setCreatingEdgeSourceId(null)}
+        />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deletingNode && (
+        <div className="modal-overlay animate-fade-in" onClick={() => setDeletingNode(null)}>
+          <div className="glass-panel-strong animate-fade-in-scale" style={{ width: 400, padding: '24px' }}>
+            <h3 style={{ fontSize: '18px', color: 'var(--silver-100)', margin: '0 0 8px', fontWeight: 700 }}>
+              Confirm Person Deletion
+            </h3>
+            <p style={{ fontSize: '13px', color: 'var(--silver-400)', margin: '0 0 20px', lineHeight: 1.5 }}>
+              Are you sure you want to delete <strong style={{ color: '#ffffff' }}>{deletingNode.fullName}</strong> ({deletingNode.publicId})? This action will remove the record from Neo4j.
+            </p>
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+              <button className="glass-button" onClick={() => setDeletingNode(null)}>
+                Cancel
+              </button>
+              <button
+                className="glass-button font-semibold"
+                style={{ background: 'rgba(244,63,94,0.15)', borderColor: 'rgba(244,63,94,0.4)', color: '#ffffff' }}
+                onClick={async () => {
+                  await removeUserNode(deletingNode.id);
+                  setDeletingNode(null);
+                  if (selectedNode?.id === deletingNode.id) setSelectedNode(null);
+                }}
+              >
+                Confirm Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
