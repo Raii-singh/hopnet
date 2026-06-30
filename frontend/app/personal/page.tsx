@@ -1,0 +1,85 @@
+'use client';
+
+import { useGraphStore } from '@/store/graphStore';
+import { useAuthStore } from '@/store/authStore';
+import Link from 'next/link';
+import React, { useState } from 'react';
+import PersonalProfileView from '@/components/profile/PersonalProfileView';
+import NodeCreateModal from '@/components/modals/NodeCreateModal';
+
+export default function PersonalPage() {
+  const { databaseNodes, visibleLinks, rootNodeId, isLoading, refreshDatabase } = useGraphStore();
+  const { isAdmin } = useAuthStore();
+  const [isMounted, setIsMounted] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+
+  React.useEffect(() => {
+    setIsMounted(true);
+    refreshDatabase();
+  }, [refreshDatabase]);
+
+  // Active person: current root node or first person in Neo4j
+  const activePerson = databaseNodes.find(n => n.id === rootNodeId) ?? databaseNodes[0];
+
+  if (isLoading || !isMounted) {
+    return (
+      <div className="page-layout" style={{ overflowY: 'auto', height: 'calc(100vh - 64px)' }}>
+        <div className="page-content" style={{ paddingBottom: '48px' }}>
+          <div style={{ marginBottom: '24px' }}>
+            <div className="animate-pulse" style={{ width: 140, height: 12, background: 'rgba(255,255,255,0.05)', borderRadius: 3, marginBottom: '8px' }} />
+            <div className="animate-pulse" style={{ width: 320, height: 26, background: 'rgba(255,255,255,0.05)', borderRadius: 6 }} />
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+            <div className="glass-panel" style={{ height: 400, padding: 24 }}>
+              <div className="animate-pulse" style={{ width: 80, height: 80, borderRadius: '50%', background: 'rgba(255,255,255,0.05)', marginBottom: 16 }} />
+              <div className="animate-pulse" style={{ width: 180, height: 20, background: 'rgba(255,255,255,0.05)', borderRadius: 4, marginBottom: 8 }} />
+              <div className="animate-pulse" style={{ width: 120, height: 12, background: 'rgba(255,255,255,0.03)', borderRadius: 3 }} />
+            </div>
+            <div className="glass-panel" style={{ height: 400, padding: 24 }}>
+              <div className="animate-pulse" style={{ width: 220, height: 20, background: 'rgba(255,255,255,0.05)', borderRadius: 4, marginBottom: 16 }} />
+              <div className="animate-pulse" style={{ width: '100%', height: 120, background: 'rgba(255,255,255,0.03)', borderRadius: 6 }} />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── EMPTY STATE — 0 Persons in Neo4j ───────────────────────────────────────
+  if (!activePerson || databaseNodes.length === 0) {
+    return (
+      <div className="page-layout" style={{ overflowY: 'auto', height: 'calc(100vh - 64px)' }}>
+        <div className="page-content" style={{ paddingBottom: '48px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
+          <div className="glass-panel" style={{ padding: '40px', maxWidth: '480px', textAlign: 'center', border: '1px solid rgba(255,255,255,0.15)' }}>
+            <div style={{ fontSize: '44px', marginBottom: '16px' }}>👤</div>
+            <h2 style={{ fontSize: '20px', fontWeight: 800, color: 'var(--silver-100)', marginBottom: '8px' }}>
+              No Personal Identity Found
+            </h2>
+            <p style={{ color: 'var(--silver-400)', fontSize: '13.5px', marginBottom: '24px', lineHeight: 1.5 }}>
+              Your Neo4j database contains 0 registered profiles. Add your first person to initialize relationship intelligence.
+            </p>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+              <button
+                className="glass-button font-semibold"
+                disabled={!isAdmin}
+                title={!isAdmin ? 'SUDO Mode Required' : ''}
+                onClick={() => setShowCreateModal(true)}
+                style={{
+                  padding: '8px 16px',
+                  background: 'rgba(255,255,255,0.1)',
+                  borderColor: 'rgba(255,255,255,0.3)',
+                  color: '#ffffff',
+                  opacity: !isAdmin ? 0.5 : 1,
+                  cursor: !isAdmin ? 'not-allowed' : 'pointer'
+                }}
+              >
+                + Add First Person {!isAdmin && '🔒'}
+              </button>
+              <Link href="/">
+                <button className="glass-button" style={{ padding: '8px 16px' }}>
+                  Go to Graph View
+                </button>
+              </Link>
+            </div>
+          </div>
+        </div>
