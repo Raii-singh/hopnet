@@ -83,3 +83,58 @@ export default function PersonalPage() {
             </div>
           </div>
         </div>
+
+        {showCreateModal && (
+          <NodeCreateModal onClose={() => setShowCreateModal(false)} />
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="page-layout" style={{ overflowY: 'auto', height: 'calc(100vh - 64px)' }}>
+      <div className="page-content" style={{ paddingBottom: '48px', maxWidth: '1200px', margin: '0 auto' }}>
+
+        {/* ── Page Header ── */}
+        <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '12px' }}>
+          <div>
+            <div className="text-label" style={{ color: 'var(--silver-400)', marginBottom: '4px' }}>Personal Database</div>
+            <h1 style={{ fontSize: '26px', fontWeight: 800, color: 'var(--silver-100)', letterSpacing: '-0.02em', margin: 0 }}>
+              Professional Profile & Relationship Intelligence
+            </h1>
+            <p style={{ color: 'var(--silver-500)', fontSize: '12.5px', marginTop: '4px' }}>
+              Active Neo4j Identity: <span style={{ color: '#ffffff', fontWeight: 600 }}>{activePerson.fullName} ({activePerson.publicId})</span>
+            </p>
+          </div>
+
+          {/* Selector if multiple persons exist */}
+          {databaseNodes.length > 1 && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span className="text-label" style={{ fontSize: '10px' }}>Switch Profile:</span>
+              <select
+                className="glass-input"
+                value={activePerson.id}
+                onChange={e => useGraphStore.getState().setRootNode(e.target.value)}
+                style={{ width: 'auto', background: 'var(--bg-glass)', cursor: 'pointer', fontSize: '12px', padding: '4px 10px' }}
+              >
+                {databaseNodes.map(n => (
+                  <option key={n.id} value={n.id} style={{ background: '#020202' }}>
+                    {n.fullName} ({n.publicId})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
+
+        {/* ── 2-COLUMN PROFILE & INTELLIGENCE VIEW ── */}
+        <PersonalProfileView
+          profile={activePerson}
+          databaseNodes={databaseNodes}
+          visibleLinks={visibleLinks}
+        />
+
+      </div>
+    </div>
+  );
+}
