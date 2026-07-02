@@ -83,3 +83,40 @@ export default function ProfilePage({ params }: ProfilePageProps) {
             </Link>
           </div>
         </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="page-layout" style={{ overflowY: 'auto', height: 'calc(100vh - 64px)' }}>
+      <div className="page-content" style={{ maxWidth: '1200px', margin: '0 auto', padding: '24px 20px 48px' }}>
+        
+        {/* Navigation Breadcrumb */}
+        <div style={{ marginBottom: '20px' }}>
+          <Link
+            href="/database"
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: '6px',
+              color: 'var(--silver-500)', fontSize: '12px', fontWeight: 500,
+              textDecoration: 'none', transition: 'color 0.2s',
+            }}
+            onMouseEnter={e => e.currentTarget.style.color = 'var(--silver-200)'}
+            onMouseLeave={e => e.currentTarget.style.color = 'var(--silver-500)'}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" />
+            </svg>
+            Back to Directory
+          </Link>
+        </div>
+
+        {/* 2-Column Profile & Intelligence View */}
+        <PersonalProfileView
+          profile={profile}
+          databaseNodes={databaseNodes}
+          visibleLinks={visibleLinks}
+        />
+      </div>
+    </div>
+  );
+}
