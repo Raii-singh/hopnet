@@ -83,3 +83,88 @@ function EndpointPicker({ label, initialNode, onSelect, disabled, useV2, allNode
     if (!q.trim()) { setResults([]); return; }
     setSearching(true);
     try {
+      if (useV2) {
+        const res = await searchPersonsV2(q, 8);
+        setResults(res.data.map(toGraphNode));
+      } else {
+        // dummy / v1: filter allNodes client-side
+        const lower = q.toLowerCase();
+        setResults(
+          allNodes
+            .filter(n =>
+              n.fullName.toLowerCase().includes(lower) ||
+              n.email?.toLowerCase().includes(lower) ||
+              n.username?.toLowerCase().includes(lower)
+            )
+            .slice(0, 8)
+        );
+      }
+    } catch { setResults([]); }
+    finally { setSearching(false); }
+  }, [useV2, allNodes]);
+
+  // Debounce search
+  useEffect(() => {
+    const id = setTimeout(() => doSearch(query), 300);
+    return () => clearTimeout(id);
+  }, [query, doSearch]);
+
+  function handleSelect(node: GraphNode) {
+    setSelected(node);
+    setQuery(node.fullName);
+    setResults([]);
+    setOpen(false);
+    onSelect(node);
+  }
+
+  return (
+    <div style={{ position: 'relative', flex: 1 }}>
+      <label className="text-label" style={{ marginBottom: '6px', display: 'block', fontSize: '10px' }}>
+        {label}
+      </label>
+
+      {selected && !open ? (
+        // Resolved node pill
+        <div
+          style={{
+            background: 'rgba(255,255,255,0.04)',
+            border: `1px solid ${selected.nodeType === 'DEMO' ? 'rgba(245,158,11,0.3)' : 'var(--glass-border)'}`,
+            borderRadius: '8px',
+            padding: '8px 10px',
+            cursor: disabled ? 'default' : 'pointer',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '3px',
+          }}
+          onClick={() => { if (!disabled) { setOpen(true); setQuery(''); setResults([]); } }}
+        >
+          <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--silver-100)' }}>
+            {selected.fullName}
+          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <NodeBadge nodeType={selected.nodeType} />
+            {selected.publicId && (
+              <span style={{ fontSize: '9px', color: 'var(--silver-600)', fontFamily: 'monospace' }}>
+                {selected.publicId}
+              </span>
+            )}
+          </div>
+        </div>
+      ) : (
+        // Search input
+        <div style={{ position: 'relative' }}>
+          <input
+            autoFocus={open}
+            className="glass-input"
+            placeholder={`Search ${label.toLowerCase()}…`}
+            value={query}
+            disabled={disabled}
+            onChange={e => { setQuery(e.target.value); setOpen(true); }}
+            onFocus={() => setOpen(true)}
+            onBlur={() => setTimeout(() => setOpen(false), 160)}
+            style={{ width: '100%' }}
+          />
+          {searching && (
+            <span style={{
+              position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)',
+              fontSize: '10px', color: 'var(--silver-600)',
