@@ -253,3 +253,88 @@ export default function EdgeEditorModal({ edge, createData, onClose }: EdgeEdito
   const [relationshipType, setRelationshipType] = useState('acquaintance');
   const [trustScore, setTrustScore] = useState(0.5);
   const [interactionFrequency, setInteractionFrequency] = useState(0.5);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const isCreating = !!createData;
+  const isDemoToReal = sourceNode?.nodeType === 'DEMO' && targetNode?.nodeType === 'REAL';
+
+  // Resolve initial nodes
+  useEffect(() => {
+    const srcId = edge
+      ? (typeof edge.source === 'string' ? edge.source : edge.source.id)
+      : createData?.sourceId;
+    const tgtId = edge
+      ? (typeof edge.target === 'string' ? edge.target : edge.target.id)
+      : createData?.targetId;
+
+    // Try visibleNodes first (most likely to be there), then localNodes
+    if (srcId) {
+      const src = [...visibleNodes, ...localNodes].find(n => n.id === srcId) ?? null;
+      setSourceNode(src);
+    }
+    if (tgtId) {
+      const tgt = [...visibleNodes, ...localNodes].find(n => n.id === tgtId) ?? null;
+      setTargetNode(tgt);
+    }
+
+    if (edge) {
+      setRelationshipType(edge.relationshipType);
+      setTrustScore(edge.trustScore);
+      setInteractionFrequency(edge.interactionFrequency);
+    }
+  }, [edge, createData]);  // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Close on Escape
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onClose]);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!sourceNode || !targetNode) {
+      setErrorMsg('Both source and target nodes must be selected.');
+      return;
+    }
+
+    // Traversal constraint: DEMO→REAL is always blocked
+    if (isDemoToReal) {
+      setErrorMsg('Traversal Constraint Violation: DEMO → REAL connections are prohibited.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setErrorMsg('');
+
+    try {
+      if (isCreating) {
+        await createNewEdge({
+          sourceId: sourceNode.id,
+          targetId: targetNode.id,
+          relationshipType,
+          trustScore,
+          interactionFrequency,
+          connectorSource: 'Manual Editor',
+        });
+      } else if (edge) {
+        await modifyEdge(edge.id, {
+          relationshipType,
+          trustScore,
+          interactionFrequency,
+        });
+      }
+      onClose();
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Failed to apply relationship configuration.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!edge || isCreating) return;
+    if (!confirm('Are you sure you want to permanently sever this relationship edge?')) return;
+    setIsSubmitting(true);
+    setErrorMsg('');
