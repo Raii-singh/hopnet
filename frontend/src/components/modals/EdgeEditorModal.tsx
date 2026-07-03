@@ -168,3 +168,88 @@ function EndpointPicker({ label, initialNode, onSelect, disabled, useV2, allNode
             <span style={{
               position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)',
               fontSize: '10px', color: 'var(--silver-600)',
+            }}>
+              searching…
+            </span>
+          )}
+
+          {open && results.length > 0 && (
+            <div style={{
+              position: 'absolute', zIndex: 200, top: '100%', left: 0, right: 0,
+              background: 'rgba(10,10,10,0.97)',
+              border: '1px solid var(--glass-border)',
+              borderRadius: '8px',
+              marginTop: '4px',
+              maxHeight: 220,
+              overflowY: 'auto',
+            }}>
+              {results.map(n => (
+                <div
+                  key={n.id}
+                  onMouseDown={() => handleSelect(n)}
+                  style={{
+                    padding: '9px 12px',
+                    cursor: 'pointer',
+                    borderBottom: '1px solid rgba(255,255,255,0.04)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    transition: 'background 0.1s',
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                >
+                  <div>
+                    <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--silver-100)' }}>
+                      {n.fullName}
+                    </div>
+                    {n.company && (
+                      <div style={{ fontSize: '10px', color: 'var(--silver-500)', marginTop: '2px' }}>
+                        {n.company}
+                      </div>
+                    )}
+                  </div>
+                  <NodeBadge nodeType={n.nodeType} />
+                </div>
+              ))}
+            </div>
+          )}
+
+          {open && !searching && query.trim() && results.length === 0 && (
+            <div style={{
+              position: 'absolute', zIndex: 200, top: '100%', left: 0, right: 0,
+              background: 'rgba(10,10,10,0.97)',
+              border: '1px solid var(--glass-border)',
+              borderRadius: '8px',
+              marginTop: '4px',
+              padding: '12px',
+              fontSize: '11px',
+              color: 'var(--silver-600)',
+              textAlign: 'center',
+            }}>
+              No matches for "{query}"
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Main EdgeEditorModal ────────────────────────────────────────────────────
+
+export default function EdgeEditorModal({ edge, createData, onClose }: EdgeEditorModalProps) {
+  const { allNodes, visibleNodes, dataSource, createNewEdge, modifyEdge, removeEdge } = useGraphStore();
+  const { isAdmin } = useAuthStore();
+
+  // In v2 mode, allNodes is empty; visibleNodes has the current subgraph.
+  // The EndpointPicker uses server-side search so neither matters for resolution.
+  const useV2 = dataSource === 'api-v2';
+  const localNodes = allNodes.length > 0 ? allNodes : visibleNodes;
+
+  const [sourceNode, setSourceNode] = useState<GraphNode | null>(null);
+  const [targetNode, setTargetNode] = useState<GraphNode | null>(null);
+
+  const [relationshipType, setRelationshipType] = useState('acquaintance');
+  const [trustScore, setTrustScore] = useState(0.5);
+  const [interactionFrequency, setInteractionFrequency] = useState(0.5);
