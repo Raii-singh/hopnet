@@ -338,3 +338,88 @@ export default function EdgeEditorModal({ edge, createData, onClose }: EdgeEdito
     if (!confirm('Are you sure you want to permanently sever this relationship edge?')) return;
     setIsSubmitting(true);
     setErrorMsg('');
+    try {
+      await removeEdge(edge.id);
+      onClose();
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Failed to remove relationship edge.');
+      setIsSubmitting(false);
+    }
+  }
+
+  // Edge kind for accent line
+  const edgeAccent = sourceNode && targetNode
+    ? (sourceNode.nodeType === 'DEMO' || targetNode.nodeType === 'DEMO')
+      ? 'linear-gradient(90deg, #f59e0b, #d97706)'
+      : 'linear-gradient(90deg, #ffffff, var(--silver-500))'
+    : 'linear-gradient(90deg, #ffffff, var(--silver-500))';
+
+  return (
+    <div
+      className="modal-overlay animate-fade-in"
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div
+        className="glass-panel-strong animate-fade-in-scale"
+        style={{
+          width: 480,
+          maxWidth: 'calc(100vw - 40px)',
+          maxHeight: 'calc(100vh - 120px)',
+          overflowY: 'auto',
+          padding: 0,
+        }}
+      >
+        {/* Top accent — amber if either endpoint is DEMO */}
+        <div style={{ height: 3, background: edgeAccent, borderRadius: '12px 12px 0 0', transition: 'background 0.3s' }} />
+
+        <div style={{ padding: '20px 24px' }}>
+
+          {/* Header */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.5">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+              </svg>
+              <h2 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--silver-100)', margin: 0 }}>
+                {isCreating ? 'Configure Secure Link' : 'Edit Relationship Edge'}
+              </h2>
+            </div>
+            <button
+              onClick={onClose}
+              style={{
+                background: 'transparent', border: '1px solid var(--glass-border)',
+                borderRadius: '8px', color: 'var(--silver-500)', cursor: 'pointer',
+                width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                transition: 'all 0.15s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.color = 'var(--silver-100)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'; }}
+              onMouseLeave={e => { e.currentTarget.style.color = 'var(--silver-500)'; e.currentTarget.style.borderColor = 'var(--glass-border)'; }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
+
+          {/* Error message */}
+          {errorMsg && (
+            <div className="glass-panel" style={{
+              background: errorMsg.includes('Violation') ? 'rgba(244,63,94,0.08)' : 'rgba(244,63,94,0.05)',
+              borderColor: errorMsg.includes('Violation') ? 'rgba(244,63,94,0.4)' : 'rgba(244,63,94,0.3)',
+              color: 'rgba(244,63,94,0.9)',
+              padding: '10px 14px', fontSize: '11.5px', lineHeight: 1.4,
+              marginBottom: '16px', borderRadius: '8px',
+            }}>
+              ⚠️ {errorMsg}
+            </div>
+          )}
+
+          {/* DEMO→REAL constraint warning */}
+          {isDemoToReal && (
+            <div style={{
+              background: 'rgba(244,63,94,0.06)',
+              border: '1px solid rgba(244,63,94,0.35)',
+              borderRadius: '8px', padding: '9px 14px', marginBottom: '14px',
+              fontSize: '11.5px', color: 'rgba(244,63,94,0.9)', fontWeight: 600,
+            }}>
