@@ -508,3 +508,72 @@ export default function EdgeEditorModal({ edge, createData, onClose }: EdgeEdito
                   {Math.round(interactionFrequency * 100)}%
                 </span>
               </div>
+              <input
+                type="range" min={0} max={1} step={0.05}
+                value={interactionFrequency}
+                onChange={e => setInteractionFrequency(Number(e.target.value))}
+                className="hop-slider"
+                style={{ background: `linear-gradient(to right, #ffffff 0%, #ffffff ${interactionFrequency * 100}%, rgba(255,255,255,0.1) ${interactionFrequency * 100}%, rgba(255,255,255,0.1) 100%)` }}
+              />
+              <div style={{ fontSize: '9.5px', color: 'var(--silver-500)', marginTop: '4px', display: 'flex', justifyContent: 'space-between' }}>
+                <span>Sporadic / Dormant</span>
+                <span>Constant / High frequency</span>
+              </div>
+            </div>
+
+            {/* Weight preview */}
+            <div className="glass-panel" style={{
+              padding: '10px 14px', background: 'rgba(0,0,0,0.15)',
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            }}>
+              <span className="text-label">Resulting Edge Weight</span>
+              <span className="text-mono" style={{ fontSize: '14px', fontWeight: 800, color: '#ffffff' }}>
+                {Math.round((trustScore * 0.6 + interactionFrequency * 0.4) * 100) / 100}
+              </span>
+            </div>
+
+            <div className="divider" style={{ margin: '8px 0 0' }} />
+
+            {/* Actions */}
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'space-between', alignItems: 'center' }}>
+              {!isCreating && edge ? (
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  disabled={isSubmitting || !isAdmin}
+                  title={!isAdmin ? 'SUDO Mode Required' : ''}
+                  className="glass-button"
+                  style={{ borderColor: 'rgba(244,63,94,0.3)', color: 'rgba(244,63,94,0.8)', opacity: (isSubmitting || !isAdmin) ? 0.5 : 1, cursor: !isAdmin ? 'not-allowed' : 'pointer' }}
+                >
+                  Sever Connection {isAdmin ? '' : '🔒'}
+                </button>
+              ) : <div />}
+
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button type="button" className="glass-button" onClick={onClose} disabled={isSubmitting} style={{ opacity: isSubmitting ? 0.5 : 1 }}>
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="glass-button font-semibold"
+                  disabled={isSubmitting || isDemoToReal || !sourceNode || !targetNode || !isAdmin}
+                  title={!isAdmin ? 'SUDO Mode Required' : ''}
+                  style={{
+                    borderColor: 'rgba(255, 255, 255, 0.25)',
+                    color: '#ffffff',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    boxShadow: '0 0 15px rgba(255, 255, 255, 0.08)',
+                    opacity: (isSubmitting || isDemoToReal || !sourceNode || !targetNode || !isAdmin) ? 0.5 : 1,
+                    cursor: (!isAdmin || isDemoToReal || !sourceNode || !targetNode) ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  {isSubmitting ? 'Syncing Ledger…' : isCreating ? 'Establish Link' : 'Apply Settings'} {isAdmin ? '' : '🔒'}
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
