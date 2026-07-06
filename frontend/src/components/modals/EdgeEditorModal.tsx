@@ -423,3 +423,88 @@ export default function EdgeEditorModal({ edge, createData, onClose }: EdgeEdito
               borderRadius: '8px', padding: '9px 14px', marginBottom: '14px',
               fontSize: '11.5px', color: 'rgba(244,63,94,0.9)', fontWeight: 600,
             }}>
+              🚫 Traversal Constraint: DEMO → REAL connections are prohibited. Change source or target.
+            </div>
+          )}
+
+          {/* ── Endpoint pickers (Decision 2 / Option A: server-side search) ── */}
+          <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', alignItems: 'flex-start' }}>
+            <EndpointPicker
+              label="Source Node"
+              initialNode={sourceNode}
+              onSelect={setSourceNode}
+              disabled={!isCreating}
+              useV2={useV2}
+              allNodes={localNodes}
+            />
+
+            {/* Arrow */}
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              paddingTop: '28px', flexShrink: 0,
+            }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={isDemoToReal ? 'rgba(244,63,94,0.7)' : 'var(--silver-500)'} strokeWidth="2">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
+            </div>
+
+            <EndpointPicker
+              label="Target Node"
+              initialNode={targetNode}
+              onSelect={setTargetNode}
+              disabled={!isCreating}
+              useV2={useV2}
+              allNodes={localNodes}
+            />
+          </div>
+
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+            {/* Relationship Type */}
+            <div>
+              <label className="text-label" style={{ marginBottom: '6px', display: 'block' }}>Relationship Classification</label>
+              <select
+                className="glass-input"
+                value={relationshipType}
+                onChange={e => setRelationshipType(e.target.value)}
+                style={{ cursor: 'pointer' }}
+              >
+                <option value="partner" style={{ background: '#020202' }}>Partner</option>
+                <option value="advisor" style={{ background: '#020202' }}>Advisor</option>
+                <option value="co-founder" style={{ background: '#020202' }}>Co-Founder</option>
+                <option value="investor" style={{ background: '#020202' }}>Investor</option>
+                <option value="colleague" style={{ background: '#020202' }}>Colleague / Peer</option>
+                <option value="acquaintance" style={{ background: '#020202' }}>Acquaintance</option>
+                <option value="friend" style={{ background: '#020202' }}>Friend</option>
+              </select>
+            </div>
+
+            {/* Trust Score Slider */}
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                <label className="text-label">Relationship Trust Score</label>
+                <span className="text-mono" style={{ fontSize: '13px', fontWeight: 700, color: '#ffffff' }}>
+                  {Math.round(trustScore * 100)}%
+                </span>
+              </div>
+              <input
+                type="range" min={0} max={1} step={0.05}
+                value={trustScore}
+                onChange={e => setTrustScore(Number(e.target.value))}
+                className="hop-slider"
+                style={{ background: `linear-gradient(to right, #ffffff 0%, #ffffff ${trustScore * 100}%, rgba(255,255,255,0.1) ${trustScore * 100}%, rgba(255,255,255,0.1) 100%)` }}
+              />
+              <div style={{ fontSize: '9.5px', color: 'var(--silver-500)', marginTop: '4px', display: 'flex', justifyContent: 'space-between' }}>
+                <span>Unverified / Soft</span>
+                <span>Verified / Cryptographic</span>
+              </div>
+            </div>
+
+            {/* Interaction Frequency Slider */}
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                <label className="text-label">Interaction Frequency</label>
+                <span className="text-mono" style={{ fontSize: '13px', fontWeight: 700, color: 'var(--silver-400)' }}>
+                  {Math.round(interactionFrequency * 100)}%
+                </span>
+              </div>
