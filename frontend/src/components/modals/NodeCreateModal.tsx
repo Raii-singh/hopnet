@@ -168,3 +168,88 @@ export default function NodeCreateModal({ onClose }: NodeCreateModalProps) {
             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '12px' }}>
               <div>
                 <label className="text-label" style={{ marginBottom: '6px', display: 'block' }}>Full Name *</label>
+                <input
+                  required
+                  className="glass-input"
+                  placeholder="e.g. Satoshi Nakamoto"
+                  value={fullName}
+                  onChange={e => setFullName(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <label className="text-label" style={{ marginBottom: '6px', display: 'block' }}>Node Type</label>
+                <select
+                  className="glass-input"
+                  value={nodeType}
+                  onChange={e => setNodeType(e.target.value as any)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <option value="REAL" style={{ background: '#020202', color: '#fff' }}>REAL</option>
+                  <option value="DEMO" style={{ background: '#020202', color: '#fff' }}>DEMO</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Username & Company */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <div>
+                <label className="text-label" style={{ marginBottom: '6px', display: 'block' }}>Username</label>
+                <input
+                  className="glass-input"
+                  placeholder="e.g. satoshi"
+                  value={username}
+                  onChange={e => setUsername(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <label className="text-label" style={{ marginBottom: '6px', display: 'block' }}>Company</label>
+                <input
+                  className="glass-input"
+                  placeholder="e.g. Bitcoin Corp"
+                  value={company}
+                  onChange={e => setCompany(e.target.value)}
+                />
+              </div>
+            </div>
+
+            {/* Email & Phone */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '12px' }}>
+              <div>
+                <label className="text-label" style={{ marginBottom: '6px', display: 'block' }}>E-mail Address</label>
+                <input
+                  type="email"
+                  className="glass-input"
+                  placeholder="satoshi@bitcoin.org"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <label className="text-label" style={{ marginBottom: '6px', display: 'block' }}>Phone Number</label>
+                <input
+                  className="glass-input"
+                  placeholder="+1 555-0199"
+                  value={phone}
+                  onChange={e => setPhone(e.target.value)}
+                />
+              </div>
+            </div>
+
+            {/* Cluster Hub & Tags */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <div>
+                <label className="text-label" style={{ marginBottom: '6px', display: 'block' }}>Cluster Assignment</label>
+                <select
+                  className="glass-input"
+                  value={cluster}
+                  onChange={e => setCluster(e.target.value)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <option value="" style={{ background: '#020202' }}>-- None --</option>
+                  <option value="Tech" style={{ background: '#020202' }}>Tech</option>
+                  <option value="Finance" style={{ background: '#020202' }}>Finance</option>
+                  <option value="Health" style={{ background: '#020202' }}>Health</option>
+                  <option value="Venture" style={{ background: '#020202' }}>Venture</option>
