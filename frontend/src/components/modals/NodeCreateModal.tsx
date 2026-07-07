@@ -253,3 +253,70 @@ export default function NodeCreateModal({ onClose }: NodeCreateModalProps) {
                   <option value="Finance" style={{ background: '#020202' }}>Finance</option>
                   <option value="Health" style={{ background: '#020202' }}>Health</option>
                   <option value="Venture" style={{ background: '#020202' }}>Venture</option>
+                  <option value="Academia" style={{ background: '#020202' }}>Academia</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-label" style={{ marginBottom: '6px', display: 'block' }}>Tags (comma-separated)</label>
+                <input
+                  className="glass-input"
+                  placeholder="crypto, founder, anon"
+                  value={tagsInput}
+                  onChange={e => setTagsInput(e.target.value)}
+                />
+              </div>
+            </div>
+
+            {/* Influence Score Slider */}
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                <label className="text-label">Influence Score</label>
+                <span className="text-mono" style={{ fontSize: '13px', fontWeight: 700, color: '#ffffff' }}>{influenceScore}</span>
+              </div>
+              <input
+                type="range"
+                min={1} max={100}
+                value={influenceScore}
+                onChange={e => setInfluenceScore(Number(e.target.value))}
+                className="hop-slider"
+                style={{
+                  background: `linear-gradient(to right, #ffffff 0%, #ffffff ${influenceScore}%, rgba(255,255,255,0.1) ${influenceScore}%, rgba(255,255,255,0.1) 100%)`
+                }}
+              />
+            </div>
+
+            <div className="divider" style={{ margin: '10px 0 6px' }} />
+
+            {/* Actions */}
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <button
+                type="button"
+                className="glass-button"
+                onClick={onClose}
+                disabled={isSubmitting}
+                style={{ opacity: isSubmitting ? 0.5 : 1 }}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="glass-button font-semibold"
+                disabled={isSubmitting}
+                style={{
+                  borderColor: 'rgba(255, 255, 255, 0.25)',
+                  color: '#ffffff',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  boxShadow: '0 0 15px rgba(255, 255, 255, 0.08)',
+                  opacity: isSubmitting ? 0.5 : 1,
+                }}
+              >
+                {isSubmitting ? 'Establishing Ledger...' : 'Establish Node'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
