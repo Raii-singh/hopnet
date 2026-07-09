@@ -168,3 +168,88 @@ export default function NodeProfileModal({ node, onClose }: NodeProfileModalProp
       className="modal-overlay"
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
     >
+      <div
+        className="glass-panel-strong animate-fade-in-scale"
+        style={{
+          width: 420,
+          maxWidth: 'calc(100vw - 40px)',
+          maxHeight: 'calc(100vh - 120px)',
+          overflowY: 'auto',
+          padding: 0,
+          position: 'relative',
+        }}
+      >
+        {/* ── TOP ACCENT BAR — color-coded by nodeType ── */}
+        <div style={{
+          height: 3,
+          background: isReal
+            ? 'linear-gradient(90deg, var(--neon-cyan), var(--neon-blue), var(--neon-violet))'
+            : 'linear-gradient(90deg, #f59e0b, #d97706, #b45309)',
+          borderRadius: '12px 12px 0 0',
+        }} />
+
+        {/* ── DEMO WARNING BANNER ── */}
+        {!isReal && (
+          <div style={{
+            background: 'rgba(245, 158, 11, 0.08)',
+            borderBottom: '1px solid rgba(245, 158, 11, 0.25)',
+            padding: '7px 20px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            fontSize: '11.5px',
+            color: 'rgba(245, 158, 11, 0.9)',
+            fontWeight: 600,
+            letterSpacing: '0.02em',
+          }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            DEMO NODE — Synthetic / hypothetical data. Not a verified real-world identity.
+          </div>
+        )}
+
+        {/* ── TABS ── */}
+        <div style={{
+          display: 'flex',
+          borderBottom: '1px solid var(--glass-border)',
+          background: 'rgba(0,0,0,0.15)',
+        }}>
+          <button
+            onClick={() => setActiveTab('view')}
+            style={{
+              flex: 1, padding: '10px 0', border: 'none', cursor: 'pointer',
+              background: 'transparent',
+              borderBottom: activeTab === 'view' ? '2px solid #ffffff' : '2px solid transparent',
+              color: activeTab === 'view' ? '#ffffff' : 'var(--silver-500)',
+              fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em',
+              transition: 'all 0.2s',
+            }}
+          >
+            Details View
+          </button>
+          <button
+            onClick={() => isAdmin && setActiveTab('edit')}
+            disabled={!isAdmin}
+            title={!isAdmin ? 'SUDO Mode Required' : ''}
+            style={{
+              flex: 1, padding: '10px 0', border: 'none', cursor: !isAdmin ? 'not-allowed' : 'pointer',
+              background: 'transparent',
+              borderBottom: activeTab === 'edit' ? '2px solid #ffffff' : '2px solid transparent',
+              color: activeTab === 'edit' ? '#ffffff' : 'var(--silver-500)',
+              fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em',
+              transition: 'all 0.2s',
+              opacity: !isAdmin ? 0.4 : 1,
+            }}
+          >
+            Edit Node Details {isAdmin ? '' : '🔒'}
+          </button>
+        </div>
+
+        <div style={{ padding: '20px 24px' }}>
+          {activeTab === 'view' ? (
+            <>
+              {/* ── HEADER ── */}
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '16px' }}>
