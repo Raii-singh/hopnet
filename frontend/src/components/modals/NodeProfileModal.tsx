@@ -253,3 +253,88 @@ export default function NodeProfileModal({ node, onClose }: NodeProfileModalProp
             <>
               {/* ── HEADER ── */}
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                  {/* Avatar circle */}
+                  <div style={{
+                    width: 52, height: 52, borderRadius: '50%',
+                    background: isReal
+                      ? 'linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))'
+                      : 'linear-gradient(135deg, rgba(100,116,139,0.15), rgba(71,85,105,0.15))',
+                    border: `2px solid ${isReal ? 'rgba(255,255,255,0.25)' : 'rgba(100,116,139,0.4)'}`,
+                    boxShadow: isReal ? '0 0 20px rgba(255,255,255,0.05)' : 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '20px',
+                    fontWeight: 700,
+                    color: isReal ? '#ffffff' : 'var(--silver-500)',
+                    flexShrink: 0,
+                  }}>
+                    {node.fullName.charAt(0)}
+                  </div>
+
+                  <div>
+                    <h2 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--silver-100)', margin: 0, lineHeight: 1.3 }}>
+                      {node.fullName}
+                    </h2>
+                    <div style={{ display: 'flex', gap: '6px', marginTop: '5px', flexWrap: 'wrap' }}>
+                      <span className={`badge ${isReal ? 'badge-real' : 'badge-demo'}`}>
+                        {isReal ? '● REAL' : '○ DEMO'}
+                      </span>
+                      {node.cluster && (
+                        <span className="badge" style={{
+                          background: 'rgba(255,255,255,0.05)',
+                          border: '1px solid rgba(255,255,255,0.12)',
+                          color: '#ffffff',
+                        }}>
+                          {node.cluster}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Close button */}
+                <button
+                  id="modal-close-btn"
+                  onClick={onClose}
+                  style={{
+                    background: 'transparent',
+                    border: '1px solid var(--glass-border)',
+                    borderRadius: '8px',
+                    color: 'var(--silver-500)',
+                    cursor: 'pointer',
+                    width: 30, height: 30,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    flexShrink: 0,
+                    transition: 'all 0.15s',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.color = 'var(--silver-100)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.color = 'var(--silver-500)'; e.currentTarget.style.borderColor = 'var(--glass-border)'; }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </button>
+              </div>
+
+              {/* Public ID and Company */}
+              <div className="text-mono" style={{ fontSize: '11px', color: 'var(--silver-400)', marginBottom: '8px', marginTop: '-8px', display: 'flex', gap: '8px' }}>
+                <span>ID: <span style={{ color: '#ffffff', fontWeight: 600 }}>{node.publicId}</span></span>
+                {node.company && <span style={{ color: 'var(--silver-600)' }}>| {node.company}</span>}
+              </div>
+
+              {/* Tags */}
+              {node.tags && node.tags.length > 0 && (
+                <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', marginBottom: '16px' }}>
+                  {node.tags.map(tag => (
+                    <span key={tag} style={{
+                      padding: '2px 8px', borderRadius: '100px',
+                      fontSize: '10px', fontWeight: 500,
+                      background: 'var(--bg-glass)',
+                      border: '1px solid var(--glass-border)',
+                      color: 'var(--silver-400)',
+                    }}>
+                      {tag}
+                    </span>
+                  ))}
