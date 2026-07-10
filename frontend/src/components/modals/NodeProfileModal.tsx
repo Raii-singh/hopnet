@@ -423,3 +423,88 @@ export default function NodeProfileModal({ node, onClose }: NodeProfileModalProp
                   <div className="progress-bar" style={{ height: 6 }}>
                     <div className="progress-fill progress-fill-blue" style={{ width: `${influencePercent}%`, background: 'linear-gradient(90deg, #cbd5e1, #475569)' }} />
                   </div>
+                </div>
+              </div>
+
+              <div className="divider" />
+
+              {/* ── ACTIONS ── */}
+              <div className="text-label" style={{ marginBottom: '10px', color: '#ffffff' }}>Actions</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
+                
+                <Link href={`/profile/${node.publicId}`} style={{ textDecoration: 'none' }} onClick={() => onClose()}>
+                  <button
+                    id="view-profile-btn"
+                    className="glass-button"
+                    style={{ width: '100%', justifyContent: 'flex-start' }}
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3"/>
+                    </svg>
+                    Explore Full Profile & Trust Path
+                  </button>
+                </Link>
+
+                <button
+                  id="highlight-neighbors-btn"
+                  className="glass-button"
+                  style={{ width: '100%', justifyContent: 'flex-start' }}
+                  onClick={() => { highlightNeighbors(node.id); onClose(); }}
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
+                  </svg>
+                  Highlight Neighbors
+                </button>
+
+                <button
+                  id="focus-node-btn"
+                  className="glass-button"
+                  style={{ width: '100%', justifyContent: 'flex-start' }}
+                  onClick={() => { setPrimaryNode(node.id); onClose(); }}
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/>
+                  </svg>
+                  Focus Graph Here
+                </button>
+
+                <button
+                  id="set-primary-node-btn"
+                  className="glass-button"
+                  style={{ width: '100%', justifyContent: 'flex-start', color: '#eab308', borderColor: 'rgba(234, 179, 8, 0.3)' }}
+                  onClick={() => { setPrimaryNode(node.id); onClose(); }}
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                  </svg>
+                  {primaryNodeId === node.id ? '⭐ Currently Primary Node' : '⭐ Set as Primary Node'}
+                </button>
+              </div>
+            </>
+          ) : (
+            /* ── EDIT TAB FORM ── */
+            <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {errorMsg && (
+                <div className="glass-panel" style={{
+                  background: 'rgba(244,63,94,0.06)',
+                  borderColor: 'rgba(244,63,94,0.3)',
+                  color: 'rgba(244,63,94,0.9)',
+                  padding: '8px 12px',
+                  fontSize: '11px',
+                  borderRadius: '6px',
+                }}>
+                  ⚠️ {errorMsg}
+                </div>
+              )}
+
+              {/* Full Name & Type */}
+              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '10px' }}>
+                <div>
+                  <label className="text-label" style={{ marginBottom: '4px', display: 'block' }}>Full Name *</label>
+                  <input
+                    required
+                    className="glass-input"
+                    value={fullName}
+                    onChange={e => setFullName(e.target.value)}
