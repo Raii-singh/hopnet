@@ -338,3 +338,88 @@ export default function NodeProfileModal({ node, onClose }: NodeProfileModalProp
                       {tag}
                     </span>
                   ))}
+                </div>
+              )}
+
+              <div className="divider" />
+
+              {/* ── RELATIONSHIP INTELLIGENCE INSIGHTS (V3.0) ── */}
+              <div className="glass-panel" style={{
+                padding: '12px 14px',
+                background: 'rgba(255,255,255,0.01)',
+                borderColor: 'rgba(255,255,255,0.08)',
+                marginBottom: '16px',
+              }}>
+                <div className="text-label" style={{ marginBottom: '10px', color: 'var(--silver-400)', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 17 17 22 12"/>
+                  </svg>
+                  Relationship Intelligence
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '11px', marginBottom: '8px' }}>
+                  <div style={{ background: 'rgba(0,0,0,0.15)', padding: '6px 8px', borderRadius: '4px' }}>
+                    <div style={{ color: 'var(--silver-500)', fontSize: '8px', textTransform: 'uppercase' }}>Classification</div>
+                    <div style={{ fontWeight: 600, color: 'var(--silver-200)', marginTop: '2px' }}>{connectorClassification}</div>
+                  </div>
+                  <div style={{ background: 'rgba(0,0,0,0.15)', padding: '6px 8px', borderRadius: '4px' }}>
+                    <div style={{ color: 'var(--silver-500)', fontSize: '8px', textTransform: 'uppercase' }}>Strategic Reach</div>
+                    <div style={{ fontWeight: 600, color: '#ffffff', marginTop: '2px' }}>{strategicReach} Nodes</div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '11px' }}>
+                  <div style={{ background: 'rgba(0,0,0,0.15)', padding: '6px 8px', borderRadius: '4px' }}>
+                    <div style={{ color: 'var(--silver-500)', fontSize: '8px', textTransform: 'uppercase' }}>Intro Potential</div>
+                    <div style={{ fontWeight: 600, color: 'var(--silver-200)', marginTop: '2px' }}>{warmIntroPct}% Success</div>
+                  </div>
+                  <div style={{ background: 'rgba(0,0,0,0.15)', padding: '6px 8px', borderRadius: '4px' }}>
+                    <div style={{ color: 'var(--silver-500)', fontSize: '8px', textTransform: 'uppercase' }}>Influence Spread</div>
+                    <div style={{ fontWeight: 600, color: 'var(--silver-400)', marginTop: '2px' }}>{propagationScore}% Power</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* ── STATS SECTION ── */}
+              <div style={{ marginBottom: '16px' }}>
+                <div className="text-label" style={{ marginBottom: '10px', color: '#ffffff' }}>Network Metrics</div>
+                <StatRow label="Total Connections" value={totalConn} />
+                <StatRow label="Real Connections" value={node.realConnections} color="#ffffff" />
+                <StatRow label="Demo Connections" value={node.demoConnections} color="var(--silver-500)" />
+                <StatRow label="Influence Score" value={node.influenceScore} color="#ffffff" />
+                {centralityPercent > 0 && (
+                  <StatRow label="Centrality" value={`${centralityPercent}%`} color="#ffffff" />
+                )}
+                {strongestEdge && (
+                  <StatRow
+                    label="Strongest Link Score"
+                    value={Math.round(strongestEdge.weight * 100)}
+                    color="#ffffff"
+                  />
+                )}
+              </div>
+
+              {/* ── MINI VISUALIZATIONS ── */}
+              <div style={{ marginBottom: '16px' }}>
+                <div className="text-label" style={{ marginBottom: '10px', color: '#ffffff' }}>Visual Metrics</div>
+
+                {/* Real connection ratio */}
+                <div style={{ marginBottom: '10px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                    <span style={{ fontSize: '11px', color: 'var(--silver-400)' }}>Connection Score Ratio</span>
+                    <span className="text-mono" style={{ fontSize: '11px', color: '#ffffff' }}>{realRatio}%</span>
+                  </div>
+                  <div className="progress-bar" style={{ height: 6 }}>
+                    <div className="progress-fill progress-fill-cyan" style={{ width: `${realRatio}%`, background: 'linear-gradient(90deg, #ffffff, #cbd5e1)' }} />
+                  </div>
+                </div>
+
+                {/* Influence meter */}
+                <div style={{ marginBottom: '10px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                    <span style={{ fontSize: '11px', color: 'var(--silver-400)' }}>Influence Power</span>
+                    <span className="text-mono" style={{ fontSize: '11px', color: '#ffffff' }}>{influencePercent}</span>
+                  </div>
+                  <div className="progress-bar" style={{ height: 6 }}>
+                    <div className="progress-fill progress-fill-blue" style={{ width: `${influencePercent}%`, background: 'linear-gradient(90deg, #cbd5e1, #475569)' }} />
+                  </div>
