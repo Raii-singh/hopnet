@@ -508,3 +508,88 @@ export default function NodeProfileModal({ node, onClose }: NodeProfileModalProp
                     className="glass-input"
                     value={fullName}
                     onChange={e => setFullName(e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <label className="text-label" style={{ marginBottom: '4px', display: 'block' }}>Type</label>
+                  <select
+                    className="glass-input"
+                    value={nodeType}
+                    onChange={e => setNodeType(e.target.value as any)}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <option value="REAL" style={{ background: '#020202' }}>REAL</option>
+                    <option value="DEMO" style={{ background: '#020202' }}>DEMO</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Username & Company */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <div>
+                  <label className="text-label" style={{ marginBottom: '4px', display: 'block' }}>Username</label>
+                  <input
+                    className="glass-input"
+                    value={username}
+                    onChange={e => setUsername(e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <label className="text-label" style={{ marginBottom: '4px', display: 'block' }}>Company</label>
+                  <input
+                    className="glass-input"
+                    value={company}
+                    onChange={e => setCompany(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              {/* Email & Phone */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '10px' }}>
+                <div>
+                  <label className="text-label" style={{ marginBottom: '4px', display: 'block' }}>E-mail Address</label>
+                  <input
+                    type="email"
+                    className="glass-input"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <label className="text-label" style={{ marginBottom: '4px', display: 'block' }}>Phone Number</label>
+                  <input
+                    className="glass-input"
+                    value={phone}
+                    onChange={e => setPhone(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              {/* Cluster & Tags */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <div>
+                  <label className="text-label" style={{ marginBottom: '4px', display: 'block' }}>Cluster Hub</label>
+                  <select
+                    className="glass-input"
+                    value={cluster}
+                    onChange={e => setCluster(e.target.value)}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <option value="" style={{ background: '#020202' }}>-- None --</option>
+                    <option value="Tech" style={{ background: '#020202' }}>Tech</option>
+                    <option value="Finance" style={{ background: '#020202' }}>Finance</option>
+                    <option value="Health" style={{ background: '#020202' }}>Health</option>
+                    <option value="Venture" style={{ background: '#020202' }}>Venture</option>
+                    <option value="Academia" style={{ background: '#020202' }}>Academia</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-label" style={{ marginBottom: '4px', display: 'block' }}>Tags</label>
+                  <input
+                    className="glass-input"
+                    value={tagsInput}
+                    onChange={e => setTagsInput(e.target.value)}
