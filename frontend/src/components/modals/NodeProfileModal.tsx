@@ -593,3 +593,74 @@ export default function NodeProfileModal({ node, onClose }: NodeProfileModalProp
                     className="glass-input"
                     value={tagsInput}
                     onChange={e => setTagsInput(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              {/* Influence score */}
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                  <label className="text-label">Influence Score</label>
+                  <span className="text-mono" style={{ fontSize: '12px', fontWeight: 700, color: 'var(--silver-400)' }}>{influenceScore}</span>
+                </div>
+                <input
+                  type="range"
+                  min={1} max={100}
+                  value={influenceScore}
+                  onChange={e => setInfluenceScore(Number(e.target.value))}
+                  className="hop-slider"
+                  style={{
+                    background: `linear-gradient(to right, #ffffff 0%, #ffffff ${influenceScore}%, rgba(255,255,255,0.1) ${influenceScore}%, rgba(255,255,255,0.1) 100%)`
+                  }}
+                />
+              </div>
+
+              <div className="divider" style={{ margin: '8px 0 2px' }} />
+
+              {/* Form Controls */}
+              <div style={{ display: 'flex', gap: '8px', justifyContent: 'space-between', alignItems: 'center' }}>
+                <button
+                  type="button"
+                  onClick={handleSoftDelete}
+                  disabled={isSubmitting}
+                  className="glass-button"
+                  style={{
+                    borderColor: 'rgba(244,63,94,0.3)',
+                    color: 'rgba(244,63,94,0.8)',
+                    opacity: isSubmitting ? 0.5 : 1,
+                  }}
+                >
+                  Delete Node
+                </button>
+
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    type="button"
+                    className="glass-button"
+                    onClick={() => setActiveTab('view')}
+                    disabled={isSubmitting}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="glass-button font-semibold"
+                    disabled={isSubmitting}
+                    style={{
+                      borderColor: 'rgba(255, 255, 255, 0.25)',
+                      color: '#ffffff',
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      boxShadow: '0 0 10px rgba(255, 255, 255, 0.08)',
+                    }}
+                  >
+                    {isSubmitting ? 'Syncing...' : 'Save Settings'}
+                  </button>
+                </div>
+              </div>
+            </form>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
