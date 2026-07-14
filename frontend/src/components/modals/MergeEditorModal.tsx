@@ -83,3 +83,88 @@ export default function MergeEditorModal({ onClose }: MergeEditorModalProps) {
         }}
       >
         {/* Top Accent line */}
+        <div style={{
+          height: 3,
+          background: 'linear-gradient(90deg, #ffffff, var(--silver-500))',
+          borderRadius: '12px 12px 0 0',
+        }} />
+
+        <div style={{ padding: '20px 24px' }}>
+          {/* Header */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.5">
+                <path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+              </svg>
+              <h2 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--silver-100)', margin: 0 }}>
+                Duplicate Identity Manager Suggestions
+              </h2>
+            </div>
+            <button
+              onClick={onClose}
+              style={{
+                background: 'transparent',
+                border: '1px solid var(--glass-border)',
+                borderRadius: '8px',
+                color: 'var(--silver-500)',
+                cursor: 'pointer',
+                width: 28, height: 28,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                transition: 'all 0.15s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.color = 'var(--silver-100)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'; }}
+              onMouseLeave={e => { e.currentTarget.style.color = 'var(--silver-500)'; e.currentTarget.style.borderColor = 'var(--glass-border)'; }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
+
+          <p style={{ color: 'var(--silver-500)', fontSize: '11px', lineHeight: 1.5, margin: '0 0 18px' }}>
+            Fuzzy matching algorithms have flagged the following human nodes as potential duplicate profile records based on shared e-mail prefixes, identical companies, and matching full name structures.
+          </p>
+
+          {errorMsg && (
+            <div className="glass-panel" style={{
+              background: 'rgba(244,63,94,0.06)',
+              borderColor: 'rgba(244,63,94,0.3)',
+              color: 'rgba(244,63,94,0.9)',
+              padding: '10px 14px',
+              fontSize: '12px',
+              marginBottom: '16px',
+              borderRadius: '8px',
+            }}>
+              ⚠️ {errorMsg}
+            </div>
+          )}
+
+          {loading ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '40px 0' }}>
+              <div style={{ width: 28, height: 28, border: '2px solid #ffffff', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite', marginBottom: '12px' }} />
+              <span className="text-label" style={{ color: '#ffffff', fontSize: '11px' }}>Scanning relationship index ledger…</span>
+            </div>
+          ) : suggestions.length === 0 ? (
+            <div className="glass-panel" style={{ padding: '24px', textAlign: 'center', background: 'rgba(255, 255, 255, 0.01)', borderColor: 'rgba(255, 255, 255, 0.08)' }}>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="1.5" style={{ marginBottom: '12px', opacity: 0.8 }}>
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+              </svg>
+              <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--silver-200)', marginBottom: '4px' }}>No duplicates flagged</div>
+              <div style={{ fontSize: '11px', color: 'var(--silver-600)' }}>The network database currently satisfies full data uniqueness constraints.</div>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', maxHeight: '350px', overflowY: 'auto', paddingRight: '4px' }}>
+              {suggestions.map((s, index) => {
+                const pairId = `${s.userA.id}-${s.userB.id}`;
+                const isMerging = mergingPairId === pairId;
+                return (
+                  <div key={pairId} className="glass-panel" style={{
+                    padding: '14px 16px',
+                    borderColor: 'var(--glass-border)',
+                    background: 'rgba(255,255,255,0.01)',
+                  }}>
+                    {/* Badge similarity */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                      <span style={{ fontSize: '10.5px', color: 'var(--silver-400)', fontWeight: 600 }}>Flagged Pair #{index + 1}</span>
+                      <span className="text-mono" style={{
+                        fontSize: '10px', fontWeight: 700,
