@@ -168,3 +168,68 @@ export default function MergeEditorModal({ onClose }: MergeEditorModalProps) {
                       <span style={{ fontSize: '10.5px', color: 'var(--silver-400)', fontWeight: 600 }}>Flagged Pair #{index + 1}</span>
                       <span className="text-mono" style={{
                         fontSize: '10px', fontWeight: 700,
+                        background: 'rgba(255, 255, 255, 0.08)',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        padding: '1px 6px', borderRadius: '100px',
+                        color: '#ffffff',
+                      }}>
+                        {s.similarity}% Similarity Score
+                      </span>
+                    </div>
+
+                    {/* Nodes side by side comparisons */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '12px' }}>
+                      {/* User A */}
+                      <div className="glass-panel" style={{ padding: '8px 10px', background: 'rgba(0,0,0,0.15)' }}>
+                        <div style={{ fontSize: '11px', color: 'var(--silver-500)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Profile A</div>
+                        <div style={{ fontSize: '12.5px', fontWeight: 700, color: 'var(--silver-200)', marginTop: '4px' }}>{s.userA.fullName}</div>
+                        <div className="text-mono" style={{ fontSize: '9.5px', color: 'var(--silver-500)', marginTop: '2px' }}>{s.userA.publicId}</div>
+                        {s.userA.company && <div style={{ fontSize: '10.5px', color: 'var(--silver-400)', marginTop: '4px' }}>🏢 {s.userA.company}</div>}
+                        {s.userA.email && <div style={{ fontSize: '10px', color: '#ffffff', marginTop: '4px', overflow: 'hidden', textOverflow: 'ellipsis' }}>✉️ {s.userA.email}</div>}
+                      </div>
+
+                      {/* User B */}
+                      <div className="glass-panel" style={{ padding: '8px 10px', background: 'rgba(0,0,0,0.15)' }}>
+                        <div style={{ fontSize: '11px', color: 'var(--silver-500)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Profile B</div>
+                        <div style={{ fontSize: '12.5px', fontWeight: 700, color: 'var(--silver-200)', marginTop: '4px' }}>{s.userB.fullName}</div>
+                        <div className="text-mono" style={{ fontSize: '9.5px', color: 'var(--silver-500)', marginTop: '2px' }}>{s.userB.publicId}</div>
+                        {s.userB.company && <div style={{ fontSize: '10.5px', color: 'var(--silver-400)', marginTop: '4px' }}>🏢 {s.userB.company}</div>}
+                        {s.userB.email && <div style={{ fontSize: '10px', color: '#ffffff', marginTop: '4px', overflow: 'hidden', textOverflow: 'ellipsis' }}>✉️ {s.userB.email}</div>}
+                      </div>
+                    </div>
+
+                    {/* Reason statement */}
+                    <div style={{ fontSize: '11px', color: 'var(--silver-400)', fontStyle: 'italic', marginBottom: '12px' }}>
+                      Reason: <span style={{ color: 'var(--silver-300)', fontWeight: 500 }}>{s.reason}</span>
+                    </div>
+
+                    {/* Merge action buttons */}
+                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', borderTop: '1px solid rgba(255,255,255,0.03)', paddingTop: '10px' }}>
+                      <span style={{ fontSize: '10px', color: 'var(--silver-600)', alignSelf: 'center', marginRight: 'auto' }}>Surviving Node:</span>
+                      <button
+                        className="glass-button"
+                        onClick={() => handleMerge(s.userA, s.userB, s.userA.id)}
+                        disabled={isMerging}
+                        style={{ fontSize: '10.5px', padding: '4px 10px', borderColor: 'rgba(255, 255, 255, 0.25)', color: '#ffffff' }}
+                      >
+                        {isMerging ? 'Merging...' : 'Keep A'}
+                      </button>
+                      <button
+                        className="glass-button"
+                        onClick={() => handleMerge(s.userA, s.userB, s.userB.id)}
+                        disabled={isMerging}
+                        style={{ fontSize: '10.5px', padding: '4px 10px', borderColor: 'rgba(255, 255, 255, 0.25)', color: '#ffffff' }}
+                      >
+                        {isMerging ? 'Merging...' : 'Keep B'}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
