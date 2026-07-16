@@ -253,3 +253,88 @@ export default function ImportPreviewModal({
                           <div style={{ fontWeight: 600, color: 'var(--silver-200)' }}>{dup.imported.fullName}</div>
                           {dup.imported.company && <div style={{ color: 'var(--silver-400)', fontSize: '10px' }}>{dup.imported.company}</div>}
                         </div>
+                        {/* Existing */}
+                        <div style={{ background: 'rgba(0,0,0,0.2)', padding: '6px 8px', borderRadius: '4px', fontSize: '11px' }}>
+                          <div style={{ color: 'var(--silver-500)', fontSize: '9px', textTransform: 'uppercase' }}>Database Ledger</div>
+                          <div style={{ fontWeight: 600, color: 'var(--silver-200)' }}>{dup.existing.fullName}</div>
+                          {dup.existing.company && <div style={{ color: 'var(--silver-400)', fontSize: '10px' }}>{dup.existing.company}</div>}
+                        </div>
+                      </div>
+
+                      {/* Surviving Option Selector */}
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', alignItems: 'center', borderTop: '1px solid rgba(255,255,255,0.03)', paddingTop: '8px' }}>
+                        <span style={{ fontSize: '9.5px', color: 'var(--silver-500)', marginRight: 'auto' }}>Surviving Strategy:</span>
+                        <button
+                          type="button"
+                          className="glass-button"
+                          onClick={() => handleSurvivingOptionChange(idx, 'KEEP_EXISTING')}
+                          style={{
+                            fontSize: '9.5px',
+                            padding: '3px 8px',
+                            borderColor: dup.survivingOption === 'KEEP_EXISTING' ? '#ffffff' : 'var(--glass-border)',
+                            color: dup.survivingOption === 'KEEP_EXISTING' ? '#ffffff' : 'var(--silver-500)',
+                            background: dup.survivingOption === 'KEEP_EXISTING' ? 'rgba(255, 255, 255, 0.05)' : 'transparent',
+                          }}
+                        >
+                          Keep Database
+                        </button>
+                        <button
+                          type="button"
+                          className="glass-button"
+                          onClick={() => handleSurvivingOptionChange(idx, 'OVERWRITE_WITH_IMPORTED')}
+                          style={{
+                            fontSize: '9.5px',
+                            padding: '3px 8px',
+                            borderColor: dup.survivingOption === 'OVERWRITE_WITH_IMPORTED' ? '#ffffff' : 'var(--glass-border)',
+                            color: dup.survivingOption === 'OVERWRITE_WITH_IMPORTED' ? '#ffffff' : 'var(--silver-500)',
+                            background: dup.survivingOption === 'OVERWRITE_WITH_IMPORTED' ? 'rgba(255, 255, 255, 0.05)' : 'transparent',
+                          }}
+                        >
+                          Overwrite Info
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+
+            {activeTab === 'edges' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {inferredEdges.length === 0 ? (
+                  <div style={{ textAlign: 'center', color: 'var(--silver-600)', padding: '40px 0', fontSize: '12px' }}>
+                    No explicit communication edges inferred from this dataset. Edges will automatically map in a central star structure.
+                  </div>
+                ) : (
+                  inferredEdges.map((edge: any, idx: number) => (
+                    <div key={idx} style={{
+                      padding: '8px 10px',
+                      background: 'rgba(255,255,255,0.01)',
+                      border: '1px solid rgba(255,255,255,0.03)',
+                      borderRadius: '6px',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      fontSize: '11px',
+                    }} division-idx={idx}>
+                      <span style={{ color: 'var(--silver-300)', fontWeight: 600 }}>{edge.sourceName}</span>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '0 8px', width: '30%' }}>
+                        <span style={{ fontSize: '9px', color: '#ffffff' }}>{edge.relationshipType}</span>
+                        <div style={{ width: '100%', height: 1, background: 'rgba(255, 255, 255, 0.12)', margin: '3px 0' }} />
+                      </div>
+                      <span style={{ color: 'var(--silver-300)', fontWeight: 600 }}>{edge.targetName}</span>
+                      <span className="text-mono" style={{ color: '#ffffff', fontSize: '10px', marginLeft: 'auto' }}>
+                        W: {Math.round((edge.trustScore * 0.6 + edge.interactionFrequency * 0.4) * 100) / 100}
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className="divider" style={{ margin: '10px 0 14px' }} />
+
+          {/* Controls */}
+          <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+            {!isIngesting && (
