@@ -168,3 +168,88 @@ export default function ImportPreviewModal({
             {[
               { id: 'nodes', label: `Detected Users (${detectedNodes.length})`, color: '#ffffff' },
               { id: 'duplicates', label: `Duplicate Conflicts (${duplicateMatches.length})`, color: 'var(--silver-400)' },
+              { id: 'edges', label: `Inferred Edges (${inferredEdges.length})`, color: '#ffffff' },
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                style={{
+                  flex: 1,
+                  padding: '10px 0',
+                  border: 'none',
+                  background: activeTab === tab.id ? 'rgba(255,255,255,0.02)' : 'transparent',
+                  borderBottom: activeTab === tab.id ? `2.5px solid ${tab.color}` : '2.5px solid transparent',
+                  color: activeTab === tab.id ? '#fff' : 'var(--silver-500)',
+                  fontSize: '11px',
+                  fontWeight: activeTab === tab.id ? 600 : 400,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s',
+                }}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Tab content area */}
+          <div className="glass-panel" style={{
+            padding: '14px',
+            background: 'rgba(0,0,0,0.1)',
+            borderRadius: '0 0 8px 8px',
+            borderTop: 'none',
+            minHeight: '200px',
+            maxHeight: '260px',
+            overflowY: 'auto',
+            marginBottom: '20px',
+          }}>
+            {activeTab === 'nodes' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {detectedNodes.length === 0 ? (
+                  <div style={{ textAlign: 'center', color: 'var(--silver-600)', padding: '40px 0', fontSize: '12px' }}>
+                    No new contacts detected. All entries match existing database records.
+                  </div>
+                ) : (
+                  detectedNodes.map((node: any, idx: number) => (
+                    <div key={idx} style={{
+                      padding: '8px 10px',
+                      background: 'rgba(255,255,255,0.01)',
+                      border: '1px solid rgba(255,255,255,0.03)',
+                      borderRadius: '6px',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}>
+                      <div>
+                        <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--silver-200)' }}>{node.fullName}</div>
+                        {node.company && <div style={{ fontSize: '10px', color: 'var(--silver-500)', marginTop: '2px' }}>🏢 {node.company} · {node.position || 'Employee'}</div>}
+                      </div>
+                      <span className="badge badge-real" style={{ fontSize: '9px', padding: '1px 5px' }}>
+                        REAL NODE
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+
+            {activeTab === 'duplicates' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {duplicateMatches.length === 0 ? (
+                  <div style={{ textAlign: 'center', color: 'var(--silver-600)', padding: '40px 0', fontSize: '12px' }}>
+                    Zero duplication warnings flagged. No conflicts found.
+                  </div>
+                ) : (
+                  duplicateMatches.map((dup: any, idx: number) => (
+                    <div key={idx} className="glass-panel" style={{ padding: '10px 12px', background: 'rgba(255, 255, 255, 0.01)', borderColor: 'var(--glass-border)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '10.5px' }}>
+                        <span style={{ color: 'var(--silver-400)', fontWeight: 600 }}>Conflict #{idx + 1}: {dup.reason}</span>
+                        <span className="text-mono" style={{ color: 'var(--silver-500)' }}>{dup.existing.publicId}</span>
+                      </div>
+                      
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
+                        {/* Imported */}
+                        <div style={{ background: 'rgba(0,0,0,0.2)', padding: '6px 8px', borderRadius: '4px', fontSize: '11px' }}>
+                          <div style={{ color: 'var(--silver-500)', fontSize: '9px', textTransform: 'uppercase' }}>Imported File</div>
+                          <div style={{ fontWeight: 600, color: 'var(--silver-200)' }}>{dup.imported.fullName}</div>
+                          {dup.imported.company && <div style={{ color: 'var(--silver-400)', fontSize: '10px' }}>{dup.imported.company}</div>}
+                        </div>
