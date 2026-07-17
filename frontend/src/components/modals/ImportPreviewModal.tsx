@@ -338,3 +338,37 @@ export default function ImportPreviewModal({
           {/* Controls */}
           <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
             {!isIngesting && (
+              <button
+                type="button"
+                className="glass-button"
+                onClick={onClose}
+              >
+                Abort
+              </button>
+            )}
+            <button
+              type="button"
+              className="glass-button font-semibold"
+              onClick={handleIngest}
+              disabled={isIngesting}
+              style={{
+                borderColor: 'rgba(255, 255, 255, 0.25)',
+                color: '#ffffff',
+                background: 'rgba(255, 255, 255, 0.05)',
+                boxShadow: '0 0 15px rgba(255, 255, 255, 0.08)',
+                opacity: isIngesting ? 0.6 : 1,
+              }}
+            >
+              {isIngesting ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ width: 12, height: 12, border: '1.5px solid #ffffff', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} />
+                  Ingesting Data…
+                </div>
+              ) : 'Commit Ingestion'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
