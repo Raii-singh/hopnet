@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useGraphStore } from '@/store/graphStore';
 import { GraphNode } from '@/types/graph';
+import { ProviderId } from '@/providers/graphProvider';
 
 export default function PathfinderPanel() {
   const {
@@ -10,9 +11,15 @@ export default function PathfinderPanel() {
     workspaceMode,
     tracedPath,
     pathCost,
+    focusMode,
     tracePathAction,
     clearTracedPath,
+    activeProvider,
+    providerCapabilities,
   } = useGraphStore();
+
+  const isImdb = activeProvider === 'imdb';
+  const accentColor = providerCapabilities.accentColor;
 
   const [isOpen, setIsOpen] = useState(false);
   const [startQuery, setStartQuery] = useState('');
@@ -34,7 +41,7 @@ export default function PathfinderPanel() {
     }
   }, [allNodes, selectedStart]);
 
-  if (workspaceMode) return null; // Hide in visual workspace mode
+  if (workspaceMode || focusMode) return null; // Hide in visual workspace mode or focus mode
 
   function handleStartSearch(q: string) {
     setStartQuery(q);
@@ -67,8 +74,8 @@ export default function PathfinderPanel() {
     if (!selectedStart || !selectedTarget) return;
     setTraversalError(false);
 
-    // Enforce traversal check locally before API
-    if (selectedStart.nodeType === 'DEMO' && selectedTarget.nodeType === 'REAL') {
+    // College-only constraint: DEMO→REAL traversal blocked
+    if (!isImdb && selectedStart.nodeType === 'DEMO' && selectedTarget.nodeType === 'REAL') {
       setTraversalError(true);
       return;
     }
@@ -97,7 +104,7 @@ export default function PathfinderPanel() {
         gap: '6px',
       }}
     >
-      <div className="glass-panel" style={{ padding: '10px 14px', border: '1px solid rgba(139,92,246,0.25)' }}>
+      <div className="glass-panel" style={{ padding: '10px 14px', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
         {/* Header */}
         <div
           onClick={() => setIsOpen(!isOpen)}
@@ -109,12 +116,12 @@ export default function PathfinderPanel() {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--neon-violet)" strokeWidth="2.5">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={accentColor} strokeWidth="2.5">
               <circle cx="12" cy="12" r="3"/>
               <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
             </svg>
             <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--silver-200)', letterSpacing: '0.04em' }}>
-              PATHFINDER ENGINE
+              {isImdb ? 'COLLABORATION PATH' : 'PATHFINDER ENGINE'}
             </span>
           </div>
           <span style={{ fontSize: '10px', color: 'var(--silver-500)', transition: 'all 0.2s' }}>
@@ -126,11 +133,11 @@ export default function PathfinderPanel() {
           <div className="animate-fade-in" style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {/* Start Node Input */}
             <div style={{ position: 'relative' }}>
-              <label className="text-label" style={{ fontSize: '8.5px', marginBottom: '3px', display: 'block' }}>Traverse Start</label>
+              <label className="text-label" style={{ fontSize: '8.5px', marginBottom: '3px', display: 'block' }}>{isImdb ? 'Start Actor' : 'Traverse Start'}</label>
               <input
                 className="glass-input"
                 style={{ padding: '4px 8px', fontSize: '11px' }}
-                placeholder="Start node name..."
+                placeholder={isImdb ? 'Actor name...' : 'Start node name...'}
                 value={startQuery}
                 onChange={e => handleStartSearch(e.target.value)}
               />
@@ -138,7 +145,7 @@ export default function PathfinderPanel() {
                 <div className="glass-panel" style={{
                   position: 'absolute', bottom: '105%', left: 0, right: 0,
                   maxHeight: 120, overflowY: 'auto', zIndex: 500, padding: 3,
-                  background: '#0a0a18',
+                  background: 'var(--bg-surface)',
                 }}>
                   {startResults.map(node => (
                     <button
@@ -156,7 +163,7 @@ export default function PathfinderPanel() {
                       onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
                       onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                     >
-                      <span style={{ width: 5, height: 5, borderRadius: '50%', background: node.nodeType === 'REAL' ? 'var(--neon-cyan)' : 'var(--silver-500)' }} />
+                      <span style={{ width: 5, height: 5, borderRadius: '50%', background: node.nodeType === 'REAL' ? '#ffffff' : 'var(--silver-500)' }} />
                       <span style={{ fontSize: '10px', color: 'var(--silver-200)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {node.fullName}
                       </span>
@@ -168,11 +175,11 @@ export default function PathfinderPanel() {
 
             {/* Target Node Input */}
             <div style={{ position: 'relative' }}>
-              <label className="text-label" style={{ fontSize: '8.5px', marginBottom: '3px', display: 'block' }}>Traverse Target</label>
+              <label className="text-label" style={{ fontSize: '8.5px', marginBottom: '3px', display: 'block' }}>{isImdb ? 'Target Actor' : 'Traverse Target'}</label>
               <input
                 className="glass-input"
                 style={{ padding: '4px 8px', fontSize: '11px' }}
-                placeholder="Target node name..."
+                placeholder={isImdb ? 'Actor name...' : 'Target node name...'}
                 value={targetQuery}
                 onChange={e => handleTargetSearch(e.target.value)}
               />
@@ -180,7 +187,7 @@ export default function PathfinderPanel() {
                 <div className="glass-panel" style={{
                   position: 'absolute', bottom: '105%', left: 0, right: 0,
                   maxHeight: 120, overflowY: 'auto', zIndex: 500, padding: 3,
-                  background: '#0a0a18',
+                  background: 'var(--bg-surface)',
                 }}>
                   {targetResults.map(node => (
                     <button
@@ -198,7 +205,7 @@ export default function PathfinderPanel() {
                       onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
                       onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                     >
-                      <span style={{ width: 5, height: 5, borderRadius: '50%', background: node.nodeType === 'REAL' ? 'var(--neon-cyan)' : 'var(--silver-500)' }} />
+                      <span style={{ width: 5, height: 5, borderRadius: '50%', background: node.nodeType === 'REAL' ? '#ffffff' : 'var(--silver-500)' }} />
                       <span style={{ fontSize: '10px', color: 'var(--silver-200)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {node.fullName}
                       </span>
@@ -228,13 +235,13 @@ export default function PathfinderPanel() {
                 disabled={!selectedStart || !selectedTarget}
                 style={{
                   flex: 2, fontSize: '10px', padding: '4px 8px',
-                  borderColor: 'rgba(139,92,246,0.4)',
-                  color: 'var(--neon-violet)',
-                  background: 'rgba(139,92,246,0.05)',
+                  borderColor: `${accentColor}60`,
+                  color: accentColor,
+                  background: `${accentColor}10`,
                   opacity: (!selectedStart || !selectedTarget) ? 0.5 : 1,
                 }}
               >
-                ⚡ Trace Dijkstra Route
+                {isImdb ? '🎬 Find Collaboration Path' : '⚡ Trace Dijkstra Route'}
               </button>
             </div>
 
@@ -245,7 +252,7 @@ export default function PathfinderPanel() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: 'var(--silver-500)' }}>
                   <span>Active traversal route</span>
-                  <span className="text-mono" style={{ color: 'var(--neon-violet)', fontWeight: 700 }}>Weight: {pathCost}</span>
+                  <span className="text-mono" style={{ color: 'var(--silver-400)', fontWeight: 700 }}>Weight: {pathCost}</span>
                 </div>
 
                 <div style={{
@@ -260,7 +267,7 @@ export default function PathfinderPanel() {
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 10 }}>
                           <div style={{
                             width: 6, height: 6, borderRadius: '50%',
-                            background: isRoot ? '#a78bfa' : isTarget ? 'var(--neon-cyan)' : 'var(--silver-600)',
+                            background: isRoot ? '#ffffff' : isTarget ? 'var(--silver-200)' : 'var(--silver-600)',
                             boxShadow: isRoot || isTarget ? '0 0 4px currentColor' : 'none',
                           }} />
                           {index < tracedPath.length - 1 && (
@@ -287,12 +294,14 @@ export default function PathfinderPanel() {
               }}>
                 <div style={{ fontSize: '10px', fontWeight: 600 }}>Traversal Blocked</div>
                 <div style={{ fontSize: '9px', marginTop: '2px', lineHeight: 1.3 }}>
-                  Dijkstra tracer forbids pathfinding from placeholder demo nodes into the REAL database ledger.
+                  Dijkstra tracer forbids pathfinding from DEMO expansion nodes into REAL database nodes.
                 </div>
               </div>
             ) : (
               <div style={{ textAlign: 'center', color: 'var(--silver-600)', padding: '10px 0', fontSize: '10px', lineHeight: 1.3 }}>
-                Search and select any node from the explorer to trace optimal secure connection chains.
+                {isImdb
+                  ? 'Find the shortest collaboration chain between any two actors.'
+                  : 'Search and select any node from the explorer to trace optimal secure connection chains.'}
               </div>
             )}
           </div>
