@@ -83,3 +83,43 @@ export interface CreatePersonInput {
   linkedinUrl?: string;
   instagramHandle?: string;
   twitterHandle?: string;
+  githubHandle?: string;
+  cluster?: string;
+  tags?: string[];
+  sourceConnectors?: string[];
+  createdBy?: string;          // Defaults to "Manual" if not provided
+  // Allow additional arbitrary properties for flexible node creation
+  [key: string]: unknown;
+}
+
+// ── Input for updating an existing node ──────────────────────────────────
+// All fields optional — only provided fields are written to Neo4j.
+// `id`, `publicId`, `nodeType`, `createdAt`, `createdBy` are immutable.
+export interface UpdatePersonInput {
+  fullName?: string;
+  username?: string;
+  email?: string;
+  phone?: string;
+  company?: string;
+  role?: string;
+  linkedinUrl?: string;
+  instagramHandle?: string;
+  twitterHandle?: string;
+  githubHandle?: string;
+  cluster?: string;
+  tags?: string[];
+  sourceConnectors?: string[];
+  influenceScore?: number;
+  degreeCentrality?: number;
+  weightedDegree?: number;
+  // Allow additional flexible property updates
+  [key: string]: unknown;
+}
+
+// ── Lightweight node (for BFS/Dijkstra engine input) ─────────────────────
+// The shared graph engine only needs id and kind. This avoids passing
+// the entire PersonNode through algorithm-layer code.
+export interface LightPerson {
+  id: string;
+  nodeType: NodeType;
+}
