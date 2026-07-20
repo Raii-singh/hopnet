@@ -83,3 +83,43 @@ export interface UpdateRelationshipInput {
 }
 
 // ── Computed functions ────────────────────────────────────────────────────
+
+/**
+ * Compute the traversal/pathfinding weight for a relationship.
+ * Weight is NOT stored in Neo4j. Compute it when passing edges to the shared
+ * graph engine (BFS, Dijkstra).
+ *
+ * Formula: trustScore * 0.6 + interactionFrequency * 0.4
+ * Range: 0.0 (no trust, no interaction) to 1.0 (full trust, high interaction)
+ * Higher weight = stronger relationship = shorter effective distance in Dijkstra.
+ */
+export function computeWeight(
+  trustScore: number,
+  interactionFrequency: number
+): number {
+  return trustScore * 0.6 + interactionFrequency * 0.4;
+}
+
+/**
+ * Derive the EdgeKind from the nodeTypes of the source and target.
+ * Called at write time; result is stored on the relationship.
+ */
+export function deriveEdgeKind(
+  sourceNodeType: NodeType,
+  targetNodeType: NodeType
+): EdgeKind {
+  return sourceNodeType === 'REAL' && targetNodeType === 'REAL'
+    ? 'REAL_EDGE'
+    : 'DEMO_EDGE';
+}
+
+/**
+ * Apply computed weight to a stored Relationship, producing a RelationshipWithWeight
+ * suitable for API serialization or graph engine input.
+ */
+export function withWeight(rel: Relationship): RelationshipWithWeight {
+  return {
+    ...rel,
+    weight: computeWeight(rel.trustScore, rel.interactionFrequency),
+  };
+}
