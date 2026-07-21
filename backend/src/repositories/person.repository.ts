@@ -83,3 +83,88 @@ function recordToPersonNode(record: Neo4jRecord, alias = 'p'): PersonNode {
 function stripNullish(obj: Record<string, unknown>): Record<string, unknown> {
   return Object.fromEntries(
     Object.entries(obj).filter(([, v]) => v !== undefined && v !== null)
+  );
+}
+
+/**
+ * Build the current UTC datetime string for createdAt/updatedAt fields.
+ */
+function nowIso(): string {
+  return new Date().toISOString();
+}
+
+// ── Public repository API ─────────────────────────────────────────────────
+
+/**
+ * Create a new Person node in Neo4j.
+ *
+ * - Generates a UUID for `id` (caller is responsible for providing `publicId`).
+ * - Only writes properties that are present in `input` (sparse).
+ * - Does NOT enforce publicId uniqueness at this layer — the Neo4j constraint
+ *   `person_public_id_unique` will throw if there is a conflict.
+ * - Does NOT generate publicId — that is the service layer's responsibility.
+ *
+ * @param publicId  Pre-generated publicId (e.g. "HNP-000001" or "DNP-000001").
+ * @param input     Node properties from the caller.
+ * @returns         The newly created PersonNode as stored in Neo4j.
+ */
+export async function createPerson(
+  publicId: string,
+  input: CreatePersonInput
+): Promise<PersonNode> {
+  const session = getSession();
+  try {
+    const now = nowIso();
+    const id = uuidv4();
+
+    // Build the properties map — only include fields that are present.
+    const baseProps: Record<string, unknown> = {
+      id,
+      publicId,
+      nodeType: input.nodeType,
+      createdAt: now,
+      updatedAt: now,
+      createdBy: input.createdBy ?? 'Manual',
+    };
+
+    // Gather optional known fields (only if present)
+    const knownOptional = [
+      'fullName', 'username', 'email', 'phone',
+      'company', 'role',
+      'linkedinUrl', 'instagramHandle', 'twitterHandle', 'githubHandle',
+      'cluster', 'tags', 'sourceConnectors',
+    ] as const;
+    for (const key of knownOptional) {
+      if (input[key] !== undefined && input[key] !== null) {
+        baseProps[key as string] = input[key];
+      }
+    }
+
+    // Collect any additional flexible properties from the input
+    // (exclude already-handled keys and internal markers)
+    const reservedKeys = new Set<string>([
+      'nodeType', 'createdBy',
+      ...(knownOptional as readonly string[]),
+    ]);
+    for (const [k, v] of Object.entries(input)) {
+      if (!reservedKeys.has(k) && v !== undefined && v !== null) {
+        baseProps[k] = v;
+      }
+    }
+
+    const result = await session.run(
+      `CREATE (p:Person $props)
+       RETURN p, 0 AS totalConn, 0 AS realConn, 0 AS demoConn`,
+      { props: baseProps }
+    );
+
+    if (result.records.length === 0) {
+      throw new Error('[PersonRepository.createPerson] CREATE returned no records.');
+    }
+    return recordToPersonNode(result.records[0]);
+  } finally {
+    await session.close();
+  }
+}
+
+/**
