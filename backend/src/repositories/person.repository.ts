@@ -338,3 +338,88 @@ export async function searchPersons(
 export async function updatePerson(
   id: string,
   updates: UpdatePersonInput
+): Promise<PersonNode | null> {
+  const session = getSession();
+  try {
+    // Decision 1 (Step 10 review): nodeType is permanently immutable.
+    // Throw explicitly — do NOT silently strip. The caller must know they
+    // attempted an illegal operation so they can correct the product flow.
+    if ('nodeType' in updates && updates['nodeType'] !== undefined) {
+      throw new Error(
+        '[PersonRepository.updatePerson] nodeType is permanently immutable. ' +
+        'REAL↔DEMO conversion is not an in-place mutation. ' +
+        "To change a node's type, soft-delete the existing node and create a new one."
+      );
+    }
+
+    // Strip remaining immutable fields (nodeType already guarded above)
+    const immutable = new Set(['id', 'publicId', 'nodeType', 'createdAt', 'createdBy', 'deletedAt']);
+    const safeUpdates = Object.fromEntries(
+      Object.entries(updates).filter(([k, v]) => !immutable.has(k) && v !== undefined && v !== null)
+    );
+
+    if (Object.keys(safeUpdates).length === 0) {
+      // Nothing to update — just return the current node
+      return getPersonById(id);
+    }
+
+    safeUpdates['updatedAt'] = nowIso();
+
+    const result = await session.run(
+      `MATCH (p:Person {id: $id})
+       WHERE p.deletedAt IS NULL
+       SET p += $updates
+       RETURN p`,
+      { id, updates: safeUpdates }
+    );
+
+    if (result.records.length === 0) return null;
+    return recordToPersonNode(result.records[0]);
+  } finally {
+    await session.close();
+  }
+}
+
+/**
+ * Soft-delete a Person node by setting `deletedAt` to the current timestamp.
+ *
+ * The node and all its relationships remain physically in Neo4j.
+ * The soft-delete causes:
+ *   - The node to be excluded from all `getPersonBy*` / `listPersons` / `searchPersons` calls.
+ *   - The node's relationships to become naturally invisible in N-hop traversal
+ *     queries (because they reference a node filtered by deletedAt IS NULL).
+ *
+ * Relationships are NOT cascade-deleted, allowing future restoration.
+ *
+ * @returns true if the node was found and soft-deleted, false if not found or already deleted.
+ */
+export async function softDeletePerson(id: string): Promise<boolean> {
+  const session = getSession();
+  try {
+    const result = await session.run(
+      `MATCH (p:Person {id: $id})
+       WHERE p.deletedAt IS NULL
+       SET p.deletedAt = $deletedAt, p.updatedAt = $updatedAt
+       RETURN p.id AS id`,
+      { id, deletedAt: nowIso(), updatedAt: nowIso() }
+    );
+    return result.records.length > 0;
+  } finally {
+    await session.close();
+  }
+}
+
+/**
+ * Restore a soft-deleted Person node by clearing its `deletedAt` property.
+ *
+ * @returns true if the node was found and restored, false if not found.
+ */
+export async function restorePerson(id: string): Promise<boolean> {
+  const session = getSession();
+  try {
+    const result = await session.run(
+      `MATCH (p:Person {id: $id})
+       WHERE p.deletedAt IS NOT NULL
+       REMOVE p.deletedAt
+       SET p.updatedAt = $updatedAt
+       RETURN p.id AS id`,
