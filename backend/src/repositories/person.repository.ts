@@ -253,3 +253,88 @@ export async function findPersonBySourceRecord(
  * @param nodeType  Optional filter: 'REAL' | 'DEMO'. Omit to return all types.
  * @param limit     Max results (default 500 — practical guard for large graphs).
  * @param skip      Offset for pagination (default 0).
+ */
+export async function listPersons(
+  nodeType?: NodeType,
+  limit = 500,
+  skip = 0
+): Promise<PersonNode[]> {
+  const session = getSession();
+  try {
+    const typeFilter = nodeType ? 'AND p.nodeType = $nodeType' : '';
+    const result = await session.run(
+      `MATCH (p:Person)
+       WHERE p.deletedAt IS NULL ${typeFilter}
+       OPTIONAL MATCH (p)-[r:CONNECTED]-(other:Person)
+       WHERE r.deletedAt IS NULL AND other.deletedAt IS NULL
+       WITH p,
+            count(r) AS totalConn,
+            sum(CASE WHEN other.nodeType = 'REAL' THEN 1 ELSE 0 END) AS realConn,
+            sum(CASE WHEN other.nodeType = 'DEMO' THEN 1 ELSE 0 END) AS demoConn
+       RETURN p, totalConn, realConn, demoConn
+       ORDER BY p.createdAt DESC
+       SKIP $skip
+       LIMIT $limit`,
+      { nodeType: nodeType ?? null, skip: neo4j.int(skip), limit: neo4j.int(limit) }
+    );
+    return result.records.map(r => recordToPersonNode(r));
+  } finally {
+    await session.close();
+  }
+}
+
+/**
+ * Full-text search across Person nodes with dynamic connection metrics.
+ */
+export async function searchPersons(
+  query: string,
+  nodeType?: NodeType,
+  limit = 50
+): Promise<PersonNode[]> {
+  if (!query || query.trim().length === 0) return [];
+
+  const session = getSession();
+  try {
+    const q = query.toLowerCase().trim();
+    const typeFilter = nodeType ? 'AND p.nodeType = $nodeType' : '';
+    const result = await session.run(
+      `MATCH (p:Person)
+       WHERE p.deletedAt IS NULL ${typeFilter}
+         AND (
+           toLower(p.fullName)   CONTAINS $q
+           OR toLower(p.email)   CONTAINS $q
+           OR toLower(p.username) CONTAINS $q
+           OR toLower(p.company)  CONTAINS $q
+         )
+       OPTIONAL MATCH (p)-[r:CONNECTED]-(other:Person)
+       WHERE r.deletedAt IS NULL AND other.deletedAt IS NULL
+       WITH p,
+            count(r) AS totalConn,
+            sum(CASE WHEN other.nodeType = 'REAL' THEN 1 ELSE 0 END) AS realConn,
+            sum(CASE WHEN other.nodeType = 'DEMO' THEN 1 ELSE 0 END) AS demoConn
+       RETURN p, totalConn, realConn, demoConn
+       ORDER BY p.fullName ASC
+       LIMIT $limit`,
+      { q, nodeType: nodeType ?? null, limit: neo4j.int(limit) }
+    );
+    return result.records.map(r => recordToPersonNode(r));
+  } finally {
+    await session.close();
+  }
+}
+
+/**
+ * Update an existing active Person node.
+ *
+ * - Only the properties present in `updates` are written (sparse merge).
+ * - `id`, `publicId`, `createdAt`, `createdBy` are immutable and silently
+ *   stripped from `updates` even if provided by the caller.
+ * - `nodeType` is PERMANENTLY IMMUTABLE and throws an explicit error if
+ *   included in `updates`. REAL↔DEMO conversion is not an in-place mutation.
+ *   To change a node's type: soft-delete the existing node and create a new one.
+ * - `updatedAt` is always refreshed.
+ * - Returns null if the node does not exist or is soft-deleted.
+ */
+export async function updatePerson(
+  id: string,
+  updates: UpdatePersonInput
