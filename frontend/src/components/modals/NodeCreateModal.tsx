@@ -85,7 +85,7 @@ export default function NodeCreateModal({ onClose }: NodeCreateModalProps) {
         {/* Top Accent line */}
         <div style={{
           height: 3,
-          background: 'linear-gradient(90deg, var(--neon-cyan), var(--neon-blue))',
+          background: 'linear-gradient(90deg, #ffffff, var(--silver-500))',
           borderRadius: '12px 12px 0 0',
         }} />
 
@@ -93,7 +93,7 @@ export default function NodeCreateModal({ onClose }: NodeCreateModalProps) {
           {/* Header */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--neon-cyan)" strokeWidth="2.5">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.5">
                 <circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M2 21v-2a4 4 0 0 1 9-3.87"/>
               </svg>
               <h2 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--silver-100)', margin: 0 }}>Create Intelligence Node</h2>
@@ -155,8 +155,8 @@ export default function NodeCreateModal({ onClose }: NodeCreateModalProps) {
                   onChange={e => setNodeType(e.target.value as any)}
                   style={{ cursor: 'pointer' }}
                 >
-                  <option value="REAL" style={{ background: '#0a0a18', color: '#fff' }}>REAL</option>
-                  <option value="DEMO" style={{ background: '#0a0a18', color: '#fff' }}>DEMO</option>
+                  <option value="REAL" style={{ background: '#020202', color: '#fff' }}>REAL</option>
+                  <option value="DEMO" style={{ background: '#020202', color: '#fff' }}>DEMO</option>
                 </select>
               </div>
             </div>
@@ -218,12 +218,12 @@ export default function NodeCreateModal({ onClose }: NodeCreateModalProps) {
                   onChange={e => setCluster(e.target.value)}
                   style={{ cursor: 'pointer' }}
                 >
-                  <option value="" style={{ background: '#0a0a18' }}>-- None --</option>
-                  <option value="Tech" style={{ background: '#0a0a18' }}>Tech</option>
-                  <option value="Finance" style={{ background: '#0a0a18' }}>Finance</option>
-                  <option value="Health" style={{ background: '#0a0a18' }}>Health</option>
-                  <option value="Venture" style={{ background: '#0a0a18' }}>Venture</option>
-                  <option value="Academia" style={{ background: '#0a0a18' }}>Academia</option>
+                  <option value="" style={{ background: '#020202' }}>-- None --</option>
+                  <option value="Tech" style={{ background: '#020202' }}>Tech</option>
+                  <option value="Finance" style={{ background: '#020202' }}>Finance</option>
+                  <option value="Health" style={{ background: '#020202' }}>Health</option>
+                  <option value="Venture" style={{ background: '#020202' }}>Venture</option>
+                  <option value="Academia" style={{ background: '#020202' }}>Academia</option>
                 </select>
               </div>
 
@@ -242,7 +242,7 @@ export default function NodeCreateModal({ onClose }: NodeCreateModalProps) {
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                 <label className="text-label">Influence Score</label>
-                <span className="text-mono" style={{ fontSize: '13px', fontWeight: 700, color: 'var(--neon-cyan)' }}>{influenceScore}</span>
+                <span className="text-mono" style={{ fontSize: '13px', fontWeight: 700, color: '#ffffff' }}>{influenceScore}</span>
               </div>
               <input
                 type="range"
@@ -251,7 +251,7 @@ export default function NodeCreateModal({ onClose }: NodeCreateModalProps) {
                 onChange={e => setInfluenceScore(Number(e.target.value))}
                 className="hop-slider"
                 style={{
-                  background: `linear-gradient(to right, var(--neon-cyan) 0%, var(--neon-cyan) ${influenceScore}%, rgba(255,255,255,0.1) ${influenceScore}%, rgba(255,255,255,0.1) 100%)`
+                  background: `linear-gradient(to right, #ffffff 0%, #ffffff ${influenceScore}%, rgba(255,255,255,0.1) ${influenceScore}%, rgba(255,255,255,0.1) 100%)`
                 }}
               />
             </div>
@@ -274,10 +274,10 @@ export default function NodeCreateModal({ onClose }: NodeCreateModalProps) {
                 className="glass-button font-semibold"
                 disabled={isSubmitting}
                 style={{
-                  borderColor: 'rgba(6,182,212,0.5)',
-                  color: 'var(--neon-cyan)',
-                  background: 'rgba(6,182,212,0.08)',
-                  boxShadow: '0 0 15px rgba(6,182,212,0.15)',
+                  borderColor: 'rgba(255, 255, 255, 0.25)',
+                  color: '#ffffff',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  boxShadow: '0 0 15px rgba(255, 255, 255, 0.08)',
                   opacity: isSubmitting ? 0.5 : 1,
                 }}
               >

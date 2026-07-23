@@ -173,9 +173,9 @@ export default function NodeProfileModal({ node, onClose }: NodeProfileModalProp
               onClick={() => setActiveTab('view')}
               style={{
                 flex: 1, padding: '10px 0', border: 'none', cursor: 'pointer',
-                background: activeTab === 'view' ? 'transparent' : 'transparent',
-                borderBottom: activeTab === 'view' ? '2px solid var(--neon-cyan)' : '2px solid transparent',
-                color: activeTab === 'view' ? 'var(--neon-cyan)' : 'var(--silver-500)',
+                background: 'transparent',
+                borderBottom: activeTab === 'view' ? '2px solid #ffffff' : '2px solid transparent',
+                color: activeTab === 'view' ? '#ffffff' : 'var(--silver-500)',
                 fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em',
                 transition: 'all 0.2s',
               }}
@@ -186,9 +186,9 @@ export default function NodeProfileModal({ node, onClose }: NodeProfileModalProp
               onClick={() => setActiveTab('edit')}
               style={{
                 flex: 1, padding: '10px 0', border: 'none', cursor: 'pointer',
-                background: activeTab === 'edit' ? 'transparent' : 'transparent',
-                borderBottom: activeTab === 'edit' ? '2px solid var(--neon-violet)' : '2px solid transparent',
-                color: activeTab === 'edit' ? 'var(--neon-violet)' : 'var(--silver-500)',
+                background: 'transparent',
+                borderBottom: activeTab === 'edit' ? '2px solid #ffffff' : '2px solid transparent',
+                color: activeTab === 'edit' ? '#ffffff' : 'var(--silver-500)',
                 fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em',
                 transition: 'all 0.2s',
               }}
@@ -208,16 +208,16 @@ export default function NodeProfileModal({ node, onClose }: NodeProfileModalProp
                   <div style={{
                     width: 52, height: 52, borderRadius: '50%',
                     background: isReal
-                      ? 'linear-gradient(135deg, rgba(6,182,212,0.3), rgba(59,130,246,0.3))'
-                      : 'linear-gradient(135deg, rgba(100,116,139,0.3), rgba(71,85,105,0.3))',
-                    border: `2px solid ${isReal ? 'rgba(6,182,212,0.5)' : 'rgba(100,116,139,0.4)'}`,
-                    boxShadow: isReal ? '0 0 20px rgba(6,182,212,0.2)' : 'none',
+                      ? 'linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))'
+                      : 'linear-gradient(135deg, rgba(100,116,139,0.15), rgba(71,85,105,0.15))',
+                    border: `2px solid ${isReal ? 'rgba(255,255,255,0.25)' : 'rgba(100,116,139,0.4)'}`,
+                    boxShadow: isReal ? '0 0 20px rgba(255,255,255,0.05)' : 'none',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     fontSize: '20px',
                     fontWeight: 700,
-                    color: isReal ? 'var(--neon-cyan)' : 'var(--silver-500)',
+                    color: isReal ? '#ffffff' : 'var(--silver-500)',
                     flexShrink: 0,
                   }}>
                     {node.fullName.charAt(0)}
@@ -233,9 +233,9 @@ export default function NodeProfileModal({ node, onClose }: NodeProfileModalProp
                       </span>
                       {node.cluster && (
                         <span className="badge" style={{
-                          background: 'rgba(139,92,246,0.12)',
-                          border: '1px solid rgba(139,92,246,0.3)',
-                          color: 'var(--neon-violet)',
+                          background: 'rgba(255,255,255,0.05)',
+                          border: '1px solid rgba(255,255,255,0.12)',
+                          color: '#ffffff',
                         }}>
                           {node.cluster}
                         </span>
@@ -270,7 +270,7 @@ export default function NodeProfileModal({ node, onClose }: NodeProfileModalProp
 
               {/* Public ID and Company */}
               <div className="text-mono" style={{ fontSize: '11px', color: 'var(--silver-400)', marginBottom: '8px', marginTop: '-8px', display: 'flex', gap: '8px' }}>
-                <span>ID: <span style={{ color: 'var(--neon-cyan)', fontWeight: 600 }}>{node.publicId}</span></span>
+                <span>ID: <span style={{ color: '#ffffff', fontWeight: 600 }}>{node.publicId}</span></span>
                 {node.company && <span style={{ color: 'var(--silver-600)' }}>| {node.company}</span>}
               </div>
 
@@ -296,11 +296,11 @@ export default function NodeProfileModal({ node, onClose }: NodeProfileModalProp
               {/* ── RELATIONSHIP INTELLIGENCE INSIGHTS (V3.0) ── */}
               <div className="glass-panel" style={{
                 padding: '12px 14px',
-                background: 'rgba(139,92,246,0.02)',
-                borderColor: 'rgba(139,92,246,0.2)',
+                background: 'rgba(255,255,255,0.01)',
+                borderColor: 'rgba(255,255,255,0.08)',
                 marginBottom: '16px',
               }}>
-                <div className="text-label" style={{ marginBottom: '10px', color: 'var(--neon-violet)', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <div className="text-label" style={{ marginBottom: '10px', color: 'var(--silver-400)', display: 'flex', alignItems: 'center', gap: '5px' }}>
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                     <polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 17 17 22 12"/>
                   </svg>
@@ -314,53 +314,53 @@ export default function NodeProfileModal({ node, onClose }: NodeProfileModalProp
                   </div>
                   <div style={{ background: 'rgba(0,0,0,0.15)', padding: '6px 8px', borderRadius: '4px' }}>
                     <div style={{ color: 'var(--silver-500)', fontSize: '8px', textTransform: 'uppercase' }}>Strategic Reach</div>
-                    <div style={{ fontWeight: 600, color: 'var(--neon-cyan)', marginTop: '2px' }}>{strategicReach} Nodes</div>
+                    <div style={{ fontWeight: 600, color: '#ffffff', marginTop: '2px' }}>{strategicReach} Nodes</div>
                   </div>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '11px' }}>
                   <div style={{ background: 'rgba(0,0,0,0.15)', padding: '6px 8px', borderRadius: '4px' }}>
                     <div style={{ color: 'var(--silver-500)', fontSize: '8px', textTransform: 'uppercase' }}>Intro Potential</div>
-                    <div style={{ fontWeight: 600, color: 'var(--neon-emerald)', marginTop: '2px' }}>{warmIntroPct}% Success</div>
+                    <div style={{ fontWeight: 600, color: 'var(--silver-200)', marginTop: '2px' }}>{warmIntroPct}% Success</div>
                   </div>
                   <div style={{ background: 'rgba(0,0,0,0.15)', padding: '6px 8px', borderRadius: '4px' }}>
                     <div style={{ color: 'var(--silver-500)', fontSize: '8px', textTransform: 'uppercase' }}>Influence Spread</div>
-                    <div style={{ fontWeight: 600, color: 'var(--neon-violet)', marginTop: '2px' }}>{propagationScore}% Power</div>
+                    <div style={{ fontWeight: 600, color: 'var(--silver-400)', marginTop: '2px' }}>{propagationScore}% Power</div>
                   </div>
                 </div>
               </div>
 
               {/* ── STATS SECTION ── */}
               <div style={{ marginBottom: '16px' }}>
-                <div className="text-label" style={{ marginBottom: '10px', color: 'var(--neon-blue)' }}>Network Metrics</div>
+                <div className="text-label" style={{ marginBottom: '10px', color: '#ffffff' }}>Network Metrics</div>
                 <StatRow label="Total Connections" value={totalConn} />
-                <StatRow label="Real Connections" value={node.realConnections} color="var(--neon-cyan)" />
+                <StatRow label="Real Connections" value={node.realConnections} color="#ffffff" />
                 <StatRow label="Demo Connections" value={node.demoConnections} color="var(--silver-500)" />
-                <StatRow label="Influence Score" value={node.influenceScore} color="var(--neon-cyan)" />
+                <StatRow label="Influence Score" value={node.influenceScore} color="#ffffff" />
                 {centralityPercent > 0 && (
-                  <StatRow label="Centrality" value={`${centralityPercent}%`} color="var(--neon-blue)" />
+                  <StatRow label="Centrality" value={`${centralityPercent}%`} color="#ffffff" />
                 )}
                 {strongestEdge && (
                   <StatRow
                     label="Strongest Link Score"
                     value={Math.round(strongestEdge.weight * 100)}
-                    color="var(--neon-emerald)"
+                    color="#ffffff"
                   />
                 )}
               </div>
 
               {/* ── MINI VISUALIZATIONS ── */}
               <div style={{ marginBottom: '16px' }}>
-                <div className="text-label" style={{ marginBottom: '10px', color: 'var(--neon-blue)' }}>Visual Metrics</div>
+                <div className="text-label" style={{ marginBottom: '10px', color: '#ffffff' }}>Visual Metrics</div>
 
                 {/* Real connection ratio */}
                 <div style={{ marginBottom: '10px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
                     <span style={{ fontSize: '11px', color: 'var(--silver-400)' }}>Connection Score Ratio</span>
-                    <span className="text-mono" style={{ fontSize: '11px', color: 'var(--neon-cyan)' }}>{realRatio}%</span>
+                    <span className="text-mono" style={{ fontSize: '11px', color: '#ffffff' }}>{realRatio}%</span>
                   </div>
                   <div className="progress-bar" style={{ height: 6 }}>
-                    <div className="progress-fill progress-fill-cyan" style={{ width: `${realRatio}%` }} />
+                    <div className="progress-fill progress-fill-cyan" style={{ width: `${realRatio}%`, background: 'linear-gradient(90deg, #ffffff, #cbd5e1)' }} />
                   </div>
                 </div>
 
@@ -368,10 +368,10 @@ export default function NodeProfileModal({ node, onClose }: NodeProfileModalProp
                 <div style={{ marginBottom: '10px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
                     <span style={{ fontSize: '11px', color: 'var(--silver-400)' }}>Influence Power</span>
-                    <span className="text-mono" style={{ fontSize: '11px', color: 'var(--neon-blue)' }}>{influencePercent}</span>
+                    <span className="text-mono" style={{ fontSize: '11px', color: '#ffffff' }}>{influencePercent}</span>
                   </div>
                   <div className="progress-bar" style={{ height: 6 }}>
-                    <div className="progress-fill progress-fill-blue" style={{ width: `${influencePercent}%` }} />
+                    <div className="progress-fill progress-fill-blue" style={{ width: `${influencePercent}%`, background: 'linear-gradient(90deg, #cbd5e1, #475569)' }} />
                   </div>
                 </div>
               </div>
@@ -379,7 +379,7 @@ export default function NodeProfileModal({ node, onClose }: NodeProfileModalProp
               <div className="divider" />
 
               {/* ── ACTIONS ── */}
-              <div className="text-label" style={{ marginBottom: '10px', color: 'var(--neon-blue)' }}>Actions</div>
+              <div className="text-label" style={{ marginBottom: '10px', color: '#ffffff' }}>Actions</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
                 
                 <Link href={`/profile/${node.publicId}`} style={{ textDecoration: 'none' }} onClick={() => onClose()}>
@@ -457,8 +457,8 @@ export default function NodeProfileModal({ node, onClose }: NodeProfileModalProp
                     onChange={e => setNodeType(e.target.value as any)}
                     style={{ cursor: 'pointer' }}
                   >
-                    <option value="REAL" style={{ background: '#0a0a18' }}>REAL</option>
-                    <option value="DEMO" style={{ background: '#0a0a18' }}>DEMO</option>
+                    <option value="REAL" style={{ background: '#020202' }}>REAL</option>
+                    <option value="DEMO" style={{ background: '#020202' }}>DEMO</option>
                   </select>
                 </div>
               </div>
@@ -516,12 +516,12 @@ export default function NodeProfileModal({ node, onClose }: NodeProfileModalProp
                     onChange={e => setCluster(e.target.value)}
                     style={{ cursor: 'pointer' }}
                   >
-                    <option value="" style={{ background: '#0a0a18' }}>-- None --</option>
-                    <option value="Tech" style={{ background: '#0a0a18' }}>Tech</option>
-                    <option value="Finance" style={{ background: '#0a0a18' }}>Finance</option>
-                    <option value="Health" style={{ background: '#0a0a18' }}>Health</option>
-                    <option value="Venture" style={{ background: '#0a0a18' }}>Venture</option>
-                    <option value="Academia" style={{ background: '#0a0a18' }}>Academia</option>
+                    <option value="" style={{ background: '#020202' }}>-- None --</option>
+                    <option value="Tech" style={{ background: '#020202' }}>Tech</option>
+                    <option value="Finance" style={{ background: '#020202' }}>Finance</option>
+                    <option value="Health" style={{ background: '#020202' }}>Health</option>
+                    <option value="Venture" style={{ background: '#020202' }}>Venture</option>
+                    <option value="Academia" style={{ background: '#020202' }}>Academia</option>
                   </select>
                 </div>
 
@@ -539,7 +539,7 @@ export default function NodeProfileModal({ node, onClose }: NodeProfileModalProp
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
                   <label className="text-label">Influence Score</label>
-                  <span className="text-mono" style={{ fontSize: '12px', fontWeight: 700, color: 'var(--neon-violet)' }}>{influenceScore}</span>
+                  <span className="text-mono" style={{ fontSize: '12px', fontWeight: 700, color: 'var(--silver-400)' }}>{influenceScore}</span>
                 </div>
                 <input
                   type="range"
@@ -548,7 +548,7 @@ export default function NodeProfileModal({ node, onClose }: NodeProfileModalProp
                   onChange={e => setInfluenceScore(Number(e.target.value))}
                   className="hop-slider"
                   style={{
-                    background: `linear-gradient(to right, var(--neon-violet) 0%, var(--neon-violet) ${influenceScore}%, rgba(255,255,255,0.1) ${influenceScore}%, rgba(255,255,255,0.1) 100%)`
+                    background: `linear-gradient(to right, #ffffff 0%, #ffffff ${influenceScore}%, rgba(255,255,255,0.1) ${influenceScore}%, rgba(255,255,255,0.1) 100%)`
                   }}
                 />
               </div>
@@ -585,10 +585,10 @@ export default function NodeProfileModal({ node, onClose }: NodeProfileModalProp
                     className="glass-button font-semibold"
                     disabled={isSubmitting}
                     style={{
-                      borderColor: 'rgba(139,92,246,0.5)',
-                      color: 'var(--neon-violet)',
-                      background: 'rgba(139,92,246,0.08)',
-                      boxShadow: '0 0 10px rgba(139,92,246,0.15)',
+                      borderColor: 'rgba(255, 255, 255, 0.25)',
+                      color: '#ffffff',
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      boxShadow: '0 0 10px rgba(255, 255, 255, 0.08)',
                     }}
                   >
                     {isSubmitting ? 'Syncing...' : 'Save Settings'}

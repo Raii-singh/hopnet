@@ -127,7 +127,7 @@ export default function EdgeEditorModal({ edge, createData, onClose }: EdgeEdito
         {/* Top Accent line */}
         <div style={{
           height: 3,
-          background: 'linear-gradient(90deg, var(--neon-cyan), var(--neon-violet))',
+          background: 'linear-gradient(90deg, #ffffff, var(--silver-500))',
           borderRadius: '12px 12px 0 0',
         }} />
 
@@ -135,7 +135,7 @@ export default function EdgeEditorModal({ edge, createData, onClose }: EdgeEdito
           {/* Header */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--neon-violet)" strokeWidth="2.5">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.5">
                 <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
                 <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
               </svg>
@@ -207,14 +207,14 @@ export default function EdgeEditorModal({ edge, createData, onClose }: EdgeEdito
                 </span>
                 <div style={{
                   width: '100%', height: 2,
-                  background: 'linear-gradient(90deg, var(--neon-cyan), var(--neon-violet))',
+                  background: 'linear-gradient(90deg, #ffffff, var(--silver-500))',
                   position: 'relative',
                   marginTop: '4px',
                 }}>
                   <div style={{
                     position: 'absolute', top: -3, left: '50%', transform: 'translateX(-50%)',
                     width: 8, height: 8, borderRadius: '50%',
-                    background: 'var(--neon-violet)', boxShadow: '0 0 8px var(--neon-violet)',
+                    background: '#ffffff', boxShadow: '0 0 8px rgba(255, 255, 255, 0.6)',
                   }} />
                 </div>
               </div>
@@ -241,13 +241,13 @@ export default function EdgeEditorModal({ edge, createData, onClose }: EdgeEdito
                 onChange={e => setRelationshipType(e.target.value)}
                 style={{ cursor: 'pointer' }}
               >
-                <option value="partner" style={{ background: '#0a0a18' }}>Partner</option>
-                <option value="advisor" style={{ background: '#0a0a18' }}>Advisor</option>
-                <option value="co-founder" style={{ background: '#0a0a18' }}>Co-Founder</option>
-                <option value="investor" style={{ background: '#0a0a18' }}>Investor</option>
-                <option value="colleague" style={{ background: '#0a0a18' }}>Colleague / Peer</option>
-                <option value="acquaintance" style={{ background: '#0a0a18' }}>Acquaintance</option>
-                <option value="friend" style={{ background: '#0a0a18' }}>Friend</option>
+                <option value="partner" style={{ background: '#020202' }}>Partner</option>
+                <option value="advisor" style={{ background: '#020202' }}>Advisor</option>
+                <option value="co-founder" style={{ background: '#020202' }}>Co-Founder</option>
+                <option value="investor" style={{ background: '#020202' }}>Investor</option>
+                <option value="colleague" style={{ background: '#020202' }}>Colleague / Peer</option>
+                <option value="acquaintance" style={{ background: '#020202' }}>Acquaintance</option>
+                <option value="friend" style={{ background: '#020202' }}>Friend</option>
               </select>
             </div>
 
@@ -255,7 +255,7 @@ export default function EdgeEditorModal({ edge, createData, onClose }: EdgeEdito
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                 <label className="text-label">Relationship Trust Score</label>
-                <span className="text-mono" style={{ fontSize: '13px', fontWeight: 700, color: 'var(--neon-cyan)' }}>
+                <span className="text-mono" style={{ fontSize: '13px', fontWeight: 700, color: '#ffffff' }}>
                   {Math.round(trustScore * 100)}%
                 </span>
               </div>
@@ -266,7 +266,7 @@ export default function EdgeEditorModal({ edge, createData, onClose }: EdgeEdito
                 onChange={e => setTrustScore(Number(e.target.value))}
                 className="hop-slider"
                 style={{
-                  background: `linear-gradient(to right, var(--neon-cyan) 0%, var(--neon-cyan) ${trustScore * 100}%, rgba(255,255,255,0.1) ${trustScore * 100}%, rgba(255,255,255,0.1) 100%)`
+                  background: `linear-gradient(to right, #ffffff 0%, #ffffff ${trustScore * 100}%, rgba(255,255,255,0.1) ${trustScore * 100}%, rgba(255,255,255,0.1) 100%)`
                 }}
               />
               <div style={{ fontSize: '9.5px', color: 'var(--silver-500)', marginTop: '4px', display: 'flex', justifyContent: 'space-between' }}>
@@ -279,7 +279,7 @@ export default function EdgeEditorModal({ edge, createData, onClose }: EdgeEdito
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                 <label className="text-label">Interaction Frequency</label>
-                <span className="text-mono" style={{ fontSize: '13px', fontWeight: 700, color: 'var(--neon-violet)' }}>
+                <span className="text-mono" style={{ fontSize: '13px', fontWeight: 700, color: 'var(--silver-400)' }}>
                   {Math.round(interactionFrequency * 100)}%
                 </span>
               </div>
@@ -290,7 +290,7 @@ export default function EdgeEditorModal({ edge, createData, onClose }: EdgeEdito
                 onChange={e => setInteractionFrequency(Number(e.target.value))}
                 className="hop-slider"
                 style={{
-                  background: `linear-gradient(to right, var(--neon-violet) 0%, var(--neon-violet) ${interactionFrequency * 100}%, rgba(255,255,255,0.1) ${interactionFrequency * 100}%, rgba(255,255,255,0.1) 100%)`
+                  background: `linear-gradient(to right, #ffffff 0%, #ffffff ${interactionFrequency * 100}%, rgba(255,255,255,0.1) ${interactionFrequency * 100}%, rgba(255,255,255,0.1) 100%)`
                 }}
               />
               <div style={{ fontSize: '9.5px', color: 'var(--silver-500)', marginTop: '4px', display: 'flex', justifyContent: 'space-between' }}>
@@ -308,7 +308,7 @@ export default function EdgeEditorModal({ edge, createData, onClose }: EdgeEdito
               alignItems: 'center',
             }}>
               <span className="text-label">Resulting Edge weight</span>
-              <span className="text-mono" style={{ fontSize: '14px', fontWeight: 800, color: 'var(--neon-emerald)' }}>
+              <span className="text-mono" style={{ fontSize: '14px', fontWeight: 800, color: '#ffffff' }}>
                 {Math.round((trustScore * 0.6 + interactionFrequency * 0.4) * 100) / 100}
               </span>
             </div>
@@ -346,13 +346,13 @@ export default function EdgeEditorModal({ edge, createData, onClose }: EdgeEdito
                 </button>
                 <button
                   type="submit"
-                  className="glass-button"
+                  className="glass-button font-semibold"
                   disabled={isSubmitting || (sourceNode?.nodeType === 'DEMO' && targetNode?.nodeType === 'REAL')}
                   style={{
-                    borderColor: 'rgba(139,92,246,0.5)',
-                    color: 'var(--neon-violet)',
-                    background: 'rgba(139,92,246,0.08)',
-                    boxShadow: '0 0 15px rgba(139,92,246,0.15)',
+                    borderColor: 'rgba(255, 255, 255, 0.25)',
+                    color: '#ffffff',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    boxShadow: '0 0 15px rgba(255, 255, 255, 0.08)',
                     opacity: (isSubmitting || (sourceNode?.nodeType === 'DEMO' && targetNode?.nodeType === 'REAL')) ? 0.5 : 1,
                   }}
                 >

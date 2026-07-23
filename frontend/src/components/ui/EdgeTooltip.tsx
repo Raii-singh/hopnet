@@ -4,8 +4,6 @@ import { GraphEdge, GraphNode } from '@/types/graph';
 
 interface EdgeTooltipProps {
   edge: GraphEdge;
-  x: number;
-  y: number;
 }
 
 function resolveNode(n: string | GraphNode): { id: string; fullName?: string; nodeType?: string } {
@@ -13,7 +11,7 @@ function resolveNode(n: string | GraphNode): { id: string; fullName?: string; no
   return { id: n.id, fullName: n.fullName, nodeType: n.nodeType };
 }
 
-export default function EdgeTooltip({ edge, x, y }: EdgeTooltipProps) {
+export default function EdgeTooltip({ edge }: EdgeTooltipProps) {
   const isReal = edge.edgeType === 'REAL_EDGE';
   const src = resolveNode(edge.source);
   const tgt = resolveNode(edge.target);
@@ -24,7 +22,7 @@ export default function EdgeTooltip({ edge, x, y }: EdgeTooltipProps) {
   return (
     <div
       className="tooltip animate-fade-in"
-      style={{ left: x + 12, top: y - 12, maxWidth: 200 }}
+      style={{ left: 12, top: -12, maxWidth: 200 }}
     >
       <div className="glass-panel-strong" style={{ padding: '10px 12px' }}>
         {/* Edge type badge */}

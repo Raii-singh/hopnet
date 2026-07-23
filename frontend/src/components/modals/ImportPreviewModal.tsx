@@ -77,7 +77,7 @@ export default function ImportPreviewModal({
         {/* Top Accent line */}
         <div style={{
           height: 3,
-          background: 'linear-gradient(90deg, var(--neon-cyan), var(--neon-blue), var(--neon-violet))',
+          background: 'linear-gradient(90deg, #ffffff, var(--silver-500))',
           borderRadius: '12px 12px 0 0',
         }} />
 
@@ -85,7 +85,7 @@ export default function ImportPreviewModal({
           {/* Header */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--neon-cyan)" strokeWidth="2.5">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.5">
                 <polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 17 17 22 12"/>
               </svg>
               <h2 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--silver-100)', margin: 0 }}>
@@ -142,9 +142,9 @@ export default function ImportPreviewModal({
           }}>
             {[
               { label: 'Total Contacts', value: summary.totalContacts, color: 'var(--silver-300)' },
-              { label: 'New Nodes', value: summary.newNodesCount, color: 'var(--neon-cyan)' },
-              { label: 'Conflicts Found', value: summary.duplicateMatchesCount, color: 'var(--neon-violet)' },
-              { label: 'Inferred Edges', value: summary.inferredEdgesCount, color: 'var(--neon-emerald)' },
+              { label: 'New Nodes', value: summary.newNodesCount, color: '#ffffff' },
+              { label: 'Conflicts Found', value: summary.duplicateMatchesCount, color: 'var(--silver-400)' },
+              { label: 'Inferred Edges', value: summary.inferredEdgesCount, color: '#ffffff' },
             ].map(item => (
               <div key={item.label} className="glass-panel" style={{ padding: '8px 10px', background: 'rgba(0,0,0,0.15)', textAlign: 'center' }}>
                 <div style={{ fontSize: '9px', color: 'var(--silver-500)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '4px' }}>
@@ -166,9 +166,9 @@ export default function ImportPreviewModal({
             overflow: 'hidden',
           }}>
             {[
-              { id: 'nodes', label: `Detected Users (${detectedNodes.length})`, color: 'var(--neon-cyan)' },
-              { id: 'duplicates', label: `Duplicate Conflicts (${duplicateMatches.length})`, color: 'var(--neon-violet)' },
-              { id: 'edges', label: `Inferred Edges (${inferredEdges.length})`, color: 'var(--neon-emerald)' },
+              { id: 'nodes', label: `Detected Users (${detectedNodes.length})`, color: '#ffffff' },
+              { id: 'duplicates', label: `Duplicate Conflicts (${duplicateMatches.length})`, color: 'var(--silver-400)' },
+              { id: 'edges', label: `Inferred Edges (${inferredEdges.length})`, color: '#ffffff' },
             ].map(tab => (
               <button
                 key={tab.id}
@@ -240,9 +240,9 @@ export default function ImportPreviewModal({
                   </div>
                 ) : (
                   duplicateMatches.map((dup: any, idx: number) => (
-                    <div key={idx} className="glass-panel" style={{ padding: '10px 12px', background: 'rgba(139,92,246,0.01)', borderColor: 'rgba(139,92,246,0.15)' }}>
+                    <div key={idx} className="glass-panel" style={{ padding: '10px 12px', background: 'rgba(255, 255, 255, 0.01)', borderColor: 'var(--glass-border)' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '10.5px' }}>
-                        <span style={{ color: 'var(--neon-violet)', fontWeight: 600 }}>Conflict #{idx + 1}: {dup.reason}</span>
+                        <span style={{ color: 'var(--silver-400)', fontWeight: 600 }}>Conflict #{idx + 1}: {dup.reason}</span>
                         <span className="text-mono" style={{ color: 'var(--silver-500)' }}>{dup.existing.publicId}</span>
                       </div>
                       
@@ -271,9 +271,9 @@ export default function ImportPreviewModal({
                           style={{
                             fontSize: '9.5px',
                             padding: '3px 8px',
-                            borderColor: dup.survivingOption === 'KEEP_EXISTING' ? 'var(--neon-cyan)' : 'var(--glass-border)',
-                            color: dup.survivingOption === 'KEEP_EXISTING' ? 'var(--neon-cyan)' : 'var(--silver-500)',
-                            background: dup.survivingOption === 'KEEP_EXISTING' ? 'rgba(6,182,212,0.05)' : 'transparent',
+                            borderColor: dup.survivingOption === 'KEEP_EXISTING' ? '#ffffff' : 'var(--glass-border)',
+                            color: dup.survivingOption === 'KEEP_EXISTING' ? '#ffffff' : 'var(--silver-500)',
+                            background: dup.survivingOption === 'KEEP_EXISTING' ? 'rgba(255, 255, 255, 0.05)' : 'transparent',
                           }}
                         >
                           Keep Database
@@ -285,9 +285,9 @@ export default function ImportPreviewModal({
                           style={{
                             fontSize: '9.5px',
                             padding: '3px 8px',
-                            borderColor: dup.survivingOption === 'OVERWRITE_WITH_IMPORTED' ? 'var(--neon-violet)' : 'var(--glass-border)',
-                            color: dup.survivingOption === 'OVERWRITE_WITH_IMPORTED' ? 'var(--neon-violet)' : 'var(--silver-500)',
-                            background: dup.survivingOption === 'OVERWRITE_WITH_IMPORTED' ? 'rgba(139,92,246,0.05)' : 'transparent',
+                            borderColor: dup.survivingOption === 'OVERWRITE_WITH_IMPORTED' ? '#ffffff' : 'var(--glass-border)',
+                            color: dup.survivingOption === 'OVERWRITE_WITH_IMPORTED' ? '#ffffff' : 'var(--silver-500)',
+                            background: dup.survivingOption === 'OVERWRITE_WITH_IMPORTED' ? 'rgba(255, 255, 255, 0.05)' : 'transparent',
                           }}
                         >
                           Overwrite Info
@@ -319,11 +319,11 @@ export default function ImportPreviewModal({
                     }} division-idx={idx}>
                       <span style={{ color: 'var(--silver-300)', fontWeight: 600 }}>{edge.sourceName}</span>
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '0 8px', width: '30%' }}>
-                        <span style={{ fontSize: '9px', color: 'var(--neon-emerald)' }}>{edge.relationshipType}</span>
-                        <div style={{ width: '100%', height: 1, background: 'rgba(16,185,129,0.3)', margin: '3px 0' }} />
+                        <span style={{ fontSize: '9px', color: '#ffffff' }}>{edge.relationshipType}</span>
+                        <div style={{ width: '100%', height: 1, background: 'rgba(255, 255, 255, 0.12)', margin: '3px 0' }} />
                       </div>
                       <span style={{ color: 'var(--silver-300)', fontWeight: 600 }}>{edge.targetName}</span>
-                      <span className="text-mono" style={{ color: 'var(--neon-emerald)', fontSize: '10px', marginLeft: 'auto' }}>
+                      <span className="text-mono" style={{ color: '#ffffff', fontSize: '10px', marginLeft: 'auto' }}>
                         W: {Math.round((edge.trustScore * 0.6 + edge.interactionFrequency * 0.4) * 100) / 100}
                       </span>
                     </div>
@@ -352,16 +352,16 @@ export default function ImportPreviewModal({
               onClick={handleIngest}
               disabled={isIngesting}
               style={{
-                borderColor: 'rgba(16,185,129,0.5)',
-                color: 'var(--neon-emerald)',
-                background: 'rgba(16,185,129,0.08)',
-                boxShadow: '0 0 15px rgba(16,185,129,0.15)',
+                borderColor: 'rgba(255, 255, 255, 0.25)',
+                color: '#ffffff',
+                background: 'rgba(255, 255, 255, 0.05)',
+                boxShadow: '0 0 15px rgba(255, 255, 255, 0.08)',
                 opacity: isIngesting ? 0.6 : 1,
               }}
             >
               {isIngesting ? (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div style={{ width: 12, height: 12, border: '1.5px solid var(--neon-emerald)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} />
+                  <div style={{ width: 12, height: 12, border: '1.5px solid #ffffff', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} />
                   Ingesting Data…
                 </div>
               ) : 'Commit Ingestion'}

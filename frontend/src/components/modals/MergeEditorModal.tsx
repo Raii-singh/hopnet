@@ -85,7 +85,7 @@ export default function MergeEditorModal({ onClose }: MergeEditorModalProps) {
         {/* Top Accent line */}
         <div style={{
           height: 3,
-          background: 'linear-gradient(90deg, var(--neon-emerald), var(--neon-cyan))',
+          background: 'linear-gradient(90deg, #ffffff, var(--silver-500))',
           borderRadius: '12px 12px 0 0',
         }} />
 
@@ -93,7 +93,7 @@ export default function MergeEditorModal({ onClose }: MergeEditorModalProps) {
           {/* Header */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--neon-emerald)" strokeWidth="2.5">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.5">
                 <path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
               </svg>
               <h2 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--silver-100)', margin: 0 }}>
@@ -141,12 +141,12 @@ export default function MergeEditorModal({ onClose }: MergeEditorModalProps) {
 
           {loading ? (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '40px 0' }}>
-              <div style={{ width: 28, height: 28, border: '2px solid var(--neon-emerald)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite', marginBottom: '12px' }} />
-              <span className="text-label" style={{ color: 'var(--neon-emerald)', fontSize: '11px' }}>Scanning relationship index ledger…</span>
+              <div style={{ width: 28, height: 28, border: '2px solid #ffffff', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite', marginBottom: '12px' }} />
+              <span className="text-label" style={{ color: '#ffffff', fontSize: '11px' }}>Scanning relationship index ledger…</span>
             </div>
           ) : suggestions.length === 0 ? (
-            <div className="glass-panel" style={{ padding: '24px', textAlign: 'center', background: 'rgba(16,185,129,0.01)', borderColor: 'rgba(16,185,129,0.1)' }}>
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--neon-emerald)" strokeWidth="1.5" style={{ marginBottom: '12px', opacity: 0.8 }}>
+            <div className="glass-panel" style={{ padding: '24px', textAlign: 'center', background: 'rgba(255, 255, 255, 0.01)', borderColor: 'rgba(255, 255, 255, 0.08)' }}>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="1.5" style={{ marginBottom: '12px', opacity: 0.8 }}>
                 <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
               </svg>
               <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--silver-200)', marginBottom: '4px' }}>No duplicates flagged</div>
@@ -160,7 +160,7 @@ export default function MergeEditorModal({ onClose }: MergeEditorModalProps) {
                 return (
                   <div key={pairId} className="glass-panel" style={{
                     padding: '14px 16px',
-                    borderColor: 'rgba(16,185,129,0.15)',
+                    borderColor: 'var(--glass-border)',
                     background: 'rgba(255,255,255,0.01)',
                   }}>
                     {/* Badge similarity */}
@@ -168,10 +168,10 @@ export default function MergeEditorModal({ onClose }: MergeEditorModalProps) {
                       <span style={{ fontSize: '10.5px', color: 'var(--silver-400)', fontWeight: 600 }}>Flagged Pair #{index + 1}</span>
                       <span className="text-mono" style={{
                         fontSize: '10px', fontWeight: 700,
-                        background: 'rgba(16,185,129,0.15)',
-                        border: '1px solid rgba(16,185,129,0.4)',
+                        background: 'rgba(255, 255, 255, 0.08)',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
                         padding: '1px 6px', borderRadius: '100px',
-                        color: 'var(--neon-emerald)',
+                        color: '#ffffff',
                       }}>
                         {s.similarity}% Similarity Score
                       </span>
@@ -185,7 +185,7 @@ export default function MergeEditorModal({ onClose }: MergeEditorModalProps) {
                         <div style={{ fontSize: '12.5px', fontWeight: 700, color: 'var(--silver-200)', marginTop: '4px' }}>{s.userA.fullName}</div>
                         <div className="text-mono" style={{ fontSize: '9.5px', color: 'var(--silver-500)', marginTop: '2px' }}>{s.userA.publicId}</div>
                         {s.userA.company && <div style={{ fontSize: '10.5px', color: 'var(--silver-400)', marginTop: '4px' }}>🏢 {s.userA.company}</div>}
-                        {s.userA.email && <div style={{ fontSize: '10px', color: 'var(--neon-cyan)', marginTop: '4px', overflow: 'hidden', textOverflow: 'ellipsis' }}>✉️ {s.userA.email}</div>}
+                        {s.userA.email && <div style={{ fontSize: '10px', color: '#ffffff', marginTop: '4px', overflow: 'hidden', textOverflow: 'ellipsis' }}>✉️ {s.userA.email}</div>}
                       </div>
 
                       {/* User B */}
@@ -194,7 +194,7 @@ export default function MergeEditorModal({ onClose }: MergeEditorModalProps) {
                         <div style={{ fontSize: '12.5px', fontWeight: 700, color: 'var(--silver-200)', marginTop: '4px' }}>{s.userB.fullName}</div>
                         <div className="text-mono" style={{ fontSize: '9.5px', color: 'var(--silver-500)', marginTop: '2px' }}>{s.userB.publicId}</div>
                         {s.userB.company && <div style={{ fontSize: '10.5px', color: 'var(--silver-400)', marginTop: '4px' }}>🏢 {s.userB.company}</div>}
-                        {s.userB.email && <div style={{ fontSize: '10px', color: 'var(--neon-cyan)', marginTop: '4px', overflow: 'hidden', textOverflow: 'ellipsis' }}>✉️ {s.userB.email}</div>}
+                        {s.userB.email && <div style={{ fontSize: '10px', color: '#ffffff', marginTop: '4px', overflow: 'hidden', textOverflow: 'ellipsis' }}>✉️ {s.userB.email}</div>}
                       </div>
                     </div>
 
@@ -210,7 +210,7 @@ export default function MergeEditorModal({ onClose }: MergeEditorModalProps) {
                         className="glass-button"
                         onClick={() => handleMerge(s.userA, s.userB, s.userA.id)}
                         disabled={isMerging}
-                        style={{ fontSize: '10.5px', padding: '4px 10px', borderColor: 'rgba(16,185,129,0.3)', color: 'var(--neon-emerald)' }}
+                        style={{ fontSize: '10.5px', padding: '4px 10px', borderColor: 'rgba(255, 255, 255, 0.25)', color: '#ffffff' }}
                       >
                         {isMerging ? 'Merging...' : 'Keep A'}
                       </button>
@@ -218,7 +218,7 @@ export default function MergeEditorModal({ onClose }: MergeEditorModalProps) {
                         className="glass-button"
                         onClick={() => handleMerge(s.userA, s.userB, s.userB.id)}
                         disabled={isMerging}
-                        style={{ fontSize: '10.5px', padding: '4px 10px', borderColor: 'rgba(16,185,129,0.3)', color: 'var(--neon-emerald)' }}
+                        style={{ fontSize: '10.5px', padding: '4px 10px', borderColor: 'rgba(255, 255, 255, 0.25)', color: '#ffffff' }}
                       >
                         {isMerging ? 'Merging...' : 'Keep B'}
                       </button>
