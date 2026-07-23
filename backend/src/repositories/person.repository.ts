@@ -168,3 +168,88 @@ export async function createPerson(
 }
 
 /**
+ * Find a Person by their backend UUID (`id`).
+ * Returns null if no active (non-deleted) node is found.
+ */
+export async function getPersonById(id: string): Promise<PersonNode | null> {
+  const session = getSession();
+  try {
+    const result = await session.run(
+      `MATCH (p:Person {id: $id})
+       WHERE p.deletedAt IS NULL
+       OPTIONAL MATCH (p)-[r:CONNECTED]-(other:Person)
+       WHERE r.deletedAt IS NULL AND other.deletedAt IS NULL
+       WITH p,
+            count(r) AS totalConn,
+            sum(CASE WHEN other.nodeType = 'REAL' THEN 1 ELSE 0 END) AS realConn,
+            sum(CASE WHEN other.nodeType = 'DEMO' THEN 1 ELSE 0 END) AS demoConn
+       RETURN p, totalConn, realConn, demoConn`,
+      { id }
+    );
+    if (result.records.length === 0) return null;
+    return recordToPersonNode(result.records[0]);
+  } finally {
+    await session.close();
+  }
+}
+
+/**
+ * Find a Person by their human-readable publicId (e.g. "HNP-000001").
+ * Returns null if no active node is found.
+ */
+export async function getPersonByPublicId(publicId: string): Promise<PersonNode | null> {
+  const session = getSession();
+  try {
+    const result = await session.run(
+      `MATCH (p:Person {publicId: $publicId})
+       WHERE p.deletedAt IS NULL
+       OPTIONAL MATCH (p)-[r:CONNECTED]-(other:Person)
+       WHERE r.deletedAt IS NULL AND other.deletedAt IS NULL
+       WITH p,
+            count(r) AS totalConn,
+            sum(CASE WHEN other.nodeType = 'REAL' THEN 1 ELSE 0 END) AS realConn,
+            sum(CASE WHEN other.nodeType = 'DEMO' THEN 1 ELSE 0 END) AS demoConn
+       RETURN p, totalConn, realConn, demoConn`,
+      { publicId }
+    );
+    if (result.records.length === 0) return null;
+    return recordToPersonNode(result.records[0]);
+  } finally {
+    await session.close();
+  }
+}
+
+/**
+ * Find a Person by source provenance identity.
+ */
+export async function findPersonBySourceRecord(
+  sourceDataset: string,
+  sourceRecordId: string
+): Promise<PersonNode | null> {
+  const session = getSession();
+  try {
+    const result = await session.run(
+      `MATCH (p:Person {sourceDataset: $sourceDataset, sourceRecordId: $sourceRecordId})
+       OPTIONAL MATCH (p)-[r:CONNECTED]-(other:Person)
+       WHERE r.deletedAt IS NULL AND other.deletedAt IS NULL
+       WITH p,
+            count(r) AS totalConn,
+            sum(CASE WHEN other.nodeType = 'REAL' THEN 1 ELSE 0 END) AS realConn,
+            sum(CASE WHEN other.nodeType = 'DEMO' THEN 1 ELSE 0 END) AS demoConn
+       RETURN p, totalConn, realConn, demoConn
+       LIMIT 1`,
+      { sourceDataset, sourceRecordId }
+    );
+    if (result.records.length === 0) return null;
+    return recordToPersonNode(result.records[0]);
+  } finally {
+    await session.close();
+  }
+}
+
+/**
+ * List all active (non-deleted) Person nodes with dynamic connection metrics.
+ *
+ * @param nodeType  Optional filter: 'REAL' | 'DEMO'. Omit to return all types.
+ * @param limit     Max results (default 500 — practical guard for large graphs).
+ * @param skip      Offset for pagination (default 0).
