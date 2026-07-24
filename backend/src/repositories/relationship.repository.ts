@@ -83,3 +83,88 @@ function nowIso(): string {
  *
  * Throws if either node does not exist or is soft-deleted.
  * Does NOT enforce REAL→DEMO→REAL constraint — that is the service layer.
+ * Does NOT enforce (sourceId, targetId, relationshipType) uniqueness —
+ *   that is also the service layer's responsibility.
+ *
+ * @param input  See CreateRelationshipInput in domain/relationship.ts.
+ * @returns      The newly persisted Relationship as stored in Neo4j.
+ */
+export async function createRelationship(
+  input: CreateRelationshipInput
+): Promise<Relationship> {
+  const session = getSession();
+  try {
+    const now = nowIso();
+    const id = uuidv4();
+
+    // ── Build base property map (edgeKind intentionally excluded) ────────
+    // edgeKind is computed inside the Cypher CASE expression so that the
+    // endpoint nodeType read and relationship write are a single atomic
+    // operation.  The returned relationship contains the computed edgeKind.
+    const baseProps: Record<string, unknown> = {
+      id,
+      sourceId:             input.sourceId,
+      targetId:             input.targetId,
+      relationshipType:     input.relationshipType     ?? 'acquaintance',
+      // edgeKind is NOT included here — computed atomically by Cypher below
+      trustScore:           input.trustScore           ?? 0.5,
+      interactionFrequency: input.interactionFrequency ?? 0.5,
+      connectorSource:      input.connectorSource      ?? 'Manual',
+      inferred:             input.inferred             ?? false,
+      confidenceScore:      input.confidenceScore      ?? 1.0,
+      createdBy:            input.createdBy            ?? 'Manual',
+      createdAt:            now,
+      updatedAt:            now,
+    };
+
+    if (input.inferredFrom !== undefined && input.inferredFrom !== null) {
+      baseProps['inferredFrom'] = input.inferredFrom;
+    }
+
+    // ── Single atomic Cypher: validate endpoints, create relationship, ────
+    // ── derive edgeKind — all within one auto-commit transaction.        ──
+    //
+    // Cypher CASE logic mirrors deriveEdgeKind() in domain/relationship.ts:
+    //   REAL + REAL  → REAL_EDGE
+    //   Any DEMO     → DEMO_EDGE
+    const createResult = await session.run(
+      `MATCH (s:Person {id: $sourceId}), (t:Person {id: $targetId})
+       WHERE s.deletedAt IS NULL AND t.deletedAt IS NULL
+       CREATE (s)-[r:CONNECTED]->(t)
+       SET r = $baseProps
+       SET r.edgeKind = CASE
+         WHEN s.nodeType = 'REAL' AND t.nodeType = 'REAL' THEN 'REAL_EDGE'
+         ELSE 'DEMO_EDGE'
+       END
+       RETURN r`,
+      { sourceId: input.sourceId, targetId: input.targetId, baseProps }
+    );
+
+    if (createResult.records.length === 0) {
+      throw new Error(
+        `[RelationshipRepository.createRelationship] One or both Person nodes ` +
+        `not found or soft-deleted. sourceId=${input.sourceId}, targetId=${input.targetId}`
+      );
+    }
+
+    return recordToRelationship(createResult.records[0]);
+  } finally {
+    await session.close();
+  }
+}
+
+/**
+ * Find an active (non-deleted) Relationship by its backend UUID.
+ * Returns null when not found, soft-deleted, or when either endpoint
+ * Person node is soft-deleted.
+ *
+ * Decision 4 (Step 10 review): both endpoints must be active.
+ * A relationship whose endpoint has been soft-deleted is invisible to
+ * normal reads.  The physical relationship is preserved; restoring the
+ * endpoint makes the relationship visible again.
+ *
+ * Uses directed MATCH to avoid returning each relationship twice.
+ */
+export async function getRelationshipById(id: string): Promise<Relationship | null> {
+  const session = getSession();
+  try {
