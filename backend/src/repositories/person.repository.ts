@@ -423,3 +423,92 @@ export async function restorePerson(id: string): Promise<boolean> {
        REMOVE p.deletedAt
        SET p.updatedAt = $updatedAt
        RETURN p.id AS id`,
+      { id, updatedAt: nowIso() }
+    );
+    return result.records.length > 0;
+  } finally {
+    await session.close();
+  }
+}
+
+/**
+ * Retrieve a lightweight person projection (id + nodeType only).
+ * Used by the graph engine adapter to feed BFS/Dijkstra without loading
+ * full PersonNode payloads.
+ *
+ * @param includeDeleted  If true, includes soft-deleted nodes. Default false.
+ */
+export async function listLightPersons(
+  includeDeleted = false
+): Promise<LightPerson[]> {
+  const session = getSession();
+  try {
+    const deletedFilter = includeDeleted ? '' : 'WHERE p.deletedAt IS NULL';
+    const result = await session.run(
+      `MATCH (p:Person)
+       ${deletedFilter}
+       RETURN p.id AS id, p.nodeType AS nodeType`
+    );
+    return result.records.map(r => ({
+      id: r.get('id') as string,
+      nodeType: r.get('nodeType') as NodeType,
+    }));
+  } finally {
+    await session.close();
+  }
+}
+
+/**
+ * Check whether a Person node exists (by id) — active or deleted.
+ * Useful for validation before creating a relationship to this node.
+ */
+export async function personExists(id: string): Promise<boolean> {
+  const session = getSession();
+  try {
+    const result = await session.run(
+      `MATCH (p:Person {id: $id}) RETURN p.id AS id LIMIT 1`,
+      { id }
+    );
+    return result.records.length > 0;
+  } finally {
+    await session.close();
+  }
+}
+
+/**
+ * Check whether a publicId is already taken (by any node, active or deleted).
+ * Used by the service layer before committing the next sequence value.
+ */
+export async function publicIdExists(publicId: string): Promise<boolean> {
+  const session = getSession();
+  try {
+    const result = await session.run(
+      `MATCH (p:Person {publicId: $publicId}) RETURN p.id AS id LIMIT 1`,
+      { publicId }
+    );
+    return result.records.length > 0;
+  } finally {
+    await session.close();
+  }
+}
+
+/**
+ * Count active (non-deleted) Person nodes, optionally filtered by nodeType.
+ * Used for graph metadata and publicId sequence initialization.
+ */
+export async function countPersons(nodeType?: NodeType): Promise<number> {
+  const session = getSession();
+  try {
+    const typeFilter = nodeType ? 'AND p.nodeType = $nodeType' : '';
+    const result = await session.run(
+      `MATCH (p:Person)
+       WHERE p.deletedAt IS NULL ${typeFilter}
+       RETURN count(p) AS total`,
+      { nodeType: nodeType ?? null }
+    );
+    const raw = result.records[0]?.get('total');
+    return typeof raw === 'number' ? raw : 0;
+  } finally {
+    await session.close();
+  }
+}
