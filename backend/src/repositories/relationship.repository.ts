@@ -168,3 +168,88 @@ export async function createRelationship(
 export async function getRelationshipById(id: string): Promise<Relationship | null> {
   const session = getSession();
   try {
+    const result = await session.run(
+      `MATCH (s:Person)-[r:CONNECTED]->(t:Person)
+       WHERE r.id = $id
+         AND r.deletedAt IS NULL
+         AND s.deletedAt IS NULL
+         AND t.deletedAt IS NULL
+       RETURN r`,
+      { id }
+    );
+    if (result.records.length === 0) return null;
+    return recordToRelationship(result.records[0]);
+  } finally {
+    await session.close();
+  }
+}
+
+/**
+ * Find all active relationships between two specific Person nodes (either
+ * direction).  Multiple relationships between the same pair are supported.
+ *
+ * Returns an empty array when no active relationship exists between them,
+ * or when either node is soft-deleted.
+ *
+ * Decision 4 (Step 10 review): both endpoints must be active.
+ * Undirected match captures both (s→t) and (t→s) stored relationships
+ * — direction semantics are preserved in storage; lookup is bidirectional.
+ */
+export async function getRelationshipsBetween(
+  sourceId: string,
+  targetId: string
+): Promise<Relationship[]> {
+  const session = getSession();
+  try {
+    const result = await session.run(
+      `MATCH (s:Person {id: $sourceId})-[r:CONNECTED]-(t:Person {id: $targetId})
+       WHERE r.deletedAt IS NULL
+         AND s.deletedAt IS NULL
+         AND t.deletedAt IS NULL
+       RETURN DISTINCT r`,
+      { sourceId, targetId }
+    );
+    return result.records.map(rec => recordToRelationship(rec));
+  } finally {
+    await session.close();
+  }
+}
+
+/**
+ * List all active relationships incident to a given Person node (both
+ * incoming and outgoing).
+ *
+ * Returns an empty array for an isolated, non-existent, or soft-deleted node.
+ * Relationships whose OTHER endpoint is soft-deleted are also excluded.
+ *
+ * Decision 4 (Step 10 review): both endpoints must be active.
+ *
+ * @param personId  Backend UUID of the Person node.
+ * @param edgeKind  Optional filter: 'REAL_EDGE' | 'DEMO_EDGE'.
+ */
+export async function listRelationshipsByPerson(
+  personId: string,
+  edgeKind?: 'REAL_EDGE' | 'DEMO_EDGE'
+): Promise<Relationship[]> {
+  const session = getSession();
+  try {
+    const kindFilter = edgeKind ? 'AND r.edgeKind = $edgeKind' : '';
+    const result = await session.run(
+      `MATCH (p:Person {id: $personId})-[r:CONNECTED]-(other:Person)
+       WHERE p.deletedAt IS NULL
+         AND other.deletedAt IS NULL
+         AND r.deletedAt IS NULL ${kindFilter}
+       RETURN DISTINCT r`,
+      { personId, edgeKind: edgeKind ?? null }
+    );
+    return result.records.map(rec => recordToRelationship(rec));
+  } finally {
+    await session.close();
+  }
+}
+
+/**
+ * List all active relationships in the graph, optionally filtered by edgeKind.
+ * Paginated — returns at most `limit` results starting at `skip`.
+ *
+ * Relationships whose source or target node is soft-deleted are excluded.
