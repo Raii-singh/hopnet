@@ -338,3 +338,104 @@ export async function updateRelationship(
     if (result.records.length === 0) return null;
     return recordToRelationship(result.records[0]);
   } finally {
+    await session.close();
+  }
+}
+
+/**
+ * Soft-delete a Relationship by setting `deletedAt` to the current timestamp.
+ *
+ * The relationship remains physically in Neo4j and is excluded from all
+ * normal reads (getRelationshipById, listRelationships, graph traversal) via
+ * `WHERE r.deletedAt IS NULL` filters.
+ *
+ * The source and target Person nodes are NOT affected.
+ *
+ * @returns true if the relationship was found and soft-deleted, false otherwise.
+ */
+export async function softDeleteRelationship(id: string): Promise<boolean> {
+  const session = getSession();
+  try {
+    const now = nowIso();
+    const result = await session.run(
+      `MATCH ()-[r:CONNECTED]->()
+       WHERE r.id = $id AND r.deletedAt IS NULL
+       SET r.deletedAt = $deletedAt, r.updatedAt = $updatedAt
+       RETURN r.id AS id`,
+      { id, deletedAt: now, updatedAt: now }
+    );
+    return result.records.length > 0;
+  } finally {
+    await session.close();
+  }
+}
+
+/**
+ * Restore a soft-deleted Relationship by removing its `deletedAt` property.
+ *
+ * @returns true if the relationship was found and restored, false otherwise.
+ */
+export async function restoreRelationship(id: string): Promise<boolean> {
+  const session = getSession();
+  try {
+    const result = await session.run(
+      `MATCH ()-[r:CONNECTED]->()
+       WHERE r.id = $id AND r.deletedAt IS NOT NULL
+       REMOVE r.deletedAt
+       SET r.updatedAt = $updatedAt
+       RETURN r.id AS id`,
+      { id, updatedAt: nowIso() }
+    );
+    return result.records.length > 0;
+  } finally {
+    await session.close();
+  }
+}
+
+/**
+ * Check whether a Relationship exists (active or soft-deleted).
+ * Useful for validation before referencing a relationship in other operations.
+ */
+export async function relationshipExists(id: string): Promise<boolean> {
+  const session = getSession();
+  try {
+    const result = await session.run(
+      `MATCH ()-[r:CONNECTED]->()
+       WHERE r.id = $id
+       RETURN r.id AS id LIMIT 1`,
+      { id }
+    );
+    return result.records.length > 0;
+  } finally {
+    await session.close();
+  }
+}
+
+/**
+ * Count active (non-deleted) relationships, optionally filtered by edgeKind.
+ * Only relationships whose both endpoints are active are counted.
+ *
+ * Decision 4 (Step 10 review): both endpoints must be active.
+ *
+ * @param edgeKind  Optional: 'REAL_EDGE' | 'DEMO_EDGE'.
+ */
+export async function countRelationships(
+  edgeKind?: 'REAL_EDGE' | 'DEMO_EDGE'
+): Promise<number> {
+  const session = getSession();
+  try {
+    const kindFilter = edgeKind ? 'AND r.edgeKind = $edgeKind' : '';
+    const result = await session.run(
+      `MATCH (s:Person)-[r:CONNECTED]->(t:Person)
+       WHERE r.deletedAt IS NULL
+         AND s.deletedAt IS NULL
+         AND t.deletedAt IS NULL ${kindFilter}
+       RETURN COUNT(r) AS total`,
+      { edgeKind: edgeKind ?? null }
+    );
+    const raw = result.records[0]?.get('total');
+    return typeof raw === 'number' ? raw : 0;
+  } finally {
+    await session.close();
+  }
+}
