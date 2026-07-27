@@ -253,3 +253,88 @@ export async function listRelationshipsByPerson(
  * Paginated — returns at most `limit` results starting at `skip`.
  *
  * Relationships whose source or target node is soft-deleted are excluded.
+ *
+ * Decision 4 (Step 10 review): both endpoints must be active.
+ *
+ * This is primarily used by the service layer to build the full graph for BFS.
+ * For large graphs, prefer getNeighbourhood in graph.repository.ts instead.
+ *
+ * @param edgeKind  Optional filter: 'REAL_EDGE' | 'DEMO_EDGE'.
+ * @param limit     Max results (default 5000).
+ * @param skip      Offset (default 0).
+ */
+export async function listRelationships(
+  edgeKind?: 'REAL_EDGE' | 'DEMO_EDGE',
+  limit = 5000,
+  skip = 0
+): Promise<Relationship[]> {
+  const session = getSession();
+  try {
+    // Neo4j 2026.x: LIMIT/SKIP must be integer literals — inlined from
+    // validated Math.floor() values, never raw user input.
+    const limitInt = Math.floor(limit);
+    const skipInt = Math.floor(skip);
+    const kindFilter = edgeKind ? 'AND r.edgeKind = $edgeKind' : '';
+
+    const result = await session.run(
+      `MATCH (s:Person)-[r:CONNECTED]->(t:Person)
+       WHERE r.deletedAt IS NULL
+         AND s.deletedAt IS NULL
+         AND t.deletedAt IS NULL ${kindFilter}
+       RETURN r
+       ORDER BY r.createdAt DESC
+       SKIP ${skipInt}
+       LIMIT ${limitInt}`,
+      { edgeKind: edgeKind ?? null }
+    );
+    return result.records.map(rec => recordToRelationship(rec));
+  } finally {
+    await session.close();
+  }
+}
+
+/**
+ * Update an existing active Relationship.
+ *
+ * - Only properties present in `updates` are written (sparse merge via SET +=).
+ * - Immutable fields (id, sourceId, targetId, edgeKind, createdAt, createdBy)
+ *   are silently stripped even if the caller provides them.
+ * - `updatedAt` is always refreshed.
+ * - Returns null if the relationship does not exist or is soft-deleted.
+ *
+ * @param id       Backend UUID of the relationship.
+ * @param updates  See UpdateRelationshipInput in domain/relationship.ts.
+ */
+export async function updateRelationship(
+  id: string,
+  updates: UpdateRelationshipInput
+): Promise<Relationship | null> {
+  const session = getSession();
+  try {
+    // Strip immutable fields — callers must never mutate them
+    const immutable = new Set([
+      'id', 'sourceId', 'targetId', 'edgeKind', 'createdAt', 'createdBy', 'deletedAt',
+    ]);
+    const safeUpdates = Object.fromEntries(
+      Object.entries(updates).filter(
+        ([k, v]) => !immutable.has(k) && v !== undefined && v !== null
+      )
+    );
+
+    if (Object.keys(safeUpdates).length === 0) {
+      return getRelationshipById(id);
+    }
+
+    safeUpdates['updatedAt'] = nowIso();
+
+    const result = await session.run(
+      `MATCH ()-[r:CONNECTED]->()
+       WHERE r.id = $id AND r.deletedAt IS NULL
+       SET r += $updates
+       RETURN r`,
+      { id, updates: safeUpdates }
+    );
+
+    if (result.records.length === 0) return null;
+    return recordToRelationship(result.records[0]);
+  } finally {
