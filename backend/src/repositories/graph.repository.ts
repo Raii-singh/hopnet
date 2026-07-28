@@ -83,3 +83,88 @@ export interface RawSubgraph {
   /** All Person nodes in the subgraph, including the root node. */
   nodes: PersonNode[];
   /**
+   * All active [:CONNECTED] relationships whose both endpoints are in `nodes`.
+   * No weight field — the service layer computes weight via computeWeight().
+   */
+  relationships: Relationship[];
+}
+
+/** Degree breakdown for a single node. */
+export interface NodeDegree {
+  /** Count of all active (non-deleted) relationships regardless of kind. */
+  total: number;
+  /** Relationships where edgeKind = 'REAL_EDGE'. */
+  realEdges: number;
+  /** Relationships where edgeKind = 'DEMO_EDGE'. */
+  demoEdges: number;
+}
+
+export interface GraphFilters {
+  relationshipTypes?: string[];
+  minTrustScore?: number;
+}
+
+/** Options for neighbourhood queries. */
+export interface NeighbourhoodOptions {
+  /**
+   * When false, DEMO Person nodes are excluded from the traversal result.
+   * Relationships to/from excluded DEMO nodes are also excluded.
+   * Default: true (both REAL and DEMO nodes returned).
+   */
+  includeDemo?: boolean;
+  /** Optional semantic filters applied during Cypher traversal. */
+  filters?: GraphFilters;
+}
+
+// ── Public repository API ─────────────────────────────────────────────────
+
+/**
+ * Retrieve the raw N-hop neighbourhood around a Person node.
+ *
+ * Returns all Person nodes reachable from `rootId` within `depth` hops,
+ * plus all active [:CONNECTED] relationships whose BOTH endpoints are in
+ * that set.  The root node itself is always included.
+ *
+ * Soft-deleted nodes and relationships are excluded from the result.
+ * The REAL→DEMO→REAL traversal constraint is NOT enforced here — the
+ * service layer applies it via the shared graph engine.
+ *
+ * Returns `{ nodes: [], relationships: [] }` when:
+ *   - rootId does not exist
+ *   - rootId is soft-deleted
+ *   - depth < 1
+ *
+ * @param rootId       Backend UUID of the node to use as the graph centre.
+ * @param depth        Hop depth (1–MAX_DEPTH). Clamped to [1, MAX_DEPTH].
+ * @param opts         See NeighbourhoodOptions.
+ */
+export async function getNeighbourhood(
+  rootId: string,
+  depth: number,
+  opts: NeighbourhoodOptions = {}
+): Promise<RawSubgraph> {
+  const { includeDemo = true, filters } = opts;
+  const clampedDepth = Math.min(Math.max(1, Math.floor(depth)), MAX_DEPTH);
+
+  const session = getSession();
+  try {
+    // ── Query 1: Collect IDs of all reachable Person nodes ──────────────
+    // OPTIONAL MATCH so that if root has no neighbours at this depth the
+    // root itself is still returned.  The filter on n handles DEMO exclusion.
+    //
+    // IMPORTANT: Neo4j 2026.x does not allow parameters inside variable-length
+    // path patterns (e.g. [:CONNECTED*1..$depth]). The depth literal MUST be
+    // inlined into the Cypher string.  This is safe because `clampedDepth` is
+    // always a validated integer in [1, MAX_DEPTH] — no user string is used.
+    const demoFilter = includeDemo ? '' : "AND n.nodeType = 'REAL'";
+    
+    // Construct dynamic path filters ensuring all edges in path satisfy conditions
+    let pathTypeFilter = '';
+    let pathTrustFilter = '';
+    const hasTypes = filters?.relationshipTypes && filters.relationshipTypes.length > 0;
+    const hasMinTrust = filters?.minTrustScore !== undefined;
+
+    if (hasTypes) {
+      pathTypeFilter = 'AND ALL(r IN rels WHERE r.relationshipType IN $types)';
+    }
+    if (hasMinTrust) {
