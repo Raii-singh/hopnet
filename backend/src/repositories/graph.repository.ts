@@ -168,3 +168,88 @@ export async function getNeighbourhood(
       pathTypeFilter = 'AND ALL(r IN rels WHERE r.relationshipType IN $types)';
     }
     if (hasMinTrust) {
+      pathTrustFilter = 'AND ALL(r IN rels WHERE r.trustScore >= $minTrustScore)';
+    }
+
+    const q1 = `
+      MATCH (root:Person)
+      WHERE (root.id = $rootId OR root.publicId = $rootId) AND root.deletedAt IS NULL
+      OPTIONAL MATCH (root)-[rels:CONNECTED*1..${clampedDepth}]-(n:Person)
+      WHERE n.deletedAt IS NULL ${demoFilter} ${pathTypeFilter} ${pathTrustFilter}
+      RETURN root.id AS rootId, COLLECT(DISTINCT n.id) AS neighbourIds
+    `;
+
+    const q1Params: Record<string, any> = { rootId };
+    if (hasTypes) q1Params.types = filters.relationshipTypes;
+    if (hasMinTrust) q1Params.minTrustScore = filters.minTrustScore;
+
+    const q1Result = await session.run(q1, q1Params);
+
+    if (q1Result.records.length === 0) {
+      // Root node not found or soft-deleted
+      return { nodes: [], relationships: [] };
+    }
+
+    const q1Rec = q1Result.records[0];
+    const fetchedRootId = q1Rec.get('rootId') as string | null;
+
+    if (!fetchedRootId) {
+      return { nodes: [], relationships: [] };
+    }
+
+    const neighbourIds = q1Rec.get('neighbourIds') as string[];
+    const actualRootId = fetchedRootId || rootId;
+    // Build complete list: root first, then all distinct neighbours
+    const allIds: string[] = [actualRootId];
+    for (const id of neighbourIds) {
+      if (id && id !== actualRootId) allIds.push(id);
+    }
+
+    // ── Query 2: Fetch full PersonNode properties for all IDs ────────────
+    const q2 = `
+      MATCH (p:Person)
+      WHERE p.id IN $ids
+      RETURN p
+    `;
+
+    const q2Result = await session.run(q2, { ids: allIds });
+    const nodes = q2Result.records.map(r => recordToPersonNode(r, 'p'));
+
+    // ── Query 3: Fetch all active relationships between those nodes ───────
+    // Directed match (a)→(b) avoids returning each relationship twice.
+    // Both endpoints must be in allIds (i.e. within the subgraph).
+    let relTypeFilter = '';
+    let relTrustFilter = '';
+    if (hasTypes) {
+      relTypeFilter = 'AND r.relationshipType IN $types';
+    }
+    if (hasMinTrust) {
+      relTrustFilter = 'AND r.trustScore >= $minTrustScore';
+    }
+
+    const q3 = `
+      MATCH (a:Person)-[r:CONNECTED]->(b:Person)
+      WHERE a.id IN $ids
+        AND b.id IN $ids
+        AND r.deletedAt IS NULL
+        ${relTypeFilter}
+        ${relTrustFilter}
+      RETURN DISTINCT r
+    `;
+
+    const q3Params: Record<string, any> = { ids: allIds };
+    if (hasTypes) q3Params.types = filters.relationshipTypes;
+    if (hasMinTrust) q3Params.minTrustScore = filters.minTrustScore;
+
+    const q3Result = await session.run(q3, q3Params);
+    const relationships = q3Result.records.map(r => recordToRelationship(r, 'r'));
+
+    return { nodes, relationships };
+  } finally {
+    await session.close();
+  }
+}
+
+/**
+ * Retrieve a single Person node plus all its active direct connections (1-hop).
+ * Used for node profile / detail views.
