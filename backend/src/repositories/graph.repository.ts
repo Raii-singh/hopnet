@@ -423,3 +423,88 @@ export async function getShortestPath(
        MATCH p = shortestPath((a)-[:CONNECTED*1..${depth}]-(b))
        WHERE ALL(n IN nodes(p) WHERE n.deletedAt IS NULL)
          AND ALL(r IN relationships(p) WHERE r.deletedAt IS NULL)
+       RETURN
+         [n IN nodes(p) | n.id]         AS nodeIds,
+         [n IN nodes(p) | n]            AS pathNodes,
+         [r IN relationships(p) | r]    AS pathRels`,
+      { fromId, toId }
+    );
+
+    if (result.records.length === 0) return null;
+
+    const rec = result.records[0];
+    const nodeIds  = rec.get('nodeIds')    as string[];
+    const rawNodes = rec.get('pathNodes')  as any[];
+    const rawRels  = rec.get('pathRels')   as any[];
+
+    const nodes         = rawNodes.map(n => n.properties as PersonNode);
+    const relationships = rawRels.map(r  => r.properties as Relationship);
+
+    return { nodeIds, nodes, relationships };
+  } finally {
+    await session.close();
+  }
+}
+
+// ── Identity Resolution & Data Ingestion (Step 19) ──────────────────────
+
+/**
+ * Merge sourceId into targetId.
+ * Rewires all relationships from source to target, soft-deletes source.
+ */
+export async function mergeDuplicateNodes(
+  sourceId: string,
+  targetId: string,
+  mergedTags: string[],
+  mergedConnectors: string[],
+  mergedMetadata: any
+): Promise<void> {
+  const session = getSession();
+  try {
+    const now = new Date().toISOString();
+    await session.executeWrite(async (tx) => {
+      // 1. Move outgoing edges and explicitly re-compute edgeKind
+      await tx.run(`
+        MATCH (source:Person {id: $sourceId})
+        MATCH (target:Person {id: $targetId})
+        OPTIONAL MATCH (source)-[out:CONNECTED]->(other)
+        WHERE other.id <> $targetId
+        WITH target, out, other,
+             CASE WHEN target.nodeType = 'REAL' AND other.nodeType = 'REAL' THEN 'REAL_EDGE' ELSE 'DEMO_EDGE' END as newEdgeKind
+        WHERE out IS NOT NULL
+        MERGE (target)-[newOut:CONNECTED]->(other)
+        SET newOut.id = randomUUID(),
+            newOut.sourceId = target.id,
+            newOut.targetId = other.id,
+            newOut.relationshipType = out.relationshipType,
+            newOut.trustScore = out.trustScore,
+            newOut.interactionFrequency = out.interactionFrequency,
+            newOut.weight = out.weight,
+            newOut.connectorSource = out.connectorSource,
+            newOut.inferred = out.inferred,
+            newOut.inferredFrom = out.inferredFrom,
+            newOut.edgeType = out.edgeType,
+            newOut.createdAt = out.createdAt,
+            newOut.updatedAt = out.updatedAt,
+            newOut.createdBy = out.createdBy,
+            newOut.edgeKind = newEdgeKind
+      `, { sourceId, targetId });
+
+      // 2. Move incoming edges and explicitly re-compute edgeKind
+      await tx.run(`
+        MATCH (source:Person {id: $sourceId})
+        MATCH (target:Person {id: $targetId})
+        OPTIONAL MATCH (other)-[in:CONNECTED]->(source)
+        WHERE other.id <> $targetId
+        WITH target, in, other,
+             CASE WHEN other.nodeType = 'REAL' AND target.nodeType = 'REAL' THEN 'REAL_EDGE' ELSE 'DEMO_EDGE' END as newEdgeKind
+        WHERE in IS NOT NULL
+        MERGE (other)-[newIn:CONNECTED]->(target)
+        SET newIn.id = randomUUID(),
+            newIn.sourceId = other.id,
+            newIn.targetId = target.id,
+            newIn.relationshipType = in.relationshipType,
+            newIn.trustScore = in.trustScore,
+            newIn.interactionFrequency = in.interactionFrequency,
+            newIn.weight = in.weight,
+            newIn.connectorSource = in.connectorSource,
