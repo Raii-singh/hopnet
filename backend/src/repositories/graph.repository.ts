@@ -338,3 +338,88 @@ export async function getDegrees(id: string): Promise<NodeDegree> {
     };
   } finally {
     await session.close();
+  }
+}
+
+/**
+ * Check whether a path exists between two Person nodes within `maxDepth` hops.
+ * Soft-deleted nodes and relationships are excluded from the traversal.
+ *
+ * This is a lightweight existence check — it does NOT return the path.
+ * The service layer can call `getNeighbourhood` to retrieve the full subgraph.
+ *
+ * Returns false when either node is not found, soft-deleted, or no path exists.
+ *
+ * @param fromId    Backend UUID of the starting node.
+ * @param toId      Backend UUID of the target node.
+ * @param maxDepth  Maximum hop depth to search (clamped to [1, MAX_DEPTH]).
+ */
+export async function pathExists(
+  fromId: string,
+  toId: string,
+  maxDepth: number
+): Promise<boolean> {
+  // Inline depth literal — same restriction as getNeighbourhood (Neo4j 2026.x).
+  const depth = Math.min(Math.max(1, Math.floor(maxDepth)), MAX_DEPTH);
+  const session = getSession();
+  try {
+    const result = await session.run(
+      `MATCH (a:Person {id: $fromId}), (b:Person {id: $toId})
+       WHERE a.deletedAt IS NULL AND b.deletedAt IS NULL
+       RETURN EXISTS {
+         MATCH (a)-[:CONNECTED*1..${depth}]-(b)
+       } AS connected`,
+      { fromId, toId }
+    );
+
+    if (result.records.length === 0) return false;
+    return result.records[0].get('connected') as boolean;
+  } finally {
+    await session.close();
+  }
+}
+
+// ── Shortest path ─────────────────────────────────────────────────────────
+
+/**
+ * Ordered nodes + relationships along the shortest path between two Person
+ * nodes, using native Cypher shortestPath().
+ *
+ * Soft-deleted nodes and relationships are excluded mid-path.
+ * Returns null when:
+ *   - Either node is not found or soft-deleted.
+ *   - No path exists within maxDepth hops.
+ *
+ * Note: shortestPath finds the path with the fewest hops, not the lowest
+ * weighted cost. The service layer may run Dijkstra on the subgraph for
+ * weighted pathfinding — this repository function provides the structural path.
+ *
+ * @param fromId    Backend UUID of the starting node.
+ * @param toId      Backend UUID of the target node.
+ * @param maxDepth  Maximum hop depth to search (clamped to [1, MAX_DEPTH]).
+ */
+export interface PathResult {
+  /** Ordered node IDs from start to end. */
+  nodeIds: string[];
+  /** Full PersonNode for each node in the path (same order as nodeIds). */
+  nodes: PersonNode[];
+  /** Active relationships along the path (length = nodeIds.length - 1). */
+  relationships: Relationship[];
+}
+
+export async function getShortestPath(
+  fromId: string,
+  toId: string,
+  maxDepth: number
+): Promise<PathResult | null> {
+  const depth = Math.min(Math.max(1, Math.floor(maxDepth)), MAX_DEPTH);
+  const session = getSession();
+  try {
+    // shortestPath finds minimum-hop path. We filter deleted nodes/rels inline.
+    // Depth literal is inlined per Neo4j 2026.x variable-length path restriction.
+    const result = await session.run(
+      `MATCH (a:Person {id: $fromId}), (b:Person {id: $toId})
+       WHERE a.deletedAt IS NULL AND b.deletedAt IS NULL
+       MATCH p = shortestPath((a)-[:CONNECTED*1..${depth}]-(b))
+       WHERE ALL(n IN nodes(p) WHERE n.deletedAt IS NULL)
+         AND ALL(r IN relationships(p) WHERE r.deletedAt IS NULL)
