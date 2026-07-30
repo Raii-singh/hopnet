@@ -253,3 +253,88 @@ export async function getNeighbourhood(
 /**
  * Retrieve a single Person node plus all its active direct connections (1-hop).
  * Used for node profile / detail views.
+ *
+ * Returns `null` for the node when not found or soft-deleted.
+ * Returns an empty relationships array when the node is isolated.
+ *
+ * @param id  Backend UUID of the Person node.
+ */
+export async function getPersonWithConnections(id: string): Promise<{
+  node: PersonNode | null;
+  relationships: Relationship[];
+}> {
+  const session = getSession();
+  try {
+    // Fetch node
+    const nodeResult = await session.run(
+      `MATCH (p:Person) WHERE (p.id = $id OR p.publicId = $id) AND p.deletedAt IS NULL RETURN p`,
+      { id }
+    );
+
+    if (nodeResult.records.length === 0) {
+      return { node: null, relationships: [] };
+    }
+
+    const node = recordToPersonNode(nodeResult.records[0], 'p');
+
+    // Fetch all active relationships (undirected — we want both outgoing and incoming)
+    // Use DISTINCT to prevent duplicate results from bidirectional traversal.
+    const relResult = await session.run(
+      `MATCH (p:Person)-[r:CONNECTED]-(neighbour:Person)
+       WHERE (p.id = $id OR p.publicId = $id)
+         AND p.deletedAt IS NULL
+         AND neighbour.deletedAt IS NULL
+         AND r.deletedAt IS NULL
+       RETURN DISTINCT r`,
+      { id }
+    );
+
+    const relationships = relResult.records.map(r => recordToRelationship(r, 'r'));
+
+    return { node, relationships };
+  } finally {
+    await session.close();
+  }
+}
+
+/**
+ * Count the active (non-deleted) relationships for a Person node, broken down
+ * by edge kind.
+ *
+ * Uses Neo4j COUNT(DISTINCT r) with undirected matching to correctly count
+ * each relationship once regardless of direction.
+ *
+ * Returns zeroes when the node does not exist, is soft-deleted, or is isolated.
+ *
+ * @param id  Backend UUID or publicId of the Person node.
+ */
+export async function getDegrees(id: string): Promise<NodeDegree> {
+  const session = getSession();
+  try {
+    const result = await session.run(
+      `MATCH (p:Person)
+       WHERE (p.id = $id OR p.publicId = $id) AND p.deletedAt IS NULL
+       OPTIONAL MATCH (p)-[r:CONNECTED]-()
+       WHERE r.deletedAt IS NULL
+       RETURN
+         COUNT(DISTINCT r) AS total,
+         COUNT(DISTINCT CASE WHEN r.edgeKind = 'REAL_EDGE' THEN r END) AS realEdges,
+         COUNT(DISTINCT CASE WHEN r.edgeKind = 'DEMO_EDGE' THEN r END) AS demoEdges`,
+      { id }
+    );
+
+    if (result.records.length === 0) {
+      return { total: 0, realEdges: 0, demoEdges: 0 };
+    }
+
+    const rec = result.records[0];
+    const toNum = (v: unknown): number =>
+      typeof v === 'number' ? v : 0;
+
+    return {
+      total:     toNum(rec.get('total')),
+      realEdges: toNum(rec.get('realEdges')),
+      demoEdges: toNum(rec.get('demoEdges')),
+    };
+  } finally {
+    await session.close();
