@@ -81,7 +81,7 @@ export default function DatabasePage() {
 
   function SortIcon({ k }: { k: SortKey }) {
     if (sortKey !== k) return <span style={{ color: 'var(--silver-700)', marginLeft: 4 }}>↕</span>;
-    return <span style={{ color: 'var(--neon-cyan)', marginLeft: 4 }}>{sortDir === 'desc' ? '↓' : '↑'}</span>;
+    return <span style={{ color: '#ffffff', marginLeft: 4 }}>{sortDir === 'desc' ? '↓' : '↑'}</span>;
   }
 
   const colStyle = (k: SortKey): React.CSSProperties => ({
@@ -89,7 +89,7 @@ export default function DatabasePage() {
     cursor: 'pointer',
     userSelect: 'none',
     whiteSpace: 'nowrap',
-    color: sortKey === k ? 'var(--neon-cyan)' : 'var(--silver-500)',
+    color: sortKey === k ? '#ffffff' : 'var(--silver-500)',
     fontSize: '11px',
     fontWeight: 600,
     letterSpacing: '0.08em',
@@ -102,7 +102,7 @@ export default function DatabasePage() {
 
         {/* ── Header ── */}
         <div style={{ marginBottom: '28px' }}>
-          <div className="text-label" style={{ color: 'var(--neon-blue)', marginBottom: '6px' }}>Universal Database</div>
+          <div className="text-label" style={{ color: 'var(--silver-400)', marginBottom: '6px' }}>Universal Database</div>
           <h1 style={{ fontSize: '28px', fontWeight: 800, color: 'var(--silver-100)', letterSpacing: '-0.02em', margin: 0 }}>
             Network Intelligence Index
           </h1>
@@ -115,9 +115,9 @@ export default function DatabasePage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginBottom: '24px' }}>
           {[
             { label: 'Total Index', value: allNodes.length, color: 'var(--silver-100)' },
-            { label: 'Real Identities', value: allNodes.filter(n => n.nodeType === 'REAL').length, color: 'var(--neon-cyan)' },
+            { label: 'Real Identities', value: allNodes.filter(n => n.nodeType === 'REAL').length, color: '#ffffff' },
             { label: 'Demo Expanders', value: allNodes.filter(n => n.nodeType === 'DEMO').length, color: 'var(--silver-500)' },
-            { label: 'Graph Pathways', value: allEdges.length, color: 'var(--neon-blue)' },
+            { label: 'Graph Pathways', value: allEdges.length, color: 'var(--silver-300)' },
           ].map(s => (
             <div key={s.label} className="glass-panel" style={{ padding: '12px 16px' }}>
               <div className="text-label" style={{ marginBottom: '4px' }}>{s.label}</div>
@@ -152,7 +152,7 @@ export default function DatabasePage() {
                 onClick={() => { setTypeFilter(t); setPage(0); }}
                 style={{ padding: '6px 12px' }}
               >
-                {t === 'REAL' && <span style={{ color: 'var(--neon-cyan)' }}>●</span>}
+                {t === 'REAL' && <span style={{ color: '#ffffff' }}>●</span>}
                 {t === 'DEMO' && <span style={{ color: 'var(--silver-500)' }}>○</span>}
                 {t}
               </button>
@@ -166,7 +166,7 @@ export default function DatabasePage() {
             onChange={e => { setClusterFilter(e.target.value); setPage(0); }}
             style={{ width: 'auto', background: 'var(--bg-glass)', cursor: 'pointer' }}
           >
-            {clusters.map(c => <option key={c} value={c} style={{ background: '#0d0d24' }}>{c} Cluster</option>)}
+            {clusters.map(c => <option key={c} value={c} style={{ background: '#020202' }}>{c} Cluster</option>)}
           </select>
 
           <span className="text-label" style={{ whiteSpace: 'nowrap' }}>
@@ -233,7 +233,7 @@ export default function DatabasePage() {
                         style={{
                           borderBottom: '1px solid rgba(255,255,255,0.04)',
                           cursor: 'pointer',
-                          background: isSelected ? 'rgba(59,130,246,0.07)' : 'transparent',
+                          background: isSelected ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
                           transition: 'background 0.15s',
                         }}
                         onMouseEnter={e => { if (!isSelected) (e.currentTarget as HTMLElement).style.background = 'var(--bg-glass)'; }}
@@ -243,7 +243,7 @@ export default function DatabasePage() {
                         <td style={{ padding: '12px 14px', minWidth: 60 }}>
                           <span className="text-mono" style={{
                             fontSize: '13px', fontWeight: 700,
-                            color: globalRank <= 3 ? 'var(--neon-cyan)' : 'var(--silver-600)',
+                            color: globalRank <= 3 ? '#ffffff' : 'var(--silver-600)',
                           }}>
                             {globalRank <= 3 ? ['🥇','🥈','🥉'][globalRank - 1] : `#${globalRank}`}
                           </span>
@@ -254,11 +254,11 @@ export default function DatabasePage() {
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <div style={{
                               width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
-                              background: isReal ? 'rgba(6,182,212,0.15)' : 'rgba(100,116,139,0.15)',
-                              border: `1px solid ${isReal ? 'rgba(6,182,212,0.4)' : 'rgba(100,116,139,0.3)'}`,
+                              background: isReal ? 'rgba(255,255,255,0.06)' : 'rgba(100,116,139,0.15)',
+                              border: `1px solid ${isReal ? 'rgba(255,255,255,0.25)' : 'rgba(100,116,139,0.3)'}`,
                               display: 'flex', alignItems: 'center', justifyContent: 'center',
                               fontSize: '11px', fontWeight: 700,
-                              color: isReal ? 'var(--neon-cyan)' : 'var(--silver-500)',
+                              color: isReal ? '#ffffff' : 'var(--silver-500)',
                             }}>
                               {node.fullName.charAt(0)}
                             </div>
@@ -283,7 +283,7 @@ export default function DatabasePage() {
                         {/* Company & Cluster */}
                         <td style={{ padding: '12px 14px', minWidth: 160 }}>
                           <div style={{ fontSize: '12px', color: 'var(--silver-200)', fontWeight: 500 }}>{node.company || '—'}</div>
-                          <div style={{ fontSize: '10px', color: 'var(--neon-violet)', fontWeight: 600 }}>{node.cluster || '—'}</div>
+                          <div style={{ fontSize: '10px', color: 'var(--silver-400)', fontWeight: 600 }}>{node.cluster || '—'}</div>
                         </td>
 
                         {/* Connections */}
@@ -293,18 +293,18 @@ export default function DatabasePage() {
 
                         {/* Real */}
                         <td style={{ padding: '12px 14px', textAlign: 'center' }}>
-                          <span className="text-mono" style={{ color: 'var(--neon-cyan)' }}>{node.realConnections}</span>
+                          <span className="text-mono" style={{ color: '#ffffff' }}>{node.realConnections}</span>
                         </td>
 
                         {/* Influence */}
                         <td style={{ padding: '12px 14px', minWidth: 120 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <span className="text-mono" style={{ color: 'var(--neon-blue)', minWidth: 28, fontSize: '12px' }}>
+                            <span className="text-mono" style={{ color: '#ffffff', minWidth: 28, fontSize: '12px' }}>
                               {node.influenceScore}
                             </span>
                             <div style={{ flex: 1 }}>
                               <div className="progress-bar">
-                                <div className="progress-fill progress-fill-blue" style={{ width: `${node.influenceScore}%` }} />
+                                <div className="progress-fill" style={{ width: `${node.influenceScore}%`, background: 'linear-gradient(90deg, #cbd5e1, #475569)' }} />
                               </div>
                             </div>
                           </div>
@@ -327,8 +327,8 @@ export default function DatabasePage() {
           {/* Expanded row panel */}
           {selectedNode && (
             <div style={{
-              borderTop: '1px solid rgba(59,130,246,0.2)',
-              background: 'rgba(59,130,246,0.04)',
+              borderTop: '1px solid rgba(255, 255, 255, 0.12)',
+              background: 'rgba(255, 255, 255, 0.02)',
               padding: '16px 24px',
               display: 'flex', alignItems: 'center', gap: '24px', flexWrap: 'wrap',
             }}>
@@ -344,7 +344,7 @@ export default function DatabasePage() {
                   )}
                 </div>
                 <div className="text-mono" style={{ fontSize: '11px', color: 'var(--silver-500)' }}>
-                  Footprint Sources: <span style={{ color: 'var(--neon-violet)' }}>{selectedNode.sourceConnectors?.join(', ') || 'Manual'}</span>
+                  Footprint Sources: <span style={{ color: '#ffffff' }}>{selectedNode.sourceConnectors?.join(', ') || 'Manual'}</span>
                 </div>
               </div>
               

@@ -3,7 +3,7 @@
 import { useGraphStore } from '@/store/graphStore';
 import Link from 'next/link';
 
-function MetricCard({ label, value, sub, color = 'var(--neon-cyan)' }: {
+function MetricCard({ label, value, sub, color = '#ffffff' }: {
   label: string; value: string | number; sub?: string; color?: string;
 }) {
   return (
@@ -97,13 +97,13 @@ export default function PersonalPage() {
 
   const metrics = [
     { label: 'Total Connections', value: ADMIN.connectionCount, color: 'var(--silver-100)' },
-    { label: 'Real Connections', value: ADMIN.realConnections, color: 'var(--neon-cyan)' },
+    { label: 'Real Connections', value: ADMIN.realConnections, color: '#ffffff' },
     { label: 'Demo Connections', value: ADMIN.demoConnections, color: 'var(--silver-500)' },
-    { label: 'Influence Score', value: ADMIN.influenceScore, color: 'var(--neon-blue)' },
-    { label: 'Reachability Score', value: reachabilityScore, sub: `${realConns} nodes reachable`, color: 'var(--neon-violet)' },
-    { label: 'Network Centrality', value: `${Math.round((ADMIN.centrality || 0) * 100)}%`, color: 'var(--neon-emerald)' },
+    { label: 'Influence Score', value: ADMIN.influenceScore, color: 'var(--silver-200)' },
+    { label: 'Reachability Score', value: reachabilityScore, sub: `${realConns} nodes reachable`, color: 'var(--silver-300)' },
+    { label: 'Network Centrality', value: `${Math.round((ADMIN.centrality || 0) * 100)}%`, color: '#ffffff' },
     { label: 'Avg Path Distance', value: ADMIN.avgPathDistance?.toFixed(1) || '—', color: 'var(--silver-300)' },
-    { label: 'Cluster Hub', value: ADMIN.cluster || '—', color: 'var(--neon-violet)' },
+    { label: 'Cluster Hub', value: ADMIN.cluster || '—', color: 'var(--silver-400)' },
   ];
 
   // Strongest connections (top 5 by edge weight)
@@ -130,12 +130,12 @@ export default function PersonalPage() {
   const strongestTrust = strongestLinks[0] ? Math.round(strongestLinks[0].edge.weight * 100) : 0;
 
   const intelligenceItems = [
-    { label: 'Best Connector Type', value: ADMIN.realConnections > 5 ? 'Hub Bridger' : 'Deep Connector', color: 'var(--neon-cyan)' },
-    { label: 'Warm Intro Probability', value: `${warmIntroPct}%`, color: 'var(--neon-emerald)' },
-    { label: 'Strongest Path Trust', value: `${strongestTrust}/100`, color: 'var(--neon-blue)' },
-    { label: 'Strategic Reach', value: `${reachabilityScore} nodes`, color: 'var(--neon-violet)' },
+    { label: 'Best Connector Type', value: ADMIN.realConnections > 5 ? 'Hub Bridger' : 'Deep Connector', color: '#ffffff' },
+    { label: 'Warm Intro Probability', value: `${warmIntroPct}%`, color: 'var(--silver-200)' },
+    { label: 'Strongest Path Trust', value: `${strongestTrust}/100`, color: '#ffffff' },
+    { label: 'Strategic Reach', value: `${reachabilityScore} nodes`, color: 'var(--silver-300)' },
     { label: 'Best Bridge Node', value: bestBridge?.fullName ?? '—', color: 'var(--silver-200)' },
-    { label: 'Data Source', value: dataSource === 'api' ? 'Live DB' : 'Demo', color: dataSource === 'api' ? 'var(--neon-emerald)' : 'var(--silver-500)' },
+    { label: 'Data Source', value: dataSource === 'api' ? 'Live DB' : 'Demo', color: '#ffffff' },
   ];
 
   return (
@@ -144,12 +144,12 @@ export default function PersonalPage() {
 
         {/* ── Page Header ── */}
         <div style={{ marginBottom: '32px' }}>
-          <div className="text-label" style={{ color: 'var(--neon-blue)', marginBottom: '6px' }}>Personal Intelligence</div>
+          <div className="text-label" style={{ color: 'var(--silver-400)', marginBottom: '6px' }}>Personal Intelligence</div>
           <h1 style={{ fontSize: '28px', fontWeight: 800, color: 'var(--silver-100)', letterSpacing: '-0.02em', margin: 0 }}>
             Relationship Intelligence Dashboard
           </h1>
           <p style={{ color: 'var(--silver-500)', fontSize: '13px', marginTop: '6px' }}>
-            Relationship intelligence operating system (OS) v2 · Loaded user: <span style={{ color: 'var(--neon-cyan)', fontWeight: 600 }}>{ADMIN.fullName} ({ADMIN.publicId})</span>
+            Relationship intelligence operating system (OS) v2 · Loaded user: <span style={{ color: '#ffffff', fontWeight: 600 }}>{ADMIN.fullName} ({ADMIN.publicId})</span>
           </p>
         </div>
 
@@ -163,11 +163,11 @@ export default function PersonalPage() {
               {/* Avatar */}
               <div style={{
                 width: 72, height: 72, borderRadius: '50%',
-                background: 'linear-gradient(135deg, rgba(6,182,212,0.3), rgba(59,130,246,0.3))',
-                border: '2px solid rgba(6,182,212,0.5)',
-                boxShadow: '0 0 30px rgba(6,182,212,0.2)',
+                background: 'linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))',
+                border: '2px solid rgba(255,255,255,0.25)',
+                boxShadow: '0 0 30px rgba(255,255,255,0.05)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '28px', fontWeight: 700, color: 'var(--neon-cyan)',
+                fontSize: '28px', fontWeight: 700, color: '#ffffff',
                 margin: '0 auto 16px',
               }}>
                 {ADMIN.fullName.charAt(0)}
@@ -199,8 +199,8 @@ export default function PersonalPage() {
                   <span style={{
                     padding: '2px 10px', borderRadius: '100px',
                     fontSize: '10px', fontWeight: 500,
-                    background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.3)',
-                    color: 'var(--neon-violet)',
+                    background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)',
+                    color: '#ffffff',
                   }}>
                     {ADMIN.cluster}
                   </span>
@@ -249,7 +249,7 @@ export default function PersonalPage() {
             {/* Connector Intelligence */}
             <div className="glass-panel" style={{ padding: '20px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--neon-cyan)" strokeWidth="2">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2">
                   <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
                 </svg>
                 <span style={{ fontWeight: 600, color: 'var(--silver-100)', fontSize: '14px' }}>Connector Intelligence</span>
@@ -290,16 +290,16 @@ export default function PersonalPage() {
                       </span>
                       <div style={{
                         width: 8, height: 8, borderRadius: '50%', flexShrink: 0,
-                        background: other?.nodeType === 'REAL' ? 'var(--neon-cyan)' : 'var(--silver-500)',
+                        background: other?.nodeType === 'REAL' ? '#ffffff' : 'var(--silver-500)',
                       }} />
                       <span style={{ color: 'var(--silver-200)', fontWeight: 500, fontSize: '13px', flex: 1 }}>
                         {other?.fullName || 'Unknown'}
                       </span>
-                      <span className="text-mono" style={{ fontSize: '11px', color: 'var(--neon-blue)', background: 'rgba(59,130,246,0.08)', padding: '2px 8px', borderRadius: '4px' }}>
+                      <span className="text-mono" style={{ fontSize: '11px', color: '#ffffff', background: 'rgba(255, 255, 255, 0.05)', padding: '2px 8px', borderRadius: '4px', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
                         {edge.relationshipType}
                       </span>
                       <div style={{ textAlign: 'right', minWidth: 50 }}>
-                        <div className="text-mono" style={{ fontSize: '14px', fontWeight: 700, color: 'var(--neon-cyan)' }}>
+                        <div className="text-mono" style={{ fontSize: '14px', fontWeight: 700, color: '#ffffff' }}>
                           {Math.round(edge.weight * 100)}
                         </div>
                         <div className="text-label" style={{ fontSize: '9px' }}>weight</div>
@@ -317,12 +317,12 @@ export default function PersonalPage() {
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 {[
-                  { label: 'Tech Cluster', count: allNodes.filter(n => n.cluster === 'Tech').length, color: 'var(--neon-blue)' },
-                  { label: 'Finance Cluster', count: allNodes.filter(n => n.cluster === 'Finance').length, color: 'var(--neon-emerald)' },
-                  { label: 'Design Cluster', count: allNodes.filter(n => n.cluster === 'Design').length, color: 'var(--neon-violet)' },
-                  { label: 'Business Cluster', count: allNodes.filter(n => n.cluster === 'Business').length, color: 'var(--neon-amber)' },
-                  { label: 'Academia Cluster', count: allNodes.filter(n => n.cluster === 'Academia').length, color: 'var(--neon-cyan)' },
-                  { label: 'Marketing Cluster', count: allNodes.filter(n => n.cluster === 'Marketing').length, color: 'var(--silver-400)' },
+                  { label: 'Tech Cluster', count: allNodes.filter(n => n.cluster === 'Tech').length, color: '#ffffff' },
+                  { label: 'Finance Cluster', count: allNodes.filter(n => n.cluster === 'Finance').length, color: '#cbd5e1' },
+                  { label: 'Design Cluster', count: allNodes.filter(n => n.cluster === 'Design').length, color: '#cbd5e1' },
+                  { label: 'Business Cluster', count: allNodes.filter(n => n.cluster === 'Business').length, color: '#94a3b8' },
+                  { label: 'Academia Cluster', count: allNodes.filter(n => n.cluster === 'Academia').length, color: '#475569' },
+                  { label: 'Marketing Cluster', count: allNodes.filter(n => n.cluster === 'Marketing').length, color: '#334155' },
                 ].map(cluster => {
                   const pct = Math.round((cluster.count / allNodes.length) * 100);
                   return (

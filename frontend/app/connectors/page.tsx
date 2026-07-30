@@ -13,9 +13,9 @@ const CONNECTORS = [
     icon: '🔗',
     desc: 'Upload standard Connections.csv export.',
     instructions: '1. In LinkedIn, go to Settings & Privacy > Data Privacy.\n2. Click "Get a copy of your data" and select "Connections".\n3. Export data and upload the Connections.csv file directly.',
-    glow: 'rgba(6,182,212,0.15)',
-    border: 'rgba(6,182,212,0.4)',
-    color: 'var(--neon-cyan)',
+    glow: 'rgba(255,255,255,0.02)',
+    border: 'rgba(255,255,255,0.12)',
+    color: '#ffffff',
     status: 'Ready to import',
   },
   {
@@ -24,9 +24,9 @@ const CONNECTORS = [
     icon: '👥',
     desc: 'Import Google Contacts via standard Contacts.csv.',
     instructions: '1. In Google Contacts, click "Export" in the left-hand column.\n2. Choose "Google CSV" format.\n3. Save and drag the exported Contacts.csv file here.',
-    glow: 'rgba(59,130,246,0.15)',
-    border: 'rgba(59,130,246,0.4)',
-    color: 'var(--neon-blue)',
+    glow: 'rgba(255,255,255,0.02)',
+    border: 'rgba(255,255,255,0.12)',
+    color: '#ffffff',
     status: 'Ready to import',
   },
   {
@@ -35,9 +35,9 @@ const CONNECTORS = [
     icon: '✉️',
     desc: 'Extract interaction frequencies from email threads.',
     instructions: '1. Paste raw header lines containing From/To headers, or upload exported email thread header lists.\n2. We will infer communication frequencies and generate trust links.',
-    glow: 'rgba(139,92,246,0.15)',
-    border: 'rgba(139,92,246,0.4)',
-    color: 'var(--neon-violet)',
+    glow: 'rgba(255,255,255,0.02)',
+    border: 'rgba(255,255,255,0.12)',
+    color: '#ffffff',
     status: 'Ready to parse',
   },
   {
@@ -46,9 +46,9 @@ const CONNECTORS = [
     icon: '🐦',
     desc: 'Import handles from standard following.js archives.',
     instructions: '1. Go to Settings > Your Account > Download an archive of your data.\n2. In the following.js file, upload the raw file to extract followers.',
-    glow: 'rgba(100,116,139,0.15)',
-    border: 'rgba(100,116,139,0.4)',
-    color: '#94a3b8',
+    glow: 'rgba(255,255,255,0.02)',
+    border: 'rgba(255,255,255,0.12)',
+    color: '#ffffff',
     status: 'Ready to parse',
   },
   {
@@ -57,9 +57,9 @@ const CONNECTORS = [
     icon: '📅',
     desc: 'Upload Outlook Contacts CSV file exports.',
     instructions: '1. In Outlook Web, go to People > Manage > Export contacts.\n2. Save as Outlook CSV and drop the file here to parse contacts.',
-    glow: 'rgba(6,182,212,0.12)',
-    border: 'rgba(6,182,212,0.3)',
-    color: 'var(--neon-cyan)',
+    glow: 'rgba(255,255,255,0.02)',
+    border: 'rgba(255,255,255,0.12)',
+    color: '#ffffff',
     status: 'Ready to import',
   },
 ];
@@ -184,7 +184,7 @@ export default function ConnectorsPage() {
         {/* Header Section */}
         <div style={{ marginBottom: '24px' }}>
           <h1 style={{ fontSize: '24px', fontWeight: 800, color: 'var(--silver-100)', letterSpacing: '-0.02em', margin: '0 0 6px' }}>
-            Data Import & Platorm Connectors
+            Data Import & Platform Connectors
           </h1>
           <p style={{ color: 'var(--silver-400)', fontSize: '13px', lineHeight: 1.5, margin: 0 }}>
             Bridge your local contact ledgers and social networks into the HOPNet database. Upload files explicitly exported from external networks to expand your human relation graphs securely.
@@ -274,17 +274,17 @@ export default function ConnectorsPage() {
 
         {/* PROGRESS BOX */}
         {progress !== null && selectedConnector && (
-          <div className="glass-panel animate-fade-in" style={{ padding: '20px 24px', marginBottom: '24px', border: '1px solid rgba(6,182,212,0.3)', background: 'rgba(6,182,212,0.02)' }}>
+          <div className="glass-panel animate-fade-in" style={{ padding: '20px 24px', marginBottom: '24px', border: '1px solid rgba(255, 255, 255, 0.15)', background: 'rgba(255, 255, 255, 0.02)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-              <span className="text-label" style={{ color: 'var(--neon-cyan)', fontWeight: 600 }}>
+              <span className="text-label" style={{ color: '#ffffff', fontWeight: 600 }}>
                 {selectedConnector.name} Ingestion Active
               </span>
-              <span className="text-mono animate-pulse" style={{ fontSize: '12px', color: 'var(--neon-cyan)', fontWeight: 700 }}>
+              <span className="text-mono animate-pulse" style={{ fontSize: '12px', color: '#ffffff', fontWeight: 700 }}>
                 {progress}%
               </span>
             </div>
             <div className="progress-bar" style={{ height: 8, background: 'rgba(255,255,255,0.05)' }}>
-              <div className="progress-fill progress-fill-cyan" style={{ width: `${progress}%` }} />
+              <div className="progress-fill progress-fill-cyan" style={{ width: `${progress}%`, background: 'linear-gradient(90deg, #ffffff, #cbd5e1)' }} />
             </div>
             <div style={{ fontSize: '11px', color: 'var(--silver-400)', marginTop: '8px', fontStyle: 'italic' }}>
               {progressText}
@@ -294,11 +294,11 @@ export default function ConnectorsPage() {
 
         {/* RUNNING SUCCESS CONSOLE LOGS */}
         {showConsole && successLogs.length > 0 && (
-          <div className="glass-panel animate-fade-in" style={{ padding: '16px', marginBottom: '24px', border: '1px solid rgba(16,185,129,0.3)', background: '#03030a' }}>
+          <div className="glass-panel animate-fade-in" style={{ padding: '16px', marginBottom: '24px', border: '1px solid rgba(255, 255, 255, 0.15)', background: '#020202' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ display: 'block', width: 6, height: 6, borderRadius: '50%', background: 'var(--neon-emerald)', boxShadow: '0 0 6px var(--neon-emerald)' }} />
-                <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--neon-emerald)', letterSpacing: '0.04em' }}>GRAPH INGESTION OUTPUT REPORT</span>
+                <span style={{ display: 'block', width: 6, height: 6, borderRadius: '50%', background: '#ffffff', boxShadow: '0 0 6px rgba(255, 255, 255, 0.8)' }} />
+                <span style={{ fontSize: '11px', fontWeight: 700, color: '#ffffff', letterSpacing: '0.04em' }}>GRAPH INGESTION OUTPUT REPORT</span>
               </div>
               <button
                 onClick={() => setShowConsole(false)}
@@ -317,7 +317,7 @@ export default function ConnectorsPage() {
               padding: '10px 14px',
               fontFamily: 'Consolas, monospace',
               fontSize: '11px',
-              color: 'var(--neon-cyan)',
+              color: '#ffffff',
               maxHeight: 180,
               overflowY: 'auto',
               display: 'flex',
@@ -329,7 +329,7 @@ export default function ConnectorsPage() {
                   {log.includes('Failed') || log.includes('Error') ? (
                     <span style={{ color: '#fb7185' }}>❌ {log}</span>
                   ) : log.includes('bridged') || log.includes('Success') || log.includes('established') ? (
-                    <span style={{ color: 'var(--neon-emerald)' }}>✅ {log}</span>
+                    <span style={{ color: 'var(--silver-300)' }}>✅ {log}</span>
                   ) : (
                     <span>🔹 {log}</span>
                   )}
@@ -348,7 +348,7 @@ export default function ConnectorsPage() {
 
           {loadingHistory ? (
             <div style={{ display: 'flex', justifyContent: 'center', padding: '30px 0' }}>
-              <div style={{ width: 22, height: 22, border: '2px solid var(--neon-blue)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+              <div style={{ width: 22, height: 22, border: '2px solid #ffffff', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
             </div>
           ) : history.length === 0 ? (
             <div style={{ textAlign: 'center', color: 'var(--silver-600)', padding: '24px 0', fontSize: '12px' }}>
@@ -382,10 +382,10 @@ export default function ConnectorsPage() {
 
                   <div style={{ display: 'flex', gap: '12px' }}>
                     <div style={{ textAlign: 'right' }}>
-                      <div className="text-mono" style={{ fontSize: '12px', fontWeight: 700, color: 'var(--neon-cyan)' }}>
+                      <div className="text-mono" style={{ fontSize: '12px', fontWeight: 700, color: '#ffffff' }}>
                         +{log.nodesCreated} Nodes
                       </div>
-                      <div className="text-mono" style={{ fontSize: '11px', color: 'var(--neon-emerald)', marginTop: '2px' }}>
+                      <div className="text-mono" style={{ fontSize: '11px', color: 'var(--silver-400)', marginTop: '2px' }}>
                         +{log.edgesCreated} Edges
                       </div>
                     </div>

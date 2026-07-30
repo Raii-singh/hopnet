@@ -68,11 +68,11 @@
 html, body {
   height: 100%;
   overflow: hidden;
-  background: var(--bg-void);
+  background: #020202;
 }
 
 body {
-  background: var(--bg-void);
+  background: #020202;
   color: var(--silver-300);
   font-family: var(--font-sans);
   font-size: 13.5px;
@@ -462,6 +462,7 @@ body {
   padding-top: var(--navbar-height);
   overflow-y: auto;
   background: transparent;
+  z-index: 10;
 }
 
 .page-content {

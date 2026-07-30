@@ -14,8 +14,8 @@ const ForceGraph2D = dynamic(() => import('react-force-graph-2d'), {
   loading: () => (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', background: 'rgba(0,0,0,0.2)' }}>
       <div style={{ textAlign: 'center' }}>
-        <div style={{ width: 30, height: 30, border: '2px solid var(--neon-blue)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 8px' }} />
-        <span className="text-label" style={{ color: 'var(--neon-blue)', fontSize: '11px' }}>Loading Local Subgraph…</span>
+        <div style={{ width: 30, height: 30, border: '2px solid #ffffff', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 8px' }} />
+        <span className="text-label" style={{ color: '#ffffff', fontSize: '11px' }}>Loading Local Subgraph…</span>
       </div>
     </div>
   )
@@ -230,8 +230,8 @@ export default function ProfilePage({ params }: ProfilePageProps) {
       <div className="page-layout">
         <div className="page-content" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '80vh' }}>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ width: 48, height: 48, border: '3px solid var(--neon-blue)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 16px' }} />
-            <span className="text-label" style={{ color: 'var(--neon-blue)', fontSize: '14px' }}>Decrypting Relationship Ledger…</span>
+            <div style={{ width: 48, height: 48, border: '3px solid #ffffff', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 16px' }} />
+            <span className="text-label" style={{ color: '#ffffff', fontSize: '14px' }}>Decrypting Relationship Ledger…</span>
           </div>
         </div>
       </div>
@@ -288,12 +288,12 @@ export default function ProfilePage({ params }: ProfilePageProps) {
             <div style={{
               width: 72, height: 72, borderRadius: '50%',
               background: isReal
-                ? 'linear-gradient(135deg, rgba(6,182,212,0.2), rgba(59,130,246,0.2))'
+                ? 'linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))'
                 : 'linear-gradient(135deg, rgba(100,116,139,0.15), rgba(71,85,105,0.15))',
-              border: `2px solid ${isReal ? 'rgba(6,182,212,0.5)' : 'rgba(100,116,139,0.4)'}`,
-              boxShadow: isReal ? '0 0 25px rgba(6,182,212,0.15)' : 'none',
+              border: `2px solid ${isReal ? 'rgba(255,255,255,0.25)' : 'rgba(100,116,139,0.4)'}`,
+              boxShadow: isReal ? '0 0 25px rgba(255,255,255,0.05)' : 'none',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '28px', fontWeight: 800, color: isReal ? 'var(--neon-cyan)' : 'var(--silver-500)',
+              fontSize: '28px', fontWeight: 800, color: isReal ? '#ffffff' : 'var(--silver-500)',
               flexShrink: 0,
             }}>
               {profile.fullName.charAt(0)}
@@ -310,7 +310,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
               </div>
 
               <div className="text-mono" style={{ fontSize: '12px', color: 'var(--silver-400)', marginTop: '4px' }}>
-                Identifier: <span style={{ color: isReal ? 'var(--neon-cyan)' : 'var(--silver-400)', fontWeight: 600 }}>{profile.publicId}</span>
+                Identifier: <span style={{ color: isReal ? '#ffffff' : 'var(--silver-400)', fontWeight: 600 }}>{profile.publicId}</span>
                 {profile.username && ` · @${profile.username}`}
               </div>
 
@@ -321,7 +321,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                   </span>
                 )}
                 {profile.cluster && (
-                  <span style={{ color: 'var(--neon-violet)', fontWeight: 600 }}>
+                  <span style={{ color: 'var(--silver-300)', fontWeight: 600 }}>
                     🔮 {profile.cluster} Cluster Hub
                   </span>
                 )}
@@ -338,7 +338,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
             {/* Neighborhood header controls */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderBottom: '1px solid var(--glass-border)', background: 'rgba(0,0,0,0.2)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--neon-cyan)" strokeWidth="2.5">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.5">
                   <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
                 </svg>
                 <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--silver-200)' }}>Neighborhood Force Canvas</span>
@@ -351,9 +351,9 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                   className="glass-input"
                   style={{ width: 'auto', padding: '3px 8px', background: 'var(--bg-void)', border: '1px solid var(--glass-border)', fontSize: '11px', cursor: 'pointer' }}
                 >
-                  <option value={1} style={{ background: '#0d0d24' }}>1 Hop</option>
-                  <option value={2} style={{ background: '#0d0d24' }}>2 Hops</option>
-                  <option value={3} style={{ background: '#0d0d24' }}>3 Hops</option>
+                  <option value={1} style={{ background: '#020202' }}>1 Hop</option>
+                  <option value={2} style={{ background: '#020202' }}>2 Hops</option>
+                  <option value={3} style={{ background: '#020202' }}>3 Hops</option>
                 </select>
               </div>
             </div>
@@ -372,7 +372,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                 // accelerated path particles
                 linkDirectionalParticles={link => highlightedEdgeIds.has(link.id) ? 6 : 0}
                 linkDirectionalParticleWidth={1.8}
-                linkDirectionalParticleColor={() => '#a78bfa'}
+                linkDirectionalParticleColor={() => '#ffffff'}
                 linkDirectionalParticleSpeed={0.006}
                 cooldownTicks={80}
                 enableNodeDrag={true}
@@ -388,13 +388,13 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                   ctx.save();
                   // Focal node outer ring glow
                   if (isFocal || isHighlighted) {
-                    const grad = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, r * 2);
-                    grad.addColorStop(0, isFocal ? 'rgba(167,139,250,0.18)' : 'rgba(6,182,212,0.15)');
-                    grad.addColorStop(1, 'transparent');
-                    ctx.beginPath();
-                    ctx.arc(node.x, node.y, r * 2, 0, 2 * Math.PI);
-                    ctx.fillStyle = grad;
-                    ctx.fill();
+                     const grad = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, r * 2);
+                     grad.addColorStop(0, isFocal ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.08)');
+                     grad.addColorStop(1, 'transparent');
+                     ctx.beginPath();
+                     ctx.arc(node.x, node.y, r * 2, 0, 2 * Math.PI);
+                     ctx.fillStyle = grad;
+                     ctx.fill();
                   }
 
                   // Core circle
@@ -404,14 +404,14 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                   ctx.fill();
 
                   // Stroke ring
-                  ctx.strokeStyle = isFocal ? '#a78bfa' : isHighlighted ? '#67e8f9' : 'rgba(255,255,255,0.06)';
+                  ctx.strokeStyle = isFocal ? '#ffffff' : isHighlighted ? 'var(--silver-300)' : 'rgba(255,255,255,0.06)';
                   ctx.lineWidth = isFocal || isHighlighted ? 1.5 : 0.8;
                   ctx.stroke();
 
                   // Node label if focused or zoom high
                   if (globalScale > 2 || isFocal || isHighlighted) {
                     ctx.font = `${isFocal || isHighlighted ? 600 : 400} ${Math.max(3, 7.5 / globalScale)}px Inter, sans-serif`;
-                    ctx.fillStyle = isFocal ? '#e0f7fa' : '#94a3b8';
+                    ctx.fillStyle = isFocal ? '#ffffff' : '#94a3b8';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'top';
                     ctx.fillText(node.fullName, node.x, node.y + r + 1.5);
@@ -428,10 +428,10 @@ export default function ProfilePage({ params }: ProfilePageProps) {
             </div>
           </div>
 
-          {/* Right Panel: Path Intelligence Tracing */}
+          {/* Right Panel: Pathfinder Trace */}
           <div className="glass-panel" style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', height: 420 }}>
             <div style={{ fontWeight: 600, color: 'var(--silver-100)', fontSize: '14px', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--neon-cyan)" strokeWidth="2.5">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.5">
                 <circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
               </svg>
               Graph Pathfinding Engine
@@ -463,7 +463,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                 <div className="glass-panel" style={{
                   position: 'absolute', top: '105%', left: 0, right: 0,
                   maxHeight: 180, overflowY: 'auto', zIndex: 100, padding: 4,
-                  background: '#0a0a18',
+                  background: 'var(--bg-surface)',
                 }}>
                   {searchResults.map(tNode => (
                     <button
@@ -477,7 +477,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                       onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
                       onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                     >
-                      <div style={{ width: 6, height: 6, borderRadius: '50%', background: tNode.nodeType === 'REAL' ? 'var(--neon-cyan)' : 'var(--silver-500)' }} />
+                      <div style={{ width: 6, height: 6, borderRadius: '50%', background: tNode.nodeType === 'REAL' ? '#ffffff' : 'var(--silver-500)' }} />
                       <span style={{ fontSize: '12px', color: 'var(--silver-200)', fontWeight: 600, flex: 1 }}>{tNode.fullName}</span>
                       <span className="text-mono" style={{ fontSize: '10px', color: 'var(--silver-500)' }}>{tNode.publicId}</span>
                     </button>
@@ -492,7 +492,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   <div style={{ fontSize: '11px', color: 'var(--silver-400)', display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
                     <span>Active Pathway Traversal</span>
-                    <span className="text-mono" style={{ color: 'var(--neon-cyan)', fontWeight: 700 }}>Weight Cost: {pathCost}</span>
+                    <span className="text-mono" style={{ color: '#ffffff', fontWeight: 700 }}>Weight Cost: {pathCost}</span>
                   </div>
 
                   <div style={{
@@ -507,7 +507,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 14 }}>
                             <div style={{
                               width: 8, height: 8, borderRadius: '50%',
-                              background: isRoot ? '#a78bfa' : isTarget ? 'var(--neon-cyan)' : 'var(--silver-600)',
+                              background: isRoot ? '#ffffff' : isTarget ? 'var(--silver-200)' : 'var(--silver-600)',
                             }} />
                             {index < tracedPath.length - 1 && (
                               <div style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.1)' }} />
@@ -548,7 +548,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
         {/* ── RELATIONSHIP INTELLIGENCE SECTOR ── */}
         <div className="glass-panel" style={{ padding: '20px 24px', marginBottom: '20px' }}>
           <div style={{ fontWeight: 600, color: 'var(--silver-100)', fontSize: '14px', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--neon-violet)" strokeWidth="2">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2">
               <polygon points="12 2 2 7 12 12 22 7 12 2" /><polyline points="2 17 12 22 22 17" /><polyline points="2 12 17 17 22 12" />
             </svg>
             Relationship & Connection Intelligence
@@ -563,7 +563,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
             ].map(ci => (
               <div key={ci.label} className="glass-panel" style={{ padding: '14px 16px', background: 'rgba(255,255,255,0.01)' }}>
                 <div className="text-label" style={{ marginBottom: '4px' }}>{ci.label}</div>
-                <div className="text-mono" style={{ fontSize: '18px', fontWeight: 800, color: 'var(--neon-violet)', marginBottom: '6px' }}>{ci.value}</div>
+                <div className="text-mono" style={{ fontSize: '18px', fontWeight: 800, color: '#ffffff', marginBottom: '6px' }}>{ci.value}</div>
                 <div style={{ fontSize: '10.5px', color: 'var(--silver-500)', lineHeight: 1.4 }}>{ci.desc}</div>
               </div>
             ))}
@@ -589,7 +589,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                 <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.03)', paddingBottom: '10px', fontSize: '12px' }}>
                   <span className="text-label">{item.label}</span>
                   {item.isLink ? (
-                    <a href={item.href} target="_blank" rel="noreferrer" style={{ color: 'var(--neon-cyan)', textDecoration: 'none', fontWeight: 600 }} className="hover-link">
+                    <a href={item.href} target="_blank" rel="noreferrer" style={{ color: '#ffffff', textDecoration: 'none', fontWeight: 600 }} className="hover-link">
                       {item.value}
                     </a>
                   ) : (
@@ -624,14 +624,14 @@ export default function ProfilePage({ params }: ProfilePageProps) {
             <div style={{ marginBottom: '14px', fontSize: '12px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.03)', paddingBottom: '8px' }}>
                 <span className="text-label">Source Connectors</span>
-                <span className="text-mono" style={{ color: 'var(--neon-violet)', fontWeight: 600 }}>{profile.sourceConnectors?.join(', ') || 'Manual'}</span>
+                <span className="text-mono" style={{ color: '#ffffff', fontWeight: 600 }}>{profile.sourceConnectors?.join(', ') || 'Manual'}</span>
               </div>
             </div>
 
             <div>
               <div className="text-label" style={{ marginBottom: '8px' }}>Secured Metadata JSON Map</div>
               <div style={{ background: 'rgba(0,0,0,0.25)', border: '1px solid var(--glass-border)', borderRadius: '8px', padding: '10px 14px', maxHeight: '150px', overflowY: 'auto' }}>
-                <pre className="text-mono" style={{ fontSize: '10.5px', color: 'var(--neon-cyan)', margin: 0, whiteSpace: 'pre-wrap' }}>
+                <pre className="text-mono" style={{ fontSize: '10.5px', color: '#ffffff', margin: 0, whiteSpace: 'pre-wrap' }}>
                   {JSON.stringify(profile.metadata ?? {}, null, 2)}
                 </pre>
               </div>
