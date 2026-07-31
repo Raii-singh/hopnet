@@ -508,3 +508,44 @@ export async function mergeDuplicateNodes(
             newIn.interactionFrequency = in.interactionFrequency,
             newIn.weight = in.weight,
             newIn.connectorSource = in.connectorSource,
+            newIn.inferred = in.inferred,
+            newIn.inferredFrom = in.inferredFrom,
+            newIn.edgeType = in.edgeType,
+            newIn.createdAt = in.createdAt,
+            newIn.updatedAt = in.updatedAt,
+            newIn.createdBy = in.createdBy,
+            newIn.edgeKind = newEdgeKind
+      `, { sourceId, targetId });
+
+      // 3. Delete old edges & update properties
+      await tx.run(`
+        MATCH (source:Person {id: $sourceId})
+        MATCH (target:Person {id: $targetId})
+        OPTIONAL MATCH (source)-[r:CONNECTED]-()
+        DELETE r
+        SET target.tags = $mergedTags,
+            target.sourceConnectors = $mergedConnectors,
+            source.deletedAt = $now
+      `, { sourceId, targetId, mergedTags, mergedConnectors, now });
+    });
+  } finally {
+    await session.close();
+  }
+}
+
+/**
+ * Retrieve all active REAL nodes for duplicate detection.
+ */
+export async function getAllActiveRealNodes(): Promise<PersonNode[]> {
+  const session = getSession();
+  try {
+    const result = await session.run(`
+      MATCH (n:Person)
+      WHERE n.deletedAt IS NULL AND n.nodeType = 'REAL'
+      RETURN n
+    `);
+    return result.records.map(r => recordToPersonNode(r, 'n'));
+  } finally {
+    await session.close();
+  }
+}
