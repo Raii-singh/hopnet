@@ -83,3 +83,89 @@ export function invalidNodeType(value: unknown): HOPNetError {
 
 export function nodeTypeImmutable(): HOPNetError {
   return new HOPNetError(
+    'NODE_TYPE_IMMUTABLE',
+    'nodeType is permanently immutable. REAL↔DEMO conversion is not supported as an ' +
+    "in-place mutation. To change a node's type, soft-delete the existing node and create a new one."
+  );
+}
+
+export function duplicatePublicId(publicId: string): HOPNetError {
+  return new HOPNetError('DUPLICATE_PUBLIC_ID', `publicId already in use: ${publicId}`, { publicId });
+}
+
+export function relationshipNotFound(id: string): HOPNetError {
+  return new HOPNetError('RELATIONSHIP_NOT_FOUND', `Relationship not found: ${id}`, { id });
+}
+
+export function relationshipAlreadyDeleted(id: string): HOPNetError {
+  return new HOPNetError('RELATIONSHIP_ALREADY_DELETED', `Relationship is already soft-deleted: ${id}`, { id });
+}
+
+export function relationshipNotDeleted(id: string): HOPNetError {
+  return new HOPNetError('RELATIONSHIP_NOT_DELETED', `Relationship is not soft-deleted (cannot restore): ${id}`, { id });
+}
+
+export function duplicateRelationship(sourceId: string, targetId: string, relationshipType: string): HOPNetError {
+  return new HOPNetError(
+    'DUPLICATE_RELATIONSHIP',
+    `An active relationship of type "${relationshipType}" already exists from ${sourceId} to ${targetId}.`,
+    { sourceId, targetId, relationshipType }
+  );
+}
+
+export function selfLoop(id: string): HOPNetError {
+  return new HOPNetError('SELF_LOOP', `Self-loops are not allowed. sourceId and targetId are the same node: ${id}`, { id });
+}
+
+export function invalidRelationshipType(value: unknown): HOPNetError {
+  return new HOPNetError('INVALID_RELATIONSHIP_TYPE', `relationshipType must be a non-empty string. Got: "${value}".`, { value });
+}
+
+export function deletedEndpoint(which: 'source' | 'target' | 'both', id?: string): HOPNetError {
+  return new HOPNetError(
+    'DELETED_ENDPOINT',
+    `Cannot create relationship: ${which} endpoint is soft-deleted${id ? ` (${id})` : ''}.`,
+    { which, id }
+  );
+}
+
+export function endpointNotFound(which: 'source' | 'target' | 'both', id?: string): HOPNetError {
+  return new HOPNetError(
+    'ENDPOINT_NOT_FOUND',
+    `Cannot create relationship: ${which} endpoint does not exist${id ? ` (${id})` : ''}.`,
+    { which, id }
+  );
+}
+
+export function validationError(message: string, details?: Record<string, unknown>): HOPNetError {
+  return new HOPNetError('VALIDATION_ERROR', message, details);
+}
+
+export function immutableField(field: string): HOPNetError {
+  return new HOPNetError('IMMUTABLE_FIELD', `Field "${field}" is immutable and cannot be updated.`, { field });
+}
+
+/**
+ * The relationship's deletedAt was successfully cleared (restore succeeded),
+ * but at least one endpoint node is still soft-deleted.
+ *
+ * RESTORE RELATIONSHIP ≠ ACTIVATE RELATIONSHIP.
+ *
+ * The relationship will become visible in normal graph reads automatically
+ * once all endpoint nodes are restored. No additional action on the
+ * relationship itself is required.
+ */
+export function relationshipRestoredButEndpointDeleted(id: string, endpointId?: string): HOPNetError {
+  return new HOPNetError(
+    'RELATIONSHIP_RESTORED_BUT_ENDPOINT_DELETED',
+    `Relationship ${id} was restored (deletedAt cleared), but it remains inactive ` +
+    `in normal graph reads because at least one endpoint node is still soft-deleted` +
+    `${endpointId ? ` (endpoint: ${endpointId})` : ''}. ` +
+    `Restore the endpoint node(s) to make this relationship visible again.`,
+    { id, endpointId }
+  );
+}
+
+export function unauthorized(message: string): HOPNetError {
+  return new HOPNetError('UNAUTHORIZED', message);
+}
