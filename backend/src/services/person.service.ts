@@ -253,3 +253,46 @@ export async function updatePerson(id: string, updates: UpdatePersonInput): Prom
  *     endpoints are soft-deleted (enforced at repository level — Decision 4).
  *   - Restoring the node makes all preserved relationships eligible to appear again.
  *   - Throws NODE_NOT_FOUND if the node doesn't exist.
+ *   - Throws NODE_ALREADY_DELETED if the node is already soft-deleted.
+ */
+export async function softDeletePerson(id: string): Promise<void> {
+  if (!id?.trim()) throw validationError('id is required');
+
+  // Check the node exists (active or deleted) before attempting delete
+  const exists = await repoCall(() => personRepo.personExists(id));
+  if (!exists) throw nodeNotFound(id);
+
+  // Check it isn't already deleted
+  const activeNode = await repoCall(() => personRepo.getPersonById(id));
+  if (!activeNode) throw nodeAlreadyDeleted(id);
+
+  const deleted = await repoCall(() => personRepo.softDeletePerson(id));
+  if (!deleted) throw nodeNotFound(id);
+}
+
+/**
+ * Restore a soft-deleted Person node.
+ *
+ * Behaviour:
+ *   - Removes the deletedAt timestamp.
+ *   - Preserved relationships become visible again automatically.
+ *   - Throws NODE_NOT_FOUND if the node doesn't exist.
+ *   - Throws NODE_NOT_DELETED if the node is already active.
+ */
+export async function restorePerson(id: string): Promise<PersonNode> {
+  if (!id?.trim()) throw validationError('id is required');
+
+  const exists = await repoCall(() => personRepo.personExists(id));
+  if (!exists) throw nodeNotFound(id);
+
+  // Verify it is actually deleted (getPersonById returns null for deleted nodes)
+  const activeNode = await repoCall(() => personRepo.getPersonById(id));
+  if (activeNode) throw nodeNotDeleted(id);
+
+  const restored = await repoCall(() => personRepo.restorePerson(id));
+  if (!restored) throw nodeNotFound(id);
+
+  const node = await repoCall(() => personRepo.getPersonById(id));
+  if (!node) throw nodeNotFound(id); // unexpected
+  return node;
+}
