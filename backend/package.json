@@ -4,7 +4,7 @@
   "description": "HOPNet Graph Intelligence API",
   "main": "dist/server.js",
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "dev": "ts-node-dev -r tsconfig-paths/register --respawn --transpile-only src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
     "seed": "ts-node prisma/seed.ts",
@@ -32,6 +32,7 @@
     "@types/node": "^25.9.1",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
+    "tsconfig-paths": "^4.2.0",
     "typescript": "^6.0.3"
   }
 }
