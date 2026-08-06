@@ -168,3 +168,88 @@ export async function createRelationship(
   // ── 1. Required field validation ─────────────────────────────────────
   if (!input.sourceId?.trim()) throw validationError('sourceId is required');
   if (!input.targetId?.trim()) throw validationError('targetId is required');
+
+  // ── 2. Self-loop prevention ───────────────────────────────────────────
+  if (input.sourceId === input.targetId) {
+    throw selfLoop(input.sourceId);
+  }
+
+  // ── 3. relationshipType validation ────────────────────────────────────
+  const relType = input.relationshipType ?? 'acquaintance';
+  if (typeof relType !== 'string' || !relType.trim()) {
+    throw invalidRelationshipType(relType);
+  }
+
+  // ── 4. Numeric range validation ───────────────────────────────────────
+  validateScore(input.trustScore, 'trustScore');
+  validateScore(input.interactionFrequency, 'interactionFrequency');
+  validateScore(input.confidenceScore, 'confidenceScore');
+
+  // ── 5 & 6. Endpoint existence and active-state checks ─────────────────
+  // Done at service level before calling the repository, so we can return
+  // typed HOPNetErrors (ENDPOINT_NOT_FOUND vs DELETED_ENDPOINT) rather than
+  // the generic repository error message.
+  const [sourceNode, targetNode] = await Promise.all([
+    repoCall(() => personRepo.getPersonById(input.sourceId)),
+    repoCall(() => personRepo.getPersonById(input.targetId)),
+  ]);
+
+  // Check existence (getPersonById returns null for soft-deleted OR non-existent)
+  // Use personExists to distinguish the two cases
+  if (!sourceNode) {
+    const exists = await repoCall(() => personRepo.personExists(input.sourceId));
+    if (exists) throw deletedEndpoint('source', input.sourceId);
+    throw endpointNotFound('source', input.sourceId);
+  }
+
+  if (!targetNode) {
+    const exists = await repoCall(() => personRepo.personExists(input.targetId));
+    if (exists) throw deletedEndpoint('target', input.targetId);
+    throw endpointNotFound('target', input.targetId);
+  }
+
+  // ── 7. Duplicate active relationship check ────────────────────────────
+  // Check only ACTIVE relationships with the exact same (sourceId, targetId,
+  // relationshipType) triplet — direction matters.
+  // Soft-deleted relationships with the same triplet do NOT block creation.
+  const existing = await repoCall(() =>
+    relRepo.getRelationshipsBetween(input.sourceId, input.targetId)
+  );
+  const activeDuplicate = existing.find(
+    r =>
+      r.sourceId === input.sourceId &&
+      r.targetId === input.targetId &&
+      r.relationshipType === relType
+  );
+  if (activeDuplicate) {
+    throw duplicateRelationship(input.sourceId, input.targetId, relType);
+  }
+
+  // ── Write the relationship ────────────────────────────────────────────
+  const rel = await repoCall(() =>
+    relRepo.createRelationship({
+      sourceId: input.sourceId,
+      targetId: input.targetId,
+      relationshipType: relType,
+      trustScore: input.trustScore,
+      interactionFrequency: input.interactionFrequency,
+      connectorSource: input.connectorSource,
+      inferred: input.inferred,
+      inferredFrom: input.inferredFrom,
+      confidenceScore: input.confidenceScore,
+      createdBy: input.createdBy,
+    })
+  );
+
+  return withWeight(rel);
+}
+
+/**
+ * Get an active Relationship by its backend UUID.
+ * Throws RELATIONSHIP_NOT_FOUND if not found, soft-deleted, or if either
+ * endpoint is soft-deleted (Decision 4).
+ */
+export async function getRelationshipById(id: string): Promise<RelationshipWithWeight> {
+  if (!id?.trim()) throw validationError('id is required');
+  const rel = await repoCall(() => relRepo.getRelationshipById(id));
+  if (!rel) throw relationshipNotFound(id);
