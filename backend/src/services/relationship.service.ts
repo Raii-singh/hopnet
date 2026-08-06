@@ -253,3 +253,88 @@ export async function getRelationshipById(id: string): Promise<RelationshipWithW
   if (!id?.trim()) throw validationError('id is required');
   const rel = await repoCall(() => relRepo.getRelationshipById(id));
   if (!rel) throw relationshipNotFound(id);
+  return withWeight(rel);
+}
+
+/**
+ * Get all active relationships between two Person nodes (either direction).
+ * Returns an empty array when none exist or when either node is soft-deleted.
+ */
+export async function getRelationshipsBetween(
+  sourceId: string,
+  targetId: string
+): Promise<RelationshipWithWeight[]> {
+  if (!sourceId?.trim()) throw validationError('sourceId is required');
+  if (!targetId?.trim()) throw validationError('targetId is required');
+  const rels = await repoCall(() => relRepo.getRelationshipsBetween(sourceId, targetId));
+  return rels.map(withWeight);
+}
+
+/**
+ * List all active relationships incident to a Person node.
+ * Relationships whose other endpoint is soft-deleted are excluded (Decision 4).
+ */
+export async function listRelationshipsByPerson(
+  personId: string,
+  opts: ListRelationshipsByPersonOptions = {}
+): Promise<RelationshipWithWeight[]> {
+  if (!personId?.trim()) throw validationError('personId is required');
+  const rels = await repoCall(() =>
+    relRepo.listRelationshipsByPerson(personId, opts.edgeKind)
+  );
+  return rels.map(withWeight);
+}
+
+/**
+ * List all active relationships in the graph, optionally filtered by edgeKind.
+ * Relationships whose source or target is soft-deleted are excluded (Decision 4).
+ */
+export async function listRelationships(
+  opts: ListRelationshipsOptions = {}
+): Promise<RelationshipWithWeight[]> {
+  const { edgeKind, limit = 500, skip = 0 } = opts;
+  const rels = await repoCall(() => relRepo.listRelationships(edgeKind, limit, skip));
+  return rels.map(withWeight);
+}
+
+/**
+ * Update an existing active Relationship.
+ *
+ * Immutable fields (id, sourceId, targetId, edgeKind, createdAt, createdBy)
+ * are silently stripped at the repository level.
+ *
+ * Mutable fields: relationshipType, trustScore, interactionFrequency,
+ * connectorSource, inferred, inferredFrom, confidenceScore.
+ *
+ * If relationshipType is being changed, checks for a duplicate ACTIVE
+ * relationship with the new (sourceId, targetId, newRelationshipType) before
+ * applying the update.
+ *
+ * Throws RELATIONSHIP_NOT_FOUND if the relationship does not exist or is
+ * soft-deleted, or if either endpoint is soft-deleted.
+ */
+export async function updateRelationship(
+  id: string,
+  updates: UpdateRelationshipInput
+): Promise<RelationshipWithWeight> {
+  if (!id?.trim()) throw validationError('id is required');
+
+  // Validate numeric ranges in the update
+  validateScore(updates.trustScore, 'trustScore');
+  validateScore(updates.interactionFrequency, 'interactionFrequency');
+  validateScore(updates.confidenceScore, 'confidenceScore');
+
+  // Validate relationshipType if being changed
+  if (updates.relationshipType !== undefined) {
+    if (typeof updates.relationshipType !== 'string' || !updates.relationshipType.trim()) {
+      throw invalidRelationshipType(updates.relationshipType);
+    }
+  }
+
+  // Fetch the current relationship to verify it exists and is active
+  const current = await repoCall(() => relRepo.getRelationshipById(id));
+  if (!current) throw relationshipNotFound(id);
+
+  // If relationshipType is being changed, check for a duplicate with the new type
+  if (updates.relationshipType && updates.relationshipType !== current.relationshipType) {
+    const existing = await repoCall(() =>
