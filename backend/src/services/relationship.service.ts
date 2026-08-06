@@ -83,3 +83,88 @@ import {
   relationshipAlreadyDeleted,
   relationshipNotDeleted,
   duplicateRelationship,
+  selfLoop,
+  invalidRelationshipType,
+  deletedEndpoint,
+  endpointNotFound,
+  validationError,
+  relationshipRestoredButEndpointDeleted,
+} from './errors';
+
+// ── Types ─────────────────────────────────────────────────────────────────
+
+export interface CreateRelationshipServiceInput {
+  sourceId: string;
+  targetId: string;
+  relationshipType?: string;
+  trustScore?: number;
+  interactionFrequency?: number;
+  connectorSource?: string;
+  inferred?: boolean;
+  inferredFrom?: string;
+  confidenceScore?: number;
+  createdBy?: string;
+}
+
+export interface ListRelationshipsOptions {
+  edgeKind?: EdgeKind;
+  limit?: number;
+  skip?: number;
+}
+
+export interface ListRelationshipsByPersonOptions {
+  edgeKind?: EdgeKind;
+}
+
+// ── Internal helpers ──────────────────────────────────────────────────────
+
+/** Validate a trustScore or interactionFrequency is in [0, 1]. */
+function validateScore(value: unknown, fieldName: string): void {
+  if (value === undefined || value === null) return;
+  if (typeof value !== 'number' || isNaN(value) || value < 0 || value > 1) {
+    throw validationError(`${fieldName} must be a number between 0.0 and 1.0. Got: ${value}`, { fieldName, value });
+  }
+}
+
+/**
+ * Wrap a repository call, converting HOPNetErrors (already typed) cleanly.
+ * Non-HOPNet errors (infrastructure) are re-thrown as-is.
+ */
+async function repoCall<T>(fn: () => Promise<T>): Promise<T> {
+  try {
+    return await fn();
+  } catch (err: unknown) {
+    if (err instanceof HOPNetError) throw err;
+    throw err;
+  }
+}
+
+// ── Service operations ────────────────────────────────────────────────────
+
+/**
+ * Create a new relationship between two Person nodes.
+ *
+ * Validation (in order):
+ *   1. sourceId and targetId must be non-empty strings.
+ *   2. Self-loop check: sourceId !== targetId.
+ *   3. relationshipType must be a non-empty string when provided.
+ *   4. trustScore and interactionFrequency must be in [0, 1] when provided.
+ *   5. Source endpoint must exist and be active (not soft-deleted).
+ *   6. Target endpoint must exist and be active (not soft-deleted).
+ *   7. No active (sourceId, targetId, relationshipType) duplicate exists.
+ *      (Soft-deleted relationships with the same triplet do NOT block creation.)
+ *
+ * REAL/DEMO semantics:
+ *   All four combinations (REAL→REAL, REAL→DEMO, DEMO→REAL, DEMO→DEMO) are
+ *   allowed at creation time. edgeKind is derived atomically by the repository.
+ *   The REAL→DEMO→REAL traversal restriction is enforced during graph traversal,
+ *   not at creation time.
+ *
+ * Returns the newly created relationship including the computed weight.
+ */
+export async function createRelationship(
+  input: CreateRelationshipServiceInput
+): Promise<RelationshipWithWeight> {
+  // ── 1. Required field validation ─────────────────────────────────────
+  if (!input.sourceId?.trim()) throw validationError('sourceId is required');
+  if (!input.targetId?.trim()) throw validationError('targetId is required');
