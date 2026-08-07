@@ -83,3 +83,88 @@ const DEFAULT_DEPTH = 2;
 /**
  * A Person node as returned in a graph subgraph response.
  * Extends PersonNode with graph-context fields:
+ *   - hopDistance: 0 = center, 1 = direct connection, etc.
+ *   - subgraphDegree: connections to other nodes INSIDE this returned subgraph.
+ *   - globalConnectionCount: total active connections globally (center only).
+ */
+export interface GraphNode extends PersonNode {
+  /** Hop count from the center node. 0 = center itself. */
+  hopDistance: number;
+  /** Number of relationships to other nodes inside the returned subgraph. */
+  subgraphDegree: number;
+  /**
+   * Total active global connections (all active rels, not just subgraph ones).
+   * Only present on the center node. Absent for all other nodes.
+   */
+  globalConnectionCount?: number;
+}
+
+/**
+ * A relationship as returned in a graph subgraph response.
+ * Uses `edgeKind` (not `edgeType`) — v2 domain naming.
+ * Preserves the stored directed sourceId/targetId from Neo4j.
+ */
+export interface GraphLink {
+  id: string;
+  /** UUID of the source node (stored direction from Neo4j). */
+  source: string;
+  /** UUID of the target node (stored direction from Neo4j). */
+  target: string;
+  relationshipType: string;
+  /** REAL_EDGE when both endpoints are REAL; DEMO_EDGE otherwise. */
+  edgeKind: 'REAL_EDGE' | 'DEMO_EDGE';
+  trustScore: number;
+  interactionFrequency: number;
+  /** trustScore * 0.6 + interactionFrequency * 0.4 (computed, not stored). */
+  weight: number;
+  connectorSource: string;
+  inferred: boolean;
+  inferredFrom?: string | null;
+  confidenceScore?: number;
+}
+
+/** Summary metadata about a returned subgraph. */
+export interface GraphMeta {
+  /** UUID of the node used as the graph center. */
+  centerId: string;
+  /** Actual depth used (clamped to [1, MAX_DEPTH]). */
+  depth: number;
+  totalNodes: number;
+  totalLinks: number;
+  realNodes: number;
+  demoNodes: number;
+  realEdges: number;
+  demoEdges: number;
+  /** Average hop distance of all non-center nodes in the result. */
+  avgHopCount: number;
+  /**
+   * Always true for HOPNet CollegeGraph traversal.
+   * The REAL→DEMO→REAL constraint is always active.
+   */
+  constraintActive: true;
+  includeDemo: boolean;
+}
+
+/** Full graph subgraph response returned to the HTTP layer. */
+export interface GraphSubgraphResponse {
+  /** Nodes sorted: center (hopDistance 0) first, then ascending hopDistance. */
+  nodes: GraphNode[];
+  links: GraphLink[];
+  meta: GraphMeta;
+}
+
+/**
+ * Path query response.
+ *
+ * Weight vs. cost distinction:
+ *   Each GraphLink has a `weight` field = connection strength (0–1, higher = stronger).
+ *   `totalCost` = sum of per-edge (1 - weight) Dijkstra friction costs along the path.
+ *   A lower totalCost means a stronger / more trusted path.
+ *   Range: 0.0 (all max-strength edges) to N (N edges each with zero strength).
+ */
+export interface PathResponse {
+  exists: boolean;
+  path: {
+    /** Ordered node IDs from start (fromId) to end (toId). */
+    nodeIds: string[];
+    /** Full GraphNode objects (same order as nodeIds, hopDistance = position from start). */
