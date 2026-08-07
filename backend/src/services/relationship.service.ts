@@ -338,3 +338,106 @@ export async function updateRelationship(
   // If relationshipType is being changed, check for a duplicate with the new type
   if (updates.relationshipType && updates.relationshipType !== current.relationshipType) {
     const existing = await repoCall(() =>
+      relRepo.getRelationshipsBetween(current.sourceId, current.targetId)
+    );
+    const conflict = existing.find(
+      r =>
+        r.id !== id &&
+        r.sourceId === current.sourceId &&
+        r.targetId === current.targetId &&
+        r.relationshipType === updates.relationshipType
+    );
+    if (conflict) {
+      throw duplicateRelationship(current.sourceId, current.targetId, updates.relationshipType);
+    }
+  }
+
+  const updated = await repoCall(() => relRepo.updateRelationship(id, updates));
+  if (!updated) throw relationshipNotFound(id);
+  return withWeight(updated);
+}
+
+/**
+ * Soft-delete a Relationship.
+ *
+ * Behaviour:
+ *   - Sets deletedAt on the relationship.
+ *   - Does NOT affect the endpoint Person nodes.
+ *   - Throws RELATIONSHIP_NOT_FOUND if not found.
+ *   - Throws RELATIONSHIP_ALREADY_DELETED if already soft-deleted.
+ */
+export async function softDeleteRelationship(id: string): Promise<void> {
+  if (!id?.trim()) throw validationError('id is required');
+
+  const exists = await repoCall(() => relRepo.relationshipExists(id));
+  if (!exists) throw relationshipNotFound(id);
+
+  // Check it's not already deleted (getRelationshipById returns null for deleted/soft-deleted)
+  // But getRelationshipById also returns null for soft-deleted endpoints — so use
+  // the raw repository to check the relationship's own deletedAt state.
+  // We infer: if it exists but getRelationshipById returns null, it's either deleted
+  // or has a soft-deleted endpoint. Either way, softDeleteRelationship(id) will return
+  // false if deletedAt is already set (idempotent guard in repo).
+  const deleted = await repoCall(() => relRepo.softDeleteRelationship(id));
+  if (!deleted) {
+    // The relationship exists but the soft-delete didn't apply — it was already deleted
+    throw relationshipAlreadyDeleted(id);
+  }
+}
+
+/**
+ * Restore a soft-deleted Relationship.
+ *
+ * Behaviour:
+ *   - Removes deletedAt from the relationship (restore always succeeds if the
+ *     relationship exists and was soft-deleted).
+ *   - RESTORE RELATIONSHIP ≠ ACTIVATE RELATIONSHIP.
+ *     If both endpoints are active, the relationship immediately becomes
+ *     visible in normal graph reads and is returned.
+ *   - If at least one endpoint is still soft-deleted, the restore still
+ *     succeeds physically, but throws RELATIONSHIP_RESTORED_BUT_ENDPOINT_DELETED
+ *     to signal that the relationship is not yet visible in normal reads.
+ *     The relationship will become visible automatically when the endpoint(s)
+ *     are restored — no further action on the relationship is needed.
+ *   - Throws RELATIONSHIP_NOT_FOUND if the relationship does not exist.
+ *   - Throws RELATIONSHIP_NOT_DELETED if the relationship is already active.
+ */
+export async function restoreRelationship(id: string): Promise<RelationshipWithWeight> {
+  if (!id?.trim()) throw validationError('id is required');
+
+  const exists = await repoCall(() => relRepo.relationshipExists(id));
+  if (!exists) throw relationshipNotFound(id);
+
+  const restored = await repoCall(() => relRepo.restoreRelationship(id));
+  if (!restored) {
+    // Exists but restore returned false — already active (not soft-deleted)
+    throw relationshipNotDeleted(id);
+  }
+
+  // Attempt to fetch back through the normal read path.
+  // getRelationshipById enforces Decision 4: both endpoints must be active.
+  // If it returns a value, both endpoints are active and the relationship
+  // is fully visible — return it.
+  const active = await repoCall(() => relRepo.getRelationshipById(id));
+  if (active) return withWeight(active);
+
+  // Restore succeeded but getRelationshipById returned null — this means
+  // at least one endpoint is still soft-deleted (Decision 4).
+  // Identify which endpoint is inactive for richer error context.
+  // We do this via a best-effort check; if both lookups fail we report
+  // the relationship ID only.
+  //
+  // RESTORE RELATIONSHIP ≠ ACTIVATE RELATIONSHIP.
+  // The relationship is physically restored. Caller must restore the
+  // endpoint node(s) to make this relationship visible again.
+  let inactiveEndpointId: string | undefined;
+  try {
+    // We need the stored sourceId/targetId — but the normal read is blocked.
+    // We can check via personExists on the IDs we can derive from a direct
+    // Cypher query. For simplicity, we report without a specific endpoint ID
+    // since this requires a repository call we don't have yet.
+    // Future: add a getRelationshipPhysical() to the repository.
+  } catch { /* best-effort — not critical */ }
+
+  throw relationshipRestoredButEndpointDeleted(id, inactiveEndpointId);
+}
