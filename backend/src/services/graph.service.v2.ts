@@ -168,3 +168,88 @@ export interface PathResponse {
     /** Ordered node IDs from start (fromId) to end (toId). */
     nodeIds: string[];
     /** Full GraphNode objects (same order as nodeIds, hopDistance = position from start). */
+    nodes: GraphNode[];
+  } | null;
+  /**
+   * Minimum accumulated Dijkstra traversal cost along the path.
+   * Cost per edge = 1 - weight (1 - connection_strength).
+   * Lower totalCost = stronger / more trusted path.
+   * null when no path exists.
+   */
+  totalCost: number | null;
+}
+
+/** Single-node profile response (node + its direct connections). */
+export interface NodeProfileResponse {
+  node: GraphNode;
+  links: GraphLink[];
+}
+
+// ── Internal helpers ──────────────────────────────────────────────────────
+
+/** Map a PersonNode to an EngineNode for the shared BFS engine. */
+function toEngineNode(p: PersonNode): EngineNode {
+  return { id: p.id, kind: p.nodeType };
+}
+
+/** Map a Relationship (with computed weight) to an EngineEdge. */
+function toEngineEdge(r: Relationship): EngineEdge {
+  return {
+    id: r.id,
+    sourceId: r.sourceId,
+    targetId: r.targetId,
+    kind: r.edgeKind,
+    weight: computeWeight(r.trustScore, r.interactionFrequency),
+  };
+}
+
+/**
+ * Convert a PersonNode into a GraphNode, filling in graph-context fields.
+ * subgraphDegree and globalConnectionCount must be filled by the caller.
+ */
+function toGraphNode(
+  p: PersonNode,
+  hopDistance: number,
+  subgraphDegree: number,
+  globalConnectionCount?: number
+): GraphNode {
+  const node: GraphNode = {
+    ...p,
+    hopDistance,
+    subgraphDegree,
+  };
+  if (globalConnectionCount !== undefined) {
+    node.globalConnectionCount = globalConnectionCount;
+  }
+  return node;
+}
+
+/** Convert a Relationship to a GraphLink (v2 response shape). */
+function toGraphLink(r: Relationship): GraphLink {
+  return {
+    id: r.id,
+    source: r.sourceId,
+    target: r.targetId,
+    relationshipType: r.relationshipType,
+    edgeKind: r.edgeKind,
+    trustScore: r.trustScore,
+    interactionFrequency: r.interactionFrequency,
+    weight: computeWeight(r.trustScore, r.interactionFrequency),
+    connectorSource: r.connectorSource,
+    inferred: r.inferred ?? false,
+    inferredFrom: r.inferredFrom ?? null,
+    confidenceScore: r.confidenceScore,
+  };
+}
+
+/**
+ * Compute per-node subgraphDegree from the final filtered link set.
+ * No database call — derived from the links already in memory.
+ */
+function computeSubgraphDegrees(
+  nodeIds: string[],
+  links: GraphLink[]
+): Map<string, number> {
+  const degreeMap = new Map<string, number>(nodeIds.map(id => [id, 0]));
+  for (const link of links) {
+    degreeMap.set(link.source, (degreeMap.get(link.source) ?? 0) + 1);
