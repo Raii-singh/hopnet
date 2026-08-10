@@ -253,3 +253,88 @@ function computeSubgraphDegrees(
   const degreeMap = new Map<string, number>(nodeIds.map(id => [id, 0]));
   for (const link of links) {
     degreeMap.set(link.source, (degreeMap.get(link.source) ?? 0) + 1);
+    degreeMap.set(link.target, (degreeMap.get(link.target) ?? 0) + 1);
+  }
+  return degreeMap;
+}
+
+// ── Public service API ────────────────────────────────────────────────────
+
+/**
+ * Get the N-hop subgraph centered on a Person node.
+ *
+ * Pipeline:
+ *   1. Validate inputs.
+ *   2. Fetch raw neighbourhood from Neo4j (3-query pattern).
+ *   3. Map to EngineNode/EngineEdge.
+ *   4. Run BFS with collegeConstraint.
+ *   5. Filter raw result to BFS-approved set.
+ *   6. Compute weights, hop distances, subgraphDegree, globalConnectionCount.
+ *   7. Return GraphSubgraphResponse.
+ *
+ * @param centerId   UUID of the Person node to use as graph center.
+ * @param depth      Hop depth [1–MAX_DEPTH]. Clamped server-side.
+ * @param includeDemo  Whether to include DEMO nodes in traversal.
+ *
+ * @throws NODE_NOT_FOUND if centerId does not exist or is soft-deleted.
+ * @throws VALIDATION_ERROR if centerId is empty.
+ */
+ 
+
+export async function getSubgraph(
+  centerId: string,
+  depth: number = DEFAULT_DEPTH,
+  includeDemo: boolean = true,
+  filters?: GraphFilters
+): Promise<GraphSubgraphResponse> {
+  if (!centerId?.trim()) throw validationError('centerId is required');
+
+  const clampedDepth = Math.min(Math.max(1, Math.floor(depth) || 1), MAX_DEPTH);
+
+  // ── Step 1: Raw neighbourhood from Neo4j ──────────────────────────────
+  const raw = await getNeighbourhood(centerId, clampedDepth, { includeDemo, filters });
+
+  if (raw.nodes.length === 0) {
+    // Root not found or soft-deleted — verify which to give precise error
+    throw nodeNotFound(centerId);
+  }
+
+  // ── Step 2: Map to engine types ───────────────────────────────────────
+  const rootNode = raw.nodes.find(n => n.id === centerId || n.publicId === centerId);
+  const resolvedCenterId = rootNode ? rootNode.id : centerId;
+
+  const engineNodes: EngineNode[] = raw.nodes.map(toEngineNode);
+  const engineEdges: EngineEdge[] = raw.relationships.map(toEngineEdge);
+
+  // ── Step 3: BFS with collegeConstraint ───────────────────────────────
+  // BFS is undirected. collegeConstraint blocks DEMO → REAL traversal.
+  // See module-level REAL/DEMO semantics documentation above.
+  const bfsResult = bfsSubgraph(
+    resolvedCenterId,
+    clampedDepth,
+    includeDemo,
+    engineNodes,
+    engineEdges,
+    collegeConstraint
+  );
+
+  // ── Step 4: Filter to BFS-approved set ───────────────────────────────
+  const approvedNodeIds = bfsResult.visitedNodeIds;
+  const approvedEdgeIds = bfsResult.visitedEdgeIds;
+
+  const filteredNodes = raw.nodes.filter(n => approvedNodeIds.has(n.id));
+  const filteredRels  = raw.relationships.filter(r => approvedEdgeIds.has(r.id));
+
+  // ── Step 5: Build GraphLinks ─────────────────────────────────────────
+  const links: GraphLink[] = filteredRels.map(toGraphLink);
+
+  // ── Step 6: Compute subgraphDegree for all nodes ─────────────────────
+  const subgraphDegrees = computeSubgraphDegrees(
+    filteredNodes.map(n => n.id),
+    links
+  );
+
+  // ── Step 7: Fetch globalConnectionCount for center node only ─────────
+  // This is a single DB query, not N queries.
+  const centerDegrees = await getDegrees(resolvedCenterId);
+  const globalConnectionCount = centerDegrees.total;
