@@ -338,3 +338,88 @@ export async function getSubgraph(
   // This is a single DB query, not N queries.
   const centerDegrees = await getDegrees(resolvedCenterId);
   const globalConnectionCount = centerDegrees.total;
+
+  // ── Step 8: Build GraphNodes ─────────────────────────────────────────
+  const nodes: GraphNode[] = filteredNodes.map(p => {
+    const hopDistance    = bfsResult.hopMap.get(p.id) ?? 0;
+    const subgraphDeg    = subgraphDegrees.get(p.id) ?? 0;
+    const isCenter       = p.id === resolvedCenterId;
+    return toGraphNode(p, hopDistance, subgraphDeg, isCenter ? globalConnectionCount : undefined);
+  });
+
+  // Sort: center first (hopDistance 0), then ascending hop distance
+  nodes.sort((a, b) => a.hopDistance - b.hopDistance);
+
+  // ── Step 9: Compute metadata ──────────────────────────────────────────
+  const hopDistances = nodes
+    .filter(n => n.hopDistance > 0)
+    .map(n => n.hopDistance);
+  const avgHopCount = hopDistances.length > 0
+    ? hopDistances.reduce((s, h) => s + h, 0) / hopDistances.length
+    : 0;
+
+  const meta: GraphMeta = {
+    centerId,
+    depth: clampedDepth,
+    totalNodes:  nodes.length,
+    totalLinks:  links.length,
+    realNodes:   nodes.filter(n => n.nodeType === 'REAL').length,
+    demoNodes:   nodes.filter(n => n.nodeType === 'DEMO').length,
+    realEdges:   links.filter(l => l.edgeKind === 'REAL_EDGE').length,
+    demoEdges:   links.filter(l => l.edgeKind === 'DEMO_EDGE').length,
+    avgHopCount: Math.round(avgHopCount * 100) / 100,
+    constraintActive: true,
+    includeDemo,
+  };
+
+  return { nodes, links, meta };
+}
+
+/**
+ * Get a single Person node plus all its active 1-hop connections.
+ * Used for node profile/detail views.
+ *
+ * @throws NODE_NOT_FOUND if id does not exist or is soft-deleted.
+ * @throws VALIDATION_ERROR if id is empty.
+ */
+export async function getNodeProfile(id: string): Promise<NodeProfileResponse> {
+  if (!id?.trim()) throw validationError('id is required');
+
+  const { node, relationships } = await getPersonWithConnections(id);
+  if (!node) throw nodeNotFound(id);
+
+  const links: GraphLink[] = relationships.map(toGraphLink);
+  const subgraphDeg = links.length;
+  const globalDeg   = await getDegrees(id);
+
+  const graphNode = toGraphNode(node, 0, subgraphDeg, globalDeg.total);
+
+  return { node: graphNode, links };
+}
+
+/**
+ * Find the minimum-friction path between two Person nodes, respecting the
+ * HOPNet traversal constraint (collegeConstraint).
+ *
+ * Pipeline (Option A — approved architecture):
+ *   1. Fetch raw neighbourhood from Neo4j centered on `fromId` up to `maxDepth`.
+ *   2. Run BFS with collegeConstraint → constraint-approved node + edge set.
+ *   3. If `toId` not reachable under constraint → exists: false.
+ *   4. Run shared Dijkstra on approved edges (cost = 1 - weight per edge).
+ *   5. Reconstruct ordered path from Dijkstra predecessor map.
+ *   6. Return GraphNode[] with hopDistance = position in path + totalCost.
+ *
+ * This endpoint uses the IDENTICAL connectivity definition as getSubgraph().
+ * A path that violates the REAL/DEMO constraint is never returned as valid.
+ *
+ * includeDemo semantics:
+ *   true  (default): DEMO nodes may participate in the path. Existing constraint
+ *                    still applies — DEMO → REAL remains blocked.
+ *   false:           Only REAL nodes participate. A path through a DEMO node
+ *                    is not returned even if physically shorter.
+ *
+ * totalCost semantics:
+ *   Each edge contributes (1 - weight) to the total cost.
+ *   weight = connection strength (0–1). 1 - weight = traversal friction.
+ *   Lower totalCost = stronger / more trusted path.
+ *   This is the Dijkstra-minimized accumulated cost, NOT the sum of weights.
