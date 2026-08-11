@@ -423,3 +423,88 @@ export async function getNodeProfile(id: string): Promise<NodeProfileResponse> {
  *   weight = connection strength (0–1). 1 - weight = traversal friction.
  *   Lower totalCost = stronger / more trusted path.
  *   This is the Dijkstra-minimized accumulated cost, NOT the sum of weights.
+ *
+ * @param fromId      UUID of the starting Person node.
+ * @param toId        UUID of the target Person node.
+ * @param maxDepth    Maximum hops to search (clamped to [1, MAX_DEPTH]). Default 6.
+ * @param includeDemo Whether DEMO nodes may participate in path traversal. Default true.
+ *
+ * @throws VALIDATION_ERROR if fromId or toId is empty or they are equal.
+ */
+export async function findPath(
+  fromId: string,
+  toId: string,
+  maxDepth: number = MAX_DEPTH,
+  includeDemo: boolean = true,
+  filters?: GraphFilters
+): Promise<PathResponse> {
+  if (!fromId?.trim()) throw validationError('fromId is required');
+  if (!toId?.trim())   throw validationError('toId is required');
+  if (fromId === toId) throw validationError('fromId and toId must be different nodes');
+
+  const clampedDepth = Math.min(Math.max(1, Math.floor(maxDepth) || MAX_DEPTH), MAX_DEPTH);
+
+  // ── Step 1: Raw neighbourhood from Neo4j (centered on fromId) ─────────
+  // Fetches all nodes/relationships reachable within maxDepth hops from fromId.
+  // includeDemo controls whether DEMO nodes appear in the Cypher traversal.
+  const raw = await getNeighbourhood(fromId, clampedDepth, { includeDemo, filters });
+
+  if (raw.nodes.length === 0) {
+    // fromId not found or soft-deleted
+    throw nodeNotFound(fromId);
+  }
+
+  // ── Step 2: Map to engine types ───────────────────────────────────────
+  const engineNodes: EngineNode[] = raw.nodes.map(toEngineNode);
+  const engineEdges: EngineEdge[] = raw.relationships.map(toEngineEdge);
+
+  // ── Step 3: BFS with collegeConstraint ───────────────────────────────
+  // Same constraint as getSubgraph — ensures path/subgraph connectivity agree.
+  const bfsResult = bfsSubgraph(
+    fromId,
+    clampedDepth,
+    includeDemo,
+    engineNodes,
+    engineEdges,
+    collegeConstraint
+  );
+
+  // ── Step 4: Check reachability ────────────────────────────────────────
+  // toId must be in the constraint-approved set. If not, no valid HOPNet path exists.
+  if (!bfsResult.visitedNodeIds.has(toId)) {
+    return { exists: false, path: null, totalCost: null };
+  }
+
+  // ── Step 5: Build approved-only engine sets ───────────────────────────
+  const approvedNodes = engineNodes.filter(n => bfsResult.visitedNodeIds.has(n.id));
+  const approvedEdges = engineEdges.filter(e => bfsResult.visitedEdgeIds.has(e.id));
+
+  // ── Step 6: Dijkstra on approved subgraph (cost = 1 - weight) ─────────
+  // The shared Dijkstra already converts weight → cost internally.
+  // collegeConstraint is passed again to ensure no constraint bypass during Dijkstra.
+  const dijkResult = dijkstra(fromId, approvedNodes, approvedEdges, collegeConstraint);
+
+  const cost = dijkResult.distance.get(toId) ?? Infinity;
+  if (cost === Infinity) {
+    // Defensive: Dijkstra confirms unreachable (should match BFS check above)
+    return { exists: false, path: null, totalCost: null };
+  }
+
+  // ── Step 7: Reconstruct ordered path ─────────────────────────────────
+  const pathNodeIds = reconstructPath(toId, dijkResult.previous);
+
+  if (pathNodeIds.length === 0) {
+    return { exists: false, path: null, totalCost: null };
+  }
+
+  // ── Step 8: Build GraphNodes with hopDistance = position in path ──────
+  // Retrieve full PersonNode for each path node from the raw neighbourhood.
+  const nodeById = new Map(raw.nodes.map(n => [n.id, n]));
+
+  // Compute path-local subgraphDegree from edges between path nodes.
+  // An edge is a path edge if both its endpoints are in pathNodeIds.
+  const pathNodeSet = new Set(pathNodeIds);
+  const pathEdges = raw.relationships.filter(
+    r => bfsResult.visitedEdgeIds.has(r.id)
+      && pathNodeSet.has(r.sourceId)
+      && pathNodeSet.has(r.targetId)
