@@ -508,3 +508,94 @@ export async function findPath(
     r => bfsResult.visitedEdgeIds.has(r.id)
       && pathNodeSet.has(r.sourceId)
       && pathNodeSet.has(r.targetId)
+  );
+  const pathLinks: GraphLink[] = pathEdges.map(toGraphLink);
+  const pathSubgraphDegrees = computeSubgraphDegrees(pathNodeIds, pathLinks);
+
+  const pathNodes: GraphNode[] = pathNodeIds.map((id, idx) => {
+    const personNode = nodeById.get(id);
+    if (!personNode) throw new Error(`Path node ${id} missing from neighbourhood`);
+    return toGraphNode(personNode, idx, pathSubgraphDegrees.get(id) ?? 0);
+  });
+
+  // totalCost = Dijkstra accumulated friction (sum of 1 - weight per edge)
+  const totalCost = Math.round(cost * 10000) / 10000;
+
+  return {
+    exists: true,
+    path: { nodeIds: pathNodeIds, nodes: pathNodes },
+    totalCost,
+  };
+}
+
+// ── Identity Resolution (Step 19) ─────────────────────────────────────────
+
+import { getAllActiveRealNodes, mergeDuplicateNodes } from '../repositories/graph.repository';
+
+export async function detectDuplicatesV2() {
+  const activeUsers = await getAllActiveRealNodes();
+  // Sort by fullName
+  activeUsers.sort((a, b) => (a.fullName || '').localeCompare(b.fullName || ''));
+
+  const suggestions: { userA: any; userB: any; reason: string; similarity: number }[] = [];
+
+  for (let i = 0; i < activeUsers.length; i++) {
+    for (let j = i + 1; j < activeUsers.length; j++) {
+      const uA = activeUsers[i];
+      const uB = activeUsers[j];
+
+      // Check 1: Exact Email Match
+      const emailMatch = uA.email && uB.email && uA.email.toLowerCase() === uB.email.toLowerCase();
+      
+      // Check 2: Exact Full Name Match (if email is missing)
+      const nameMatch = uA.fullName && uB.fullName && uA.fullName.toLowerCase() === uB.fullName.toLowerCase();
+
+      if (emailMatch) {
+        suggestions.push({
+          userA: { id: uA.id, publicId: uA.publicId, fullName: uA.fullName, email: uA.email },
+          userB: { id: uB.id, publicId: uB.publicId, fullName: uB.fullName, email: uB.email },
+          reason: `Identical email address`,
+          similarity: 100,
+        });
+      } else if (nameMatch) {
+        suggestions.push({
+          userA: { id: uA.id, publicId: uA.publicId, fullName: uA.fullName, email: uA.email },
+          userB: { id: uB.id, publicId: uB.publicId, fullName: uB.fullName, email: uB.email },
+          reason: `Identical full name`,
+          similarity: 90,
+        });
+      }
+    }
+  }
+  return suggestions;
+}
+
+export async function mergeUsersV2(sourceId: string, targetId: string) {
+  if (sourceId === targetId) throw new Error('Cannot merge a user into themselves.');
+
+  const [sourceResult, targetResult] = await Promise.all([
+    getPersonWithConnections(sourceId).catch(() => null),
+    getPersonWithConnections(targetId).catch(() => null),
+  ]);
+  
+  const sourceUser = sourceResult?.node;
+  const targetUser = targetResult?.node;
+
+  if (!sourceUser || !targetUser) throw new Error('Source or target user does not exist.');
+
+  // Combine fields
+  const combinedTags = Array.from(new Set([...(sourceUser.tags || []), ...(targetUser.tags || [])]));
+  const combinedConnectors = Array.from(new Set([...(sourceUser.sourceConnectors || []), ...(targetUser.sourceConnectors || [])]));
+  const sourceMeta = (sourceUser.metadata as any) || {};
+  const targetMeta = (targetUser.metadata as any) || {};
+  const combinedMeta = {
+    ...sourceMeta,
+    ...targetMeta,
+    mergedFrom: sourceUser.publicId,
+    mergedAt: new Date().toISOString(),
+  };
+
+  await mergeDuplicateNodes(sourceId, targetId, combinedTags, combinedConnectors, combinedMeta);
+
+  return { id: targetId };
+}
