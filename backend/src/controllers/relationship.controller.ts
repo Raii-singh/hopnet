@@ -168,3 +168,57 @@ export async function softDeleteRelationship(
     next(err);
   }
 }
+
+// ── POST /api/v2/relationships/:id/restore ────────────────────────────────
+// Param: id (UUID)
+//
+// Normal path (both endpoints active):
+//   HTTP 200 OK
+//   RelationshipWithWeight
+//
+// Edge case path (endpoint still soft-deleted):
+//   HTTP 200 OK
+//   {
+//     "status": "restored_pending_endpoint",
+//     "message": "<descriptive message>",
+//     "id": "<relationship UUID>"
+//   }
+//
+// Errors:
+//   404 RELATIONSHIP_NOT_FOUND
+//   409 RELATIONSHIP_NOT_DELETED  (already active)
+export async function restoreRelationship(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  const id = req.params['id'] as string;
+  try {
+    const rel = await relSvc.restoreRelationship(id);
+    // Normal path: relationship is restored and both endpoints are active.
+    res.json(rel);
+  } catch (err) {
+    // Special case: RELATIONSHIP_RESTORED_BUT_ENDPOINT_DELETED
+    // The restore physically succeeded but the relationship is still inactive
+    // because at least one endpoint is soft-deleted.
+    // Approved contract: HTTP 200 OK with status:"restored_pending_endpoint".
+    if (
+      err instanceof HOPNetError &&
+      err.code === 'RELATIONSHIP_RESTORED_BUT_ENDPOINT_DELETED'
+    ) {
+      res.status(200).json({
+        status: 'restored_pending_endpoint',
+        message:
+          'The relationship has been restored (deletedAt cleared). ' +
+          'It will become visible in normal graph reads automatically ' +
+          'once all endpoint nodes are also restored.',
+        id,
+        ...(err.details ?? {}),
+      });
+      return;
+    }
+    // All other errors (RELATIONSHIP_NOT_FOUND, RELATIONSHIP_NOT_DELETED, etc.)
+    // are passed to the shared error handler.
+    next(err);
+  }
+}
