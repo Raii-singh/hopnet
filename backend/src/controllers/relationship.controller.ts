@@ -83,3 +83,88 @@ export async function getRelationshipById(
   res: Response,
   next: NextFunction
 ): Promise<void> {
+  try {
+    const rel = await relSvc.getRelationshipById(req.params['id'] as string);
+    res.json(rel);
+  } catch (err) {
+    next(err);
+  }
+}
+
+// ── GET /api/v2/relationships/between/:sourceId/:targetId ─────────────────
+// Params: sourceId, targetId (UUIDs)
+// Returns all active relationships between the two nodes (either direction).
+// Response 200: { data: RelationshipWithWeight[], count: number }
+export async function getRelationshipsBetween(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const rels = await relSvc.getRelationshipsBetween(
+      req.params['sourceId'] as string,
+      req.params['targetId'] as string
+    );
+    res.json({ data: rels, count: rels.length });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// ── GET /api/v2/relationships/by-person/:personId ─────────────────────────
+// Param: personId (UUID)
+// Query: ?edgeKind=REAL_EDGE|DEMO_EDGE
+// Response 200: { data: RelationshipWithWeight[], count: number }
+export async function listRelationshipsByPerson(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const edgeKind = req.query['edgeKind'] as EdgeKind | undefined;
+    const rels = await relSvc.listRelationshipsByPerson(
+      req.params['personId'] as string,
+      { edgeKind }
+    );
+    res.json({ data: rels, count: rels.length });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// ── PATCH /api/v2/relationships/:id ───────────────────────────────────────
+// Param: id (UUID)
+// Body: UpdateRelationshipInput (sparse)
+// Response 200: RelationshipWithWeight  |  404  |  409  |  422
+export async function updateRelationship(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const rel = await relSvc.updateRelationship(
+      req.params['id'] as string,
+      req.body
+    );
+    res.json(rel);
+  } catch (err) {
+    next(err);
+  }
+}
+
+// ── DELETE /api/v2/relationships/:id ──────────────────────────────────────
+// Param: id (UUID)
+// Soft-delete only. Preserves the relationship physically.
+// Response 204 No Content  |  404  |  409 RELATIONSHIP_ALREADY_DELETED
+export async function softDeleteRelationship(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    await relSvc.softDeleteRelationship(req.params['id'] as string);
+    res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
+}
