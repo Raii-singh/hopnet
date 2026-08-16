@@ -4,7 +4,8 @@ import path from "path";
 const nextConfig: NextConfig = {
   turbopack: {
     resolveAlias: {
-      "@": path.resolve(__dirname, "src"),
+      "@": path.join(process.cwd(), "src"),
+      "@hopnet/shared/graph-engine": "./src/index.ts",
     },
   },
 };
