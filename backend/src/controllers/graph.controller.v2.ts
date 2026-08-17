@@ -83,3 +83,70 @@ export async function getNode(
   res: Response,
   next: NextFunction
 ): Promise<void> {
+  try {
+    const result = await getNodeProfile(req.params['id'] as string);
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+}
+
+// ── GET /api/v2/graph/path ───────────────────────────────────────────────────────
+// Query params:
+//   from         string UUID    (required)
+//   to           string UUID    (required)
+//   maxDepth     integer        default 6, clamped [1,6]
+//   includeDemo  boolean        default true
+//
+// Path honors the HOPNet traversal constraint (collegeConstraint).
+// A physically existing path that violates REAL/DEMO rules is NOT returned.
+//
+// totalCost = Dijkstra accumulated friction (sum of 1-weight per edge).
+//             Lower = stronger/more-trusted path.
+//
+// Response 200: PathResponse
+// Response 400: VALIDATION_ERROR (missing/equal from|to)
+export async function getPath(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const from        = (req.query['from'] as string) ?? '';
+    const to          = (req.query['to'] as string)   ?? '';
+    const maxDepth    = parseInt(req.query['maxDepth'] as string, 10) || 6;
+    const includeDemo = req.query['includeDemo'] !== 'false';
+    const filters     = parseFilters(req);
+
+    const result = await findPath(from, to, maxDepth, includeDemo, filters);
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+}
+// ── WORKSPACE: Merge & Duplicate suggestions (Step 19) ───────────────
+
+import { detectDuplicatesV2, mergeUsersV2 } from '../services/graph.service.v2';
+
+export async function getDuplicates(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const suggestions = await detectDuplicatesV2();
+    res.json({ suggestions });
+  } catch (err: any) {
+    next(err);
+  }
+}
+
+export async function mergeUserIdentities(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { sourceId, targetId } = req.body;
+    if (!sourceId || !targetId) {
+      res.status(400).json({ error: 'sourceId and targetId are required' });
+      return;
+    }
+    const targetNode = await mergeUsersV2(sourceId, targetId);
+    res.json({ success: true, targetNode });
+  } catch (err: any) {
+    next(err);
+  }
+}
