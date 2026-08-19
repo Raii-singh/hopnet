@@ -8,7 +8,12 @@ import imdbRouter from './routes/imdb.routes';
 
 const app = express();
 
-app.use(cors({ origin: 'http://localhost:3000' }));
+const allowedOrigins = [
+  'http://localhost:3000',
+  process.env.FRONTEND_URL,
+].filter(Boolean) as string[];
+
+app.use(cors({ origin: allowedOrigins }));
 app.use(express.json());
 
 // Health check
