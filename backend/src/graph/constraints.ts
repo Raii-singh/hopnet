@@ -8,7 +8,7 @@
  */
 
 import { NodeType } from '@prisma/client';
-import { isTraversalAllowed as engineIsTraversalAllowed, findConstraintViolation as engineFindConstraintViolation } from '@hopnet/shared/graph-engine';
+import { isTraversalAllowed as engineIsTraversalAllowed, findConstraintViolation as engineFindConstraintViolation } from '../../../shared/graph-engine/src';
 
 export interface LightNode {
   id: string;

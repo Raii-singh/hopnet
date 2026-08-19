@@ -1,6 +1,6 @@
 import { LightNode } from './constraints';
 import { NodeType } from '@prisma/client';
-import { dijkstra as engineDijkstra, reconstructPath as engineReconstructPath } from '@hopnet/shared/graph-engine';
+import { dijkstra as engineDijkstra, reconstructPath as engineReconstructPath } from '../../../shared/graph-engine/src';
 
 export interface DijkstraNode extends LightNode {
   id: string;

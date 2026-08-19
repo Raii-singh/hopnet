@@ -9,7 +9,7 @@
 
 import { Router, Request, Response } from 'express';
 import { loadImdbGraph } from '../graph-providers/imdb/imdb.adapter';
-import { dijkstra, reconstructPath, EngineNode, EngineEdge } from '@hopnet/shared/graph-engine';
+import { dijkstra, reconstructPath, EngineNode, EngineEdge } from '../../../shared/graph-engine/src';
 
 const router = Router();
 

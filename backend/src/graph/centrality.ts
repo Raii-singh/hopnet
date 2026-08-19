@@ -1,5 +1,5 @@
 import { NodeType, EdgeType } from '@prisma/client';
-import { computeScores as engineComputeScores, rankNodes as engineRankNodes } from '@hopnet/shared/graph-engine';
+import { computeScores as engineComputeScores, rankNodes as engineRankNodes } from '../../../shared/graph-engine/src';
 
 export interface ScoringNode {
   id: string;

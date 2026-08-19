@@ -8,7 +8,7 @@
 
 import fs from 'fs';
 import path from 'path';
-import { EngineNode, EngineEdge } from '@hopnet/shared/graph-engine';
+import { EngineNode, EngineEdge } from '../../../../shared/graph-engine/src';
 
 const PROCESSED_PATH = path.resolve(__dirname, '../../../../database/graph-providers/imdb/datasets/processed/imdb_graph.json');
 

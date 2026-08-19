@@ -1,6 +1,6 @@
 import { LightNode } from './constraints';
 import { NodeType, EdgeType } from '@prisma/client';
-import { bfsSubgraph as engineBfsSubgraph } from '@hopnet/shared/graph-engine';
+import { bfsSubgraph as engineBfsSubgraph } from '../../../shared/graph-engine/src';
 
 export interface BFSNode extends LightNode {
   id: string;
