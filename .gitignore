@@ -11,18 +11,3 @@ Thumbs.db
 *.tsbuildinfo
 prisma/dev.db
 bin/
-
-# AI/editor assistant config
-frontend/CLAUDE.md
-frontend/AGENTS.md
-
-# Developer scratch files
-promt.cpp
-
-# OS-specific and one-off scripts
-scripts/build_git_history.ps1
-scripts/fedora_setup.sh
-scripts/imdb/
-
-# Large raw datasets — use processed versions committed under database/
-database/graph-providers/imdb/datasets/raw/
