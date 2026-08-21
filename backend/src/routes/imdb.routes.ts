@@ -83,3 +83,40 @@ router.get('/path', (req: Request, res: Response) => {
     }
 
     res.json({
+      nodes: pathNodes,
+      links: pathLinks,
+      hops: pathNodeIds.length - 1
+    });
+
+  } catch (error: any) {
+    res.status(500).json({ error: 'Failed to compute shortest path', details: error.message });
+  }
+});
+
+// ── GET /api/imdb/stats ──────────────────────────────────────────────────────
+router.get('/stats', (req: Request, res: Response) => {
+  try {
+    const graphData = loadImdbGraph();
+
+    const avgAppearances = graphData.nodes.reduce((sum, n) => sum + (n.metadata?.appearances || 0), 0) / (graphData.nodes.length || 1);
+    const maxAppearances = Math.max(...graphData.nodes.map(n => n.metadata?.appearances || 0));
+
+    res.json({
+      totalActors: graphData.nodes.length,
+      totalCollaborations: graphData.links.length,
+      avgAppearances: Math.round(avgAppearances * 10) / 10,
+      maxAppearances,
+      provider: 'imdb',
+      capabilities: {
+        readOnly: true,
+        supportsCRUD: false,
+        supportsPathfinding: true,
+        supportsCentrality: true
+      }
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: 'Failed to fetch graph stats', details: error.message });
+  }
+});
+
+export default router;
