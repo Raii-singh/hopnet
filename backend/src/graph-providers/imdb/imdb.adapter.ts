@@ -83,3 +83,35 @@ const FALLBACK_GRAPH: ImdbGraphData = {
     }
   ],
   links: [
+    {
+      id: "e_fallback_1",
+      source: "nm0000102",
+      target: "nm0000190",
+      relationshipType: "Co-Starred",
+      trustScore: 0.85,
+      interactionFrequency: 2,
+      connectorSource: "imdb",
+      edgeType: "REAL_EDGE",
+      weight: 0.85
+    }
+  ]
+};
+
+export function loadImdbGraph(): ImdbGraphData {
+  try {
+    if (fs.existsSync(PROCESSED_PATH)) {
+      const content = fs.readFileSync(PROCESSED_PATH, 'utf8');
+      const parsed = JSON.parse(content);
+      return {
+        nodes: parsed.nodes || [],
+        links: parsed.edges || []
+      };
+    } else {
+      console.warn(`[IMDb Adapter] Processed graph not found at ${PROCESSED_PATH}. Using fallback dataset. Please run scripts/imdb/run_pipeline.ps1`);
+      return FALLBACK_GRAPH;
+    }
+  } catch (error) {
+    console.error('[IMDb Adapter] Failed to load processed IMDb graph:', error);
+    return FALLBACK_GRAPH;
+  }
+}
