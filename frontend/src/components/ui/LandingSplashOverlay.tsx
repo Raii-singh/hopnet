@@ -83,3 +83,47 @@ export default function LandingSplashOverlay() {
         <h1 style={{
           margin: '0 0 4px 0',
           fontSize: '32px',
+          fontWeight: 800,
+          letterSpacing: '-0.02em',
+          background: 'linear-gradient(135deg, #ffffff, #94a3b8)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          backgroundClip: 'text',
+        }}>
+          HOP<span style={{ WebkitTextFillColor: 'rgba(255,255,255,0.7)', fontWeight: 400 }}>Net</span>
+        </h1>
+
+        <p style={{ margin: '0 0 28px 0', fontSize: '11px', color: 'var(--silver-400)', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600 }}>
+          High-Order Path Network Intelligence
+        </p>
+
+        {/* Progress Bar Line Track - Thin 2px & 70% width */}
+        <div style={{
+          width: '70%',
+          maxWidth: '850px',
+          height: 2,
+          background: 'rgba(255, 255, 255, 0.12)',
+          borderRadius: 100,
+          overflow: 'hidden',
+          marginBottom: '16px',
+          position: 'relative',
+        }}>
+          <div style={{
+            width: `${progress}%`,
+            height: '100%',
+            background: 'linear-gradient(90deg, #3b82f6, #818cf8, #ffffff)',
+            borderRadius: 100,
+            transition: 'width 0.1s ease-out',
+            boxShadow: '0 0 12px rgba(255, 255, 255, 0.8)',
+          }} />
+        </div>
+
+        {/* Status text */}
+        <div style={{ fontSize: '11px', fontFamily: 'monospace', color: 'var(--silver-300)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: progress >= 90 ? '#3b82f6' : '#94a3b8', boxShadow: '0 0 6px currentColor' }} />
+          <span>{Math.round(progress)}% — {progress >= 90 ? 'Finishing Graph Mesh...' : 'Loading Network Mesh...'}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
