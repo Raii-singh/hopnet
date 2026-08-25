@@ -83,3 +83,46 @@ export default function SudoLoginModal({ onClose }: { onClose: () => void }) {
               width: '100%',
               padding: '10px 12px',
               background: 'rgba(0,0,0,0.3)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: '6px',
+              color: '#fff',
+              outline: 'none',
+              fontFamily: 'monospace',
+            }}
+          />
+
+          {error && <div style={{ color: '#ef4444', fontSize: '12px' }}>{error}</div>}
+
+          <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+            <button
+              type="button"
+              className="glass-button"
+              onClick={onClose}
+              style={{ flex: 1, padding: '8px', fontSize: '13px' }}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              style={{
+                flex: 1,
+                padding: '8px',
+                fontSize: '13px',
+                background: '#3b82f6',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '6px',
+                fontWeight: 600,
+                cursor: loading ? 'not-allowed' : 'pointer',
+                opacity: loading ? 0.7 : 1,
+              }}
+            >
+              {loading ? 'Authenticating...' : 'Authenticate'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
