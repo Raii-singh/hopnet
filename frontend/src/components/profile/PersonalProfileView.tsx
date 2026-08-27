@@ -83,3 +83,88 @@ export default function PersonalProfileView({ profile, databaseNodes, visibleLin
     });
 
   // Extract optional metadata fields cleanly
+  const bio = profile.metadata?.bio || profile.metadata?.description || null;
+  const location = profile.metadata?.location || null;
+  const education = profile.metadata?.education || null;
+  const website = profile.metadata?.website || null;
+  const githubUrl = profile.metadata?.githubUrl || (profile.username ? `https://github.com/${profile.username}` : null);
+  const twitterHandle = profile.twitterHandle || profile.metadata?.twitterHandle || null;
+
+  // Build client-side neighborhood graph
+  useEffect(() => {
+    if (!profile) return;
+    const adj = new Map<string, { neighborId: string; edge: GraphEdge }[]>();
+    for (const edge of visibleLinks) {
+      const src = typeof edge.source === 'string' ? edge.source : (edge.source as any).id;
+      const tgt = typeof edge.target === 'string' ? edge.target : (edge.target as any).id;
+      if (!adj.has(src)) adj.set(src, []);
+      if (!adj.has(tgt)) adj.set(tgt, []);
+      adj.get(src)!.push({ neighborId: tgt, edge });
+      adj.get(tgt)!.push({ neighborId: src, edge });
+    }
+
+    const visitedNodes = new Set<string>([profile.id]);
+    const visitedEdges = new Set<string>();
+    const queue: { nodeId: string; hop: number }[] = [{ nodeId: profile.id, hop: 0 }];
+
+    while (queue.length > 0) {
+      const { nodeId, hop } = queue.shift()!;
+      if (hop >= localDepth) continue;
+
+      const neighbors = adj.get(nodeId) || [];
+      for (const { neighborId, edge } of neighbors) {
+        visitedEdges.add(edge.id);
+        if (!visitedNodes.has(neighborId)) {
+          visitedNodes.add(neighborId);
+          queue.push({ nodeId: neighborId, hop: hop + 1 });
+        }
+      }
+    }
+
+    const localNodes = databaseNodes.filter(n => visitedNodes.has(n.id)).map(n => ({ ...n }));
+    const localLinks = visibleLinks.filter(e => visitedEdges.has(e.id)).map(e => ({ ...e }));
+
+    setNeighborhoodNodes(localNodes);
+    setNeighborhoodLinks(localLinks);
+
+    setTimeout(() => {
+      miniGraphRef.current?.zoomToFit(400, 30);
+    }, 300);
+  }, [profile, localDepth, databaseNodes, visibleLinks]);
+
+  // Pathfinder Autocomplete search
+  const handleTargetSearch = (q: string) => {
+    setSearchTarget(q);
+    if (q.trim().length < 2) {
+      setSearchResults([]);
+      return;
+    }
+    const results = databaseNodes.filter(n =>
+      n.id !== profile.id &&
+      (n.fullName.toLowerCase().includes(q.toLowerCase()) ||
+        n.publicId.toLowerCase().includes(q.toLowerCase()) ||
+        n.company?.toLowerCase().includes(q.toLowerCase()))
+    ).slice(0, 5);
+    setSearchResults(results);
+  };
+
+  const handleTracePath = async (targetNode: GraphNode) => {
+    setSelectedTarget(targetNode);
+    setSearchResults([]);
+    setSearchTarget(targetNode.fullName);
+
+    try {
+      const pathRes = await fetchPath(profile.id, targetNode.id);
+      if (pathRes && pathRes.path) {
+        const mappedPath = pathRes.path
+          .map(id => databaseNodes.find(n => n.id === id))
+          .filter(Boolean) as GraphNode[];
+        setTracedPath(mappedPath);
+        setPathCost(pathRes.totalCost);
+
+        const nodeIds = new Set(pathRes.path);
+        const edgeIds = new Set<string>();
+        for (let i = 0; i < pathRes.path.length - 1; i++) {
+          const src = pathRes.path[i];
+          const tgt = pathRes.path[i + 1];
+          const edge = visibleLinks.find(e => {
