@@ -168,3 +168,88 @@ export default function PersonalProfileView({ profile, databaseNodes, visibleLin
           const src = pathRes.path[i];
           const tgt = pathRes.path[i + 1];
           const edge = visibleLinks.find(e => {
+            const s = typeof e.source === 'string' ? e.source : (e.source as any).id;
+            const t = typeof e.target === 'string' ? e.target : (e.target as any).id;
+            return (s === src && t === tgt) || (s === tgt && t === src);
+          });
+          if (edge) edgeIds.add(edge.id);
+        }
+        setHighlightedNodeIds(nodeIds);
+        setHighlightedEdgeIds(edgeIds);
+
+        if (!neighborhoodNodes.some(n => n.id === targetNode.id)) {
+          setLocalDepth(2);
+        }
+      } else {
+        setTracedPath([]);
+        setPathCost(null);
+        setHighlightedNodeIds(new Set());
+        setHighlightedEdgeIds(new Set());
+      }
+    } catch {
+      setTracedPath([]);
+    }
+  };
+
+  const handleClearPath = () => {
+    setSelectedTarget(null);
+    setSearchTarget('');
+    setTracedPath([]);
+    setPathCost(null);
+    setHighlightedNodeIds(new Set());
+    setHighlightedEdgeIds(new Set());
+  };
+
+  const getNodeColor = useCallback((node: any) => {
+    const n = node as GraphNode;
+    if (n.id === profile.id) return '#ffffff';
+    if (highlightedNodeIds.has(n.id)) return '#ffffff';
+    return n.nodeType === 'REAL' ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.2)';
+  }, [profile.id, highlightedNodeIds]);
+
+  const getNodeSize = useCallback((node: any) => {
+    const n = node as GraphNode;
+    const base = n.nodeType === 'REAL' ? 4 + (n.influenceScore / 100) * 3 : 3;
+    if (n.id === profile.id) return base * 1.5;
+    if (highlightedNodeIds.has(n.id)) return base * 1.3;
+    return base;
+  }, [profile.id, highlightedNodeIds]);
+
+  const getLinkColor = useCallback((link: any) => {
+    const e = link as GraphEdge;
+    if (highlightedEdgeIds.has(e.id)) return '#ffffff';
+    return e.edgeType === 'REAL_EDGE' ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.06)';
+  }, [highlightedEdgeIds]);
+
+  const getLinkWidth = useCallback((link: any) => {
+    const e = link as GraphEdge;
+    if (highlightedEdgeIds.has(e.id)) return 2.5;
+    return e.edgeType === 'REAL_EDGE' ? 0.9 : 0.5;
+  }, [highlightedEdgeIds]);
+
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: '24px', alignItems: 'start' }}>
+      
+      {/* ─────────────────────────────────────────────────────────────────── */}
+      {/* ── LEFT HALF: POLISHED LINKEDIN-STYLE PROFESSIONAL PROFILE ────────── */}
+      {/* ─────────────────────────────────────────────────────────────────── */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+        
+        {/* Profile Card Header */}
+        <div className="glass-panel" style={{ padding: '24px', position: 'relative', overflow: 'hidden' }}>
+          {/* Subtle Top Accent */}
+          <div style={{
+            position: 'absolute', top: 0, left: 0, right: 0, height: 3,
+            background: isReal
+              ? 'linear-gradient(90deg, #ffffff, var(--silver-400), #ffffff)'
+              : 'linear-gradient(90deg, #f59e0b, #d97706)',
+          }} />
+
+          <div style={{ display: 'flex', gap: '18px', alignItems: 'center' }}>
+            {/* Avatar Circle */}
+            <div style={{
+              width: 80, height: 80, borderRadius: '50%', flexShrink: 0,
+              background: isReal
+                ? 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02))'
+                : 'linear-gradient(135deg, rgba(245,158,11,0.15), rgba(180,83,9,0.15))',
+              border: `2px solid ${isReal ? 'rgba(255,255,255,0.25)' : 'rgba(245,158,11,0.4)'}`,
