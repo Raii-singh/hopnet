@@ -338,3 +338,88 @@ export default function PersonalProfileView({ profile, databaseNodes, visibleLin
         {/* Company & Footprint Section */}
         <div className="glass-panel" style={{ padding: '20px 24px' }}>
           <div className="text-label" style={{ marginBottom: '12px', color: '#ffffff', fontWeight: 700 }}>Company & Industry Footprint</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <div style={{ background: 'rgba(0,0,0,0.15)', padding: '10px 12px', borderRadius: '6px' }}>
+              <div className="text-label" style={{ fontSize: '9px' }}>Company</div>
+              <div style={{ fontSize: '13px', fontWeight: 600, color: '#ffffff', marginTop: '2px' }}>
+                {profile.company || 'Not Specified'}
+              </div>
+            </div>
+            <div style={{ background: 'rgba(0,0,0,0.15)', padding: '10px 12px', borderRadius: '6px' }}>
+              <div className="text-label" style={{ fontSize: '9px' }}>Cluster Hub</div>
+              <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--silver-200)', marginTop: '2px' }}>
+                {profile.cluster || 'Unclustered'}
+              </div>
+            </div>
+          </div>
+
+          <div style={{ marginTop: '12px', fontSize: '11px', color: 'var(--silver-400)' }}>
+            Data Ingestion Source: <span className="text-mono" style={{ color: '#ffffff' }}>{profile.sourceConnectors?.join(', ') || 'Manual Input'}</span>
+          </div>
+        </div>
+
+        {/* Education & Credentials */}
+        <div className="glass-panel" style={{ padding: '20px 24px' }}>
+          <div className="text-label" style={{ marginBottom: '10px', color: '#ffffff', fontWeight: 700 }}>Education & Credentials</div>
+          {education ? (
+            <div style={{ fontSize: '13px', color: 'var(--silver-200)', fontWeight: 500 }}>
+              🎓 {education}
+            </div>
+          ) : (
+            <div style={{ fontSize: '12px', color: 'var(--silver-500)', fontStyle: 'italic' }}>
+              No education records indexed.
+            </div>
+          )}
+        </div>
+
+        {/* Skills & Tag Pills */}
+        <div className="glass-panel" style={{ padding: '20px 24px' }}>
+          <div className="text-label" style={{ marginBottom: '10px', color: '#ffffff', fontWeight: 700 }}>Skills & Domain Tags</div>
+          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+            {profile.tags && profile.tags.length > 0 ? (
+              profile.tags.map(tag => (
+                <span key={tag} style={{
+                  padding: '3px 10px', borderRadius: '100px',
+                  fontSize: '11px', fontWeight: 500,
+                  background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)',
+                  color: '#ffffff',
+                }}>
+                  {tag}
+                </span>
+              ))
+            ) : (
+              <span style={{ fontSize: '12px', color: 'var(--silver-500)', fontStyle: 'italic' }}>
+                No tags registered.
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Public Social & Contact Handles */}
+        <div className="glass-panel" style={{ padding: '20px 24px' }}>
+          <div className="text-label" style={{ marginBottom: '12px', color: '#ffffff', fontWeight: 700 }}>Public Handles & Contact</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {[
+              { label: 'E-mail Address', val: profile.email, link: profile.email ? `mailto:${profile.email}` : null },
+              { label: 'Phone Number', val: profile.phone, link: null },
+              { label: 'Website', val: website, link: website },
+              { label: 'LinkedIn', val: profile.linkedinUrl ? 'linkedin.com/in/' + profile.publicId : null, link: profile.linkedinUrl },
+              { label: 'GitHub', val: githubUrl ? 'github.com/' + (profile.username || profile.publicId) : null, link: githubUrl },
+              { label: 'X / Twitter', val: twitterHandle ? '@' + twitterHandle.replace('@','') : null, link: twitterHandle ? `https://twitter.com/${twitterHandle.replace('@','')}` : null },
+            ].map(item => (
+              <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', borderBottom: '1px solid rgba(255,255,255,0.03)', paddingBottom: '8px' }}>
+                <span className="text-label">{item.label}</span>
+                {item.val && item.link ? (
+                  <a href={item.link} target="_blank" rel="noreferrer" style={{ color: '#ffffff', textDecoration: 'none', fontWeight: 600 }} className="hover-link">
+                    {item.val} ↗
+                  </a>
+                ) : item.val ? (
+                  <span className="text-mono" style={{ color: 'var(--silver-200)' }}>{item.val}</span>
+                ) : (
+                  <span style={{ color: 'var(--silver-600)', fontSize: '11px' }}>Not indexed</span>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
