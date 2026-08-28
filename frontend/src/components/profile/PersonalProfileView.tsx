@@ -253,3 +253,88 @@ export default function PersonalProfileView({ profile, databaseNodes, visibleLin
                 ? 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02))'
                 : 'linear-gradient(135deg, rgba(245,158,11,0.15), rgba(180,83,9,0.15))',
               border: `2px solid ${isReal ? 'rgba(255,255,255,0.25)' : 'rgba(245,158,11,0.4)'}`,
+              boxShadow: '0 0 25px rgba(255,255,255,0.06)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: '32px', fontWeight: 800, color: isReal ? '#ffffff' : '#f59e0b',
+            }}>
+              {profile.fullName.charAt(0)}
+            </div>
+
+            <div style={{ flex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                <h1 style={{ fontSize: '22px', fontWeight: 800, color: 'var(--silver-100)', letterSpacing: '-0.02em', margin: 0 }}>
+                  {profile.fullName}
+                </h1>
+                <span className={`badge ${isReal ? 'badge-real' : 'badge-demo'}`}>
+                  {isReal ? '● REAL' : '○ DEMO'}
+                </span>
+              </div>
+
+              <div className="text-mono" style={{ fontSize: '11px', color: 'var(--silver-400)', marginTop: '3px' }}>
+                {profile.publicId} {profile.username && `· @${profile.username}`}
+              </div>
+
+              <div style={{ fontSize: '13px', fontWeight: 600, color: '#ffffff', marginTop: '6px' }}>
+                {profile.company ? `${profile.company}` : profile.cluster ? `${profile.cluster} Cluster Member` : 'Professional Profile'}
+              </div>
+
+              {location && (
+                <div style={{ fontSize: '11.5px', color: 'var(--silver-400)', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  📍 {location}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Action buttons */}
+          <div style={{ display: 'flex', gap: '8px', marginTop: '20px', flexWrap: 'wrap' }}>
+            <button
+              className="glass-button font-semibold"
+              onClick={() => { setPrimaryNode(profile.id); router.push('/'); }}
+              style={{ flex: 1, justifyContent: 'center', background: 'rgba(255,255,255,0.06)', color: '#ffffff' }}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/>
+              </svg>
+              Focus in Graph
+            </button>
+            <button
+              className="glass-button font-semibold"
+              onClick={() => setPrimaryNode(profile.id)}
+              style={{
+                flex: 1, justifyContent: 'center',
+                background: (primaryNodeId === profile.id || primaryNodeId === profile.publicId) ? 'rgba(234,179,8,0.15)' : 'rgba(255,255,255,0.06)',
+                color: '#eab308', borderColor: 'rgba(234,179,8,0.3)'
+              }}
+            >
+              {(primaryNodeId === profile.id || primaryNodeId === profile.publicId) ? '⭐ Primary Identity' : '⭐ Set Primary'}
+            </button>
+            <button
+              className="glass-button"
+              disabled={!isAdmin}
+              title={!isAdmin ? 'SUDO Mode Required' : ''}
+              onClick={() => setEditingNode(profile)}
+              style={{ padding: '6px 14px', color: '#ffffff', opacity: !isAdmin ? 0.4 : 1, cursor: !isAdmin ? 'not-allowed' : 'pointer' }}
+            >
+              ✏️ Edit {!isAdmin && '🔒'}
+            </button>
+          </div>
+        </div>
+
+        {/* Professional About / Bio Section */}
+        <div className="glass-panel" style={{ padding: '20px 24px' }}>
+          <div className="text-label" style={{ marginBottom: '10px', color: '#ffffff', fontWeight: 700 }}>About & Overview</div>
+          {bio ? (
+            <p style={{ color: 'var(--silver-300)', fontSize: '13px', lineHeight: 1.6, margin: 0 }}>
+              {bio}
+            </p>
+          ) : (
+            <div style={{ fontSize: '12px', color: 'var(--silver-500)', fontStyle: 'italic' }}>
+              No biography summary registered for this profile.
+            </div>
+          )}
+        </div>
+
+        {/* Company & Footprint Section */}
+        <div className="glass-panel" style={{ padding: '20px 24px' }}>
+          <div className="text-label" style={{ marginBottom: '12px', color: '#ffffff', fontWeight: 700 }}>Company & Industry Footprint</div>
