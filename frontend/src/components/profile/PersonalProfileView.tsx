@@ -423,3 +423,88 @@ export default function PersonalProfileView({ profile, databaseNodes, visibleLin
           </div>
         </div>
 
+      </div>
+
+
+      {/* ─────────────────────────────────────────────────────────────────── */}
+      {/* ── RIGHT HALF: HOPNET RELATIONSHIP INTELLIGENCE ENGINE ─────────── */}
+      {/* ─────────────────────────────────────────────────────────────────── */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+
+        {/* Intelligence Engine Header Card */}
+        <div className="glass-panel" style={{ padding: '20px 24px', background: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.12)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.5">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            </svg>
+            <h2 style={{ fontSize: '16px', fontWeight: 800, color: '#ffffff', margin: 0 }}>
+              HOPNet Relationship Intelligence
+            </h2>
+          </div>
+          <p style={{ color: 'var(--silver-400)', fontSize: '12px', lineHeight: 1.4, margin: 0 }}>
+            Graph-aware metrics, reachability, centrality, and trust topology calculated directly from active Neo4j relationships.
+          </p>
+        </div>
+
+        {/* Network Metrics Grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+          {[
+            { label: 'Total Connections', val: totalConn, color: '#ffffff' },
+            { label: 'Real Connections', val: profile.realConnections, color: '#ffffff' },
+            { label: 'Demo Connections', val: profile.demoConnections, color: 'var(--silver-500)' },
+            { label: 'Influence Score', val: profile.influenceScore, color: '#ffffff' },
+            { label: 'Strategic Reach', val: reachabilityScore, color: 'var(--silver-200)' },
+            { label: 'Network Centrality', val: `${Math.round((profile.centrality || 0) * 100)}%`, color: '#ffffff' },
+            { label: 'Avg Path Distance', val: profile.avgPathDistance?.toFixed(1) || '—', color: 'var(--silver-300)' },
+            { label: 'Cluster Placement', val: profile.cluster || '—', color: 'var(--silver-400)' },
+          ].map(m => (
+            <div key={m.label} className="glass-panel" style={{ padding: '12px 14px' }}>
+              <div className="text-label" style={{ marginBottom: '4px', fontSize: '9.5px' }}>{m.label}</div>
+              <div className="text-mono" style={{ fontSize: '18px', fontWeight: 700, color: m.color }}>{m.val}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Intelligence Derived Insights */}
+        <div className="glass-panel" style={{ padding: '20px 24px' }}>
+          <div className="text-label" style={{ marginBottom: '14px', color: '#ffffff', fontWeight: 700 }}>Derived Network Insights</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+            <div style={{ background: 'rgba(0,0,0,0.2)', padding: '10px 12px', borderRadius: '6px' }}>
+              <div className="text-label" style={{ fontSize: '9px' }}>Classification</div>
+              <div style={{ fontSize: '12px', fontWeight: 700, color: '#ffffff', marginTop: '2px' }}>{connectorClassification}</div>
+            </div>
+            <div style={{ background: 'rgba(0,0,0,0.2)', padding: '10px 12px', borderRadius: '6px' }}>
+              <div className="text-label" style={{ fontSize: '9px' }}>Warm Intro Success</div>
+              <div style={{ fontSize: '12px', fontWeight: 700, color: '#ffffff', marginTop: '2px' }}>{warmIntroPct}%</div>
+            </div>
+            <div style={{ background: 'rgba(0,0,0,0.2)', padding: '10px 12px', borderRadius: '6px' }}>
+              <div className="text-label" style={{ fontSize: '9px' }}>Influence Dissemination</div>
+              <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--silver-300)', marginTop: '2px' }}>{propagationScore}%</div>
+            </div>
+            <div style={{ background: 'rgba(0,0,0,0.2)', padding: '10px 12px', borderRadius: '6px' }}>
+              <div className="text-label" style={{ fontSize: '9px' }}>Best Bridge Node</div>
+              <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--silver-200)', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {bestBridge ? bestBridge.fullName : '—'}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Strongest Trust Links */}
+        <div className="glass-panel" style={{ padding: '20px 24px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+            <div className="text-label" style={{ color: '#ffffff', fontWeight: 700 }}>Strongest Direct Trust Links</div>
+            <span className="text-mono" style={{ fontSize: '11px', color: 'var(--silver-500)' }}>{profileEdges.length} links</span>
+          </div>
+
+          {strongestLinks.length === 0 ? (
+            <div style={{ fontSize: '12px', color: 'var(--silver-500)', fontStyle: 'italic' }}>
+              No direct relationships registered for this person.
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {strongestLinks.map(({ edge, otherPerson }, idx) => (
+                <div key={edge.id} style={{
+                  display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px',
+                  background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px',
+                }}>
