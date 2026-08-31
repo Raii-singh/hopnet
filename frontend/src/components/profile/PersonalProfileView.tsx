@@ -508,3 +508,80 @@ export default function PersonalProfileView({ profile, databaseNodes, visibleLin
                   display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px',
                   background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px',
                 }}>
+                  <span className="text-mono" style={{ fontSize: '11px', color: 'var(--silver-500)', width: 16 }}>#{idx + 1}</span>
+                  <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--silver-100)', flex: 1 }}>
+                    {otherPerson ? otherPerson.fullName : 'Unknown Node'}
+                  </span>
+                  <span className="badge badge-real" style={{ fontSize: '9px' }}>{edge.relationshipType}</span>
+                  <span className="text-mono" style={{ fontSize: '12px', fontWeight: 700, color: '#ffffff' }}>
+                    {Math.round(edge.weight * 100)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Neighborhood Force Canvas & Pathfinder */}
+        <div className="glass-panel" style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', height: 380 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 16px', borderBottom: '1px solid var(--glass-border)', background: 'rgba(0,0,0,0.2)' }}>
+            <span className="text-label" style={{ color: '#ffffff', fontWeight: 700 }}>Neighborhood Map & Route Finder</span>
+            <div style={{ display: 'flex', gap: '4px' }}>
+              {[1, 2, 3].map(d => (
+                <button
+                  key={d}
+                  onClick={() => setLocalDepth(d)}
+                  style={{
+                    padding: '2px 8px', fontSize: '10px', borderRadius: '4px',
+                    border: '1px solid var(--glass-border)', cursor: 'pointer',
+                    background: localDepth === d ? 'rgba(255,255,255,0.15)' : 'transparent',
+                    color: localDepth === d ? '#ffffff' : 'var(--silver-500)',
+                  }}
+                >
+                  {d} Hop{d > 1 ? 's' : ''}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ flex: 1, position: 'relative' }}>
+            <ForceGraph2D
+              ref={miniGraphRef}
+              graphData={{ nodes: neighborhoodNodes as any, links: neighborhoodLinks as any }}
+              backgroundColor="transparent"
+              nodeColor={getNodeColor}
+              nodeVal={getNodeSize}
+              linkColor={getLinkColor}
+              linkWidth={getLinkWidth}
+              linkCurvature={0.08}
+              cooldownTicks={80}
+              enableNodeDrag={true}
+              nodeCanvasObject={(node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
+                if (!isFinite(node.x) || !isFinite(node.y)) return;
+                const r = getNodeSize(node);
+                const color = getNodeColor(node);
+                const isFocal = node.id === profile.id;
+                ctx.save();
+                ctx.beginPath(); ctx.arc(node.x, node.y, r, 0, 2 * Math.PI);
+                ctx.fillStyle = color; ctx.fill();
+                ctx.strokeStyle = isFocal ? '#ffffff' : 'rgba(255,255,255,0.1)';
+                ctx.lineWidth = isFocal ? 1.5 : 0.7; ctx.stroke();
+                if (globalScale > 2.2 || isFocal) {
+                  ctx.font = `${isFocal ? 600 : 400} ${Math.max(3, 7 / globalScale)}px Inter, sans-serif`;
+                  ctx.fillStyle = isFocal ? '#ffffff' : '#94a3b8';
+                  ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+                  ctx.fillText(node.fullName, node.x, node.y + r + 1.5);
+                }
+                ctx.restore();
+              }}
+              nodeCanvasObjectMode={() => 'replace'}
+            />
+          </div>
+        </div>
+
+      </div>
+
+      {editingNode && <NodeProfileModal node={editingNode} onClose={() => setEditingNode(null)} />}
+    </div>
+  );
+}
