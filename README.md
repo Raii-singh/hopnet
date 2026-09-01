@@ -168,3 +168,57 @@ DEMO → DEMO → DEMO    ✓
 
 ---
 
+## Graph Providers
+
+HOPNet uses a provider registry pattern that lets the graph explorer switch data sources at runtime. Each provider declares:
+
+- Display name, icon, accent color
+- Which nav sections are available
+- Whether workspace (CRUD) mode is enabled
+- API endpoint prefix or static dataset path
+
+Current providers:
+
+| Provider | Source | Nodes | Description |
+|---|---|---|---|
+| College Graph | PostgreSQL / static JSON | ~20 | Small-world college social network — the primary demo |
+| IMDB | Processed co-appearance data | ~500+ | Actor co-appearance network derived from IMDB datasets |
+
+---
+
+## API Reference
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/health` | Health check |
+| `GET` | `/api/graph` | Full graph (nodes + edges) |
+| `GET` | `/api/graph/subgraph` | Subgraph by root node and hop depth |
+| `GET` | `/api/graph/path` | Shortest path between two nodes |
+| `GET` | `/api/users` | All users |
+| `GET` | `/api/users/:id` | User by ID |
+| `POST` | `/api/users` | Create node |
+| `PUT` | `/api/users/:id` | Update node |
+| `DELETE` | `/api/users/:id` | Delete node |
+| `POST` | `/api/relationships` | Create edge |
+| `PUT` | `/api/relationships/:id` | Update edge |
+| `DELETE` | `/api/relationships/:id` | Delete edge |
+| `GET` | `/api/imdb/graph` | IMDB co-appearance subgraph |
+
+---
+
+## Algorithms
+
+### BFS — Breadth-First Search
+Used for unweighted shortest path and hop-depth subgraph expansion. Respects the REAL→DEMO→REAL constraint at traversal time.
+
+### Dijkstra — Trust-Weighted Pathfinding
+Used for finding the strongest introduction path between two nodes. Edge weight is derived from trust score, interaction frequency, and relationship type. Lower weight = stronger/closer relationship.
+
+### Centrality
+Approximated betweenness centrality used to rank nodes by their strategic importance as bridge connectors in the network.
+
+---
+
+## License
+
+MIT
