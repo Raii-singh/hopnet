@@ -496,20 +496,16 @@ export const useGraphStore = create<GraphState>((set, get) => ({
         let visibleNodes = data.nodes.map(apiNodeV2ToGraph);
         const visibleLinks = data.links.map(apiEdgeV2ToGraph);
 
-        // Include ONLY truly isolated database entries (0 total connections in Neo4j) as floating visual anchors
+        // Include all database entries as floating visual anchors so the full database graph is visible
         const visibleNodeIds = new Set(visibleNodes.map(n => n.id));
         for (const dbNode of dbNodes) {
           if (!visibleNodeIds.has(dbNode.id)) {
             if (!showDemoNodes && dbNode.nodeType === 'DEMO') continue;
-            // Only float nodes that legitimately have ZERO relationships in the database
-            const totalConn = showDemoNodes ? (dbNode.connectionCount ?? 0) : (dbNode.realConnections ?? dbNode.connectionCount ?? 0);
-            if (totalConn === 0) {
-              visibleNodes.push({
-                ...dbNode,
-                hopDistance: 99,
-              });
-              visibleNodeIds.add(dbNode.id);
-            }
+            visibleNodes.push({
+              ...dbNode,
+              hopDistance: 99,
+            });
+            visibleNodeIds.add(dbNode.id);
           }
         }
 
