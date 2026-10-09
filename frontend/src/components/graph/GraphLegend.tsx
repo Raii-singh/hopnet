@@ -1,6 +1,7 @@
 'use client';
 
 import { useGraphStore } from '@/store/graphStore';
+import { useAuthStore } from '@/store/authStore';
 
 function hexToRgba(hex: string, alpha: number): string {
   if (!hex || !hex.startsWith('#')) return `rgba(255, 255, 255, ${alpha})`;
@@ -33,10 +34,11 @@ const IMDB_DECADE_CLUSTERS = [
 
 export default function GraphLegend() {
   const { focusMode, activeProvider, providerCapabilities } = useGraphStore();
+  const { isAdmin } = useAuthStore();
 
   if (focusMode) return null;
 
-  const isImdb = activeProvider === 'imdb';
+  const isImdb = false;
   const accentColor = providerCapabilities.accentColor;
 
   const clusterList = isImdb ? IMDB_DECADE_CLUSTERS : COLLEGE_CLUSTERS;
@@ -67,7 +69,7 @@ export default function GraphLegend() {
             background: `${accentColor}20`, color: accentColor,
             border: `1px solid ${accentColor}40`, fontWeight: 700,
           }}>
-            {providerCapabilities.displayName.toUpperCase()}
+            {isAdmin ? 'LIVE GRAPH' : 'RAI NETWORK'}
           </div>
         </div>
 

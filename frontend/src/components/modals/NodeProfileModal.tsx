@@ -5,6 +5,7 @@ import { useGraphStore } from '@/store/graphStore';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/authStore';
+import { useAppStore } from '@/store/appStore';
 
 interface NodeProfileModalProps {
   node: GraphNode;
@@ -22,6 +23,10 @@ function StatRow({ label, value, color = 'var(--silver-200)' }: { label: string;
 
 export default function NodeProfileModal({ node, onClose }: NodeProfileModalProps) {
   const { isAdmin } = useAuthStore();
+  const { appMode } = useAppStore();
+
+  // In demo mode, non-admin visitors see only the read-only Details view.
+  const isReadOnly = appMode === 'demo' && !isAdmin;
 
   const {
     workspaceMode,
@@ -230,21 +235,19 @@ export default function NodeProfileModal({ node, onClose }: NodeProfileModalProp
           >
             Details View
           </button>
+          {/* Edit tab — accessible to all; inputs disabled if !isAdmin */}
           <button
-            onClick={() => isAdmin && setActiveTab('edit')}
-            disabled={!isAdmin}
-            title={!isAdmin ? 'SUDO Mode Required' : ''}
+            onClick={() => setActiveTab('edit')}
             style={{
-              flex: 1, padding: '10px 0', border: 'none', cursor: !isAdmin ? 'not-allowed' : 'pointer',
+              flex: 1, padding: '10px 0', border: 'none', cursor: 'pointer',
               background: 'transparent',
               borderBottom: activeTab === 'edit' ? '2px solid #ffffff' : '2px solid transparent',
               color: activeTab === 'edit' ? '#ffffff' : 'var(--silver-500)',
               fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em',
               transition: 'all 0.2s',
-              opacity: !isAdmin ? 0.4 : 1,
             }}
           >
-            Edit Node Details {isAdmin ? '' : '🔒'}
+            Edit Node Details
           </button>
         </div>
 

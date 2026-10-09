@@ -13,7 +13,7 @@ export default function BottomInfoBar({ meta, isLoading }: BottomInfoBarProps) {
 
   if (!meta || focusMode) return null;
 
-  const isImdb = activeProvider === 'imdb';
+  const isImdb = false;
   const accentColor = providerCapabilities.accentColor;
 
   const realRatio = meta.totalNodes > 0

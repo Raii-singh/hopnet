@@ -88,7 +88,7 @@ export default function Navbar() {
         >
           <span style={{ fontSize: '15px', lineHeight: 1 }}>{providerCapabilities.icon}</span>
           <span style={{ fontSize: '12px', fontWeight: 600, color: accentColor, letterSpacing: '0.01em' }}>
-            {providerCapabilities.displayName}
+            {isAdmin ? 'Live Graph' : "Rai's Network"}
           </span>
           <svg
             width="10" height="10" viewBox="0 0 24 24" fill="none"
@@ -236,15 +236,7 @@ export default function Navbar() {
           </svg>
         </button>
 
-        {/* Graph status dot */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{
-            display: 'block', width: 6, height: 6, borderRadius: '50%',
-            background: accentColor,
-            boxShadow: `0 0 8px ${accentColor}80`,
-            animation: 'pulseGlow 2s ease-in-out infinite',
-          }} />
-        </div>
+
       </div>
 
       {/* Backdrop to close switcher */}

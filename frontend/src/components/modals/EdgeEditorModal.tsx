@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useGraphStore } from '@/store/graphStore';
 import { useAuthStore } from '@/store/authStore';
+import { useAppStore } from '@/store/appStore';
 import { GraphEdge, GraphNode } from '@/types/graph';
 import { searchPersonsV2, ApiNodeV2 } from '@/services/api';
 
@@ -241,15 +242,15 @@ function EndpointPicker({ label, initialNode, onSelect, disabled, useV2, allNode
 export default function EdgeEditorModal({ edge, createData, onClose }: EdgeEditorModalProps) {
   const { allNodes, visibleNodes, dataSource, createNewEdge, modifyEdge, removeEdge } = useGraphStore();
   const { isAdmin } = useAuthStore();
+  const { appMode } = useAppStore();
 
   // In v2 mode, allNodes is empty; visibleNodes has the current subgraph.
-  // The EndpointPicker uses server-side search so neither matters for resolution.
   const useV2 = dataSource === 'api-v2';
   const localNodes = allNodes.length > 0 ? allNodes : visibleNodes;
 
+  // All useState hooks declared unconditionally before any conditional return
   const [sourceNode, setSourceNode] = useState<GraphNode | null>(null);
   const [targetNode, setTargetNode] = useState<GraphNode | null>(null);
-
   const [relationshipType, setRelationshipType] = useState('acquaintance');
   const [trustScore, setTrustScore] = useState(0.5);
   const [interactionFrequency, setInteractionFrequency] = useState(0.5);
@@ -291,6 +292,10 @@ export default function EdgeEditorModal({ edge, createData, onClose }: EdgeEdito
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, [onClose]);
+
+  // In demo mode, non-admin visitors cannot open edge mutation modals.
+  // All hooks have been called above — safe to return null here.
+  if (appMode === 'demo' && !isAdmin) return null;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -540,12 +545,11 @@ export default function EdgeEditorModal({ edge, createData, onClose }: EdgeEdito
                 <button
                   type="button"
                   onClick={handleDelete}
-                  disabled={isSubmitting || !isAdmin}
-                  title={!isAdmin ? 'SUDO Mode Required' : ''}
+                  disabled={isSubmitting}
                   className="glass-button"
-                  style={{ borderColor: 'rgba(244,63,94,0.3)', color: 'rgba(244,63,94,0.8)', opacity: (isSubmitting || !isAdmin) ? 0.5 : 1, cursor: !isAdmin ? 'not-allowed' : 'pointer' }}
+                  style={{ borderColor: 'rgba(244,63,94,0.3)', color: 'rgba(244,63,94,0.8)', opacity: isSubmitting ? 0.5 : 1, cursor: 'pointer' }}
                 >
-                  Sever Connection {isAdmin ? '' : '🔒'}
+                  Sever Connection
                 </button>
               ) : <div />}
 
@@ -556,18 +560,17 @@ export default function EdgeEditorModal({ edge, createData, onClose }: EdgeEdito
                 <button
                   type="submit"
                   className="glass-button font-semibold"
-                  disabled={isSubmitting || isDemoToReal || !sourceNode || !targetNode || !isAdmin}
-                  title={!isAdmin ? 'SUDO Mode Required' : ''}
+                  disabled={isSubmitting || isDemoToReal || !sourceNode || !targetNode}
                   style={{
                     borderColor: 'rgba(255, 255, 255, 0.25)',
                     color: '#ffffff',
                     background: 'rgba(255, 255, 255, 0.05)',
                     boxShadow: '0 0 15px rgba(255, 255, 255, 0.08)',
-                    opacity: (isSubmitting || isDemoToReal || !sourceNode || !targetNode || !isAdmin) ? 0.5 : 1,
-                    cursor: (!isAdmin || isDemoToReal || !sourceNode || !targetNode) ? 'not-allowed' : 'pointer'
+                    opacity: (isSubmitting || isDemoToReal || !sourceNode || !targetNode) ? 0.5 : 1,
+                    cursor: (isDemoToReal || !sourceNode || !targetNode) ? 'not-allowed' : 'pointer'
                   }}
                 >
-                  {isSubmitting ? 'Syncing Ledger…' : isCreating ? 'Establish Link' : 'Apply Settings'} {isAdmin ? '' : '🔒'}
+                  {isSubmitting ? 'Syncing Ledger…' : isCreating ? 'Establish Link' : 'Apply Settings'}
                 </button>
               </div>
             </div>

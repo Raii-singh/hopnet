@@ -8,29 +8,67 @@ import { ProviderId } from '@/providers/graphProvider';
 export default function PathfinderPanel() {
   const {
     allNodes,
+    visibleNodes,
+    databaseNodes,
     workspaceMode,
     tracedPath,
     pathCost,
+    tracedPaths,
+    activePathIndex,
+    hasMorePaths,
+    isLoadingMorePaths,
+    setActivePathIndex,
+    loadMorePaths,
     focusMode,
     tracePathAction,
     clearTracedPath,
+    excludedNodeIds,
+    excludeNode,
+    includeNode,
+    clearExcludedNodes,
     activeProvider,
     providerCapabilities,
   } = useGraphStore();
 
-  const isImdb = activeProvider === 'imdb';
+  const isImdb = false;
   const accentColor = providerCapabilities.accentColor;
 
   const [isOpen, setIsOpen] = useState(false);
   const [startQuery, setStartQuery] = useState('');
   const [targetQuery, setTargetQuery] = useState('');
+  const [excludeQuery, setExcludeQuery] = useState('');
   
   const [startResults, setStartResults] = useState<any[]>([]);
   const [targetResults, setTargetResults] = useState<any[]>([]);
+  const [excludeResults, setExcludeResults] = useState<any[]>([]);
   
   const [selectedStart, setSelectedStart] = useState<any>(null);
   const [selectedTarget, setSelectedTarget] = useState<any>(null);
   const [traversalError, setTraversalError] = useState(false);
+
+  useEffect(() => {
+    if (excludeQuery.trim().length < 2) {
+      setExcludeResults([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      const { dataSource, allNodes, visibleNodes, databaseNodes, excludedNodeIds } = useGraphStore.getState();
+      if (dataSource === 'api-v2' || dataSource === 'api') {
+        import('@/services/api').then(({ searchPersonsV2 }) => {
+          searchPersonsV2(excludeQuery).then(res => setExcludeResults(res.data.filter(n => !excludedNodeIds.has(n.id)).slice(0, 5))).catch(() => setExcludeResults([]));
+        });
+      } else {
+        const pool = [...visibleNodes, ...databaseNodes, ...allNodes];
+        const results = pool.filter(n =>
+          !excludedNodeIds.has(n.id) &&
+          (n.fullName.toLowerCase().includes(excludeQuery.toLowerCase()) ||
+            n.publicId.toLowerCase().includes(excludeQuery.toLowerCase()))
+        ).slice(0, 5);
+        setExcludeResults(results);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [excludeQuery]);
 
   // Set default start node to active primary node when visibleNodes are loaded
   useEffect(() => {
@@ -104,16 +142,34 @@ export default function PathfinderPanel() {
   }
 
   async function handleTrace() {
-    if (!selectedStart || !selectedTarget) return;
+    let start = selectedStart;
+    let target = selectedTarget;
+
+    const { visibleNodes, databaseNodes, allNodes } = useGraphStore.getState();
+    const pool = visibleNodes.length > 0 ? visibleNodes : (databaseNodes.length > 0 ? databaseNodes : allNodes);
+
+    if (!start && startQuery.trim()) {
+      const q = startQuery.trim().toLowerCase();
+      start = pool.find(n => n.fullName.toLowerCase().includes(q) || n.publicId.toLowerCase().includes(q)) || null;
+      if (start) setSelectedStart(start);
+    }
+
+    if (!target && targetQuery.trim()) {
+      const q = targetQuery.trim().toLowerCase();
+      target = pool.find(n => (start ? n.id !== start.id : true) && (n.fullName.toLowerCase().includes(q) || n.publicId.toLowerCase().includes(q))) || null;
+      if (target) setSelectedTarget(target);
+    }
+
+    if (!start || !target) return;
     setTraversalError(false);
 
     // College-only constraint: DEMO→REAL traversal blocked
-    if (!isImdb && selectedStart.nodeType === 'DEMO' && selectedTarget.nodeType === 'REAL') {
+    if (!isImdb && start.nodeType === 'DEMO' && target.nodeType === 'REAL') {
       setTraversalError(true);
       return;
     }
 
-    await tracePathAction(selectedStart.id, selectedTarget.id);
+    await tracePathAction(start.id, target.id);
   }
 
   function handleReset() {
@@ -248,6 +304,92 @@ export default function PathfinderPanel() {
               )}
             </div>
 
+            {/* Excluded Nodes Section */}
+            <div style={{ position: 'relative' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3px' }}>
+                <label className="text-label" style={{ fontSize: '8.5px', color: 'var(--silver-400)' }}>
+                  Exclude Nodes ({excludedNodeIds.size})
+                </label>
+                {excludedNodeIds.size > 0 && (
+                  <button
+                    onClick={clearExcludedNodes}
+                    style={{ background: 'transparent', border: 'none', color: 'rgba(244,63,94,0.8)', fontSize: '8.5px', cursor: 'pointer' }}
+                  >
+                    Clear All
+                  </button>
+                )}
+              </div>
+
+              {excludedNodeIds.size > 0 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3px', marginBottom: '4px' }}>
+                  {Array.from(excludedNodeIds).map(id => {
+                    const pool = [...visibleNodes, ...databaseNodes, ...allNodes];
+                    const node = pool.find(n => n.id === id || n.publicId === id);
+                    const name = node ? node.fullName : id;
+                    return (
+                      <span
+                        key={id}
+                        style={{
+                          fontSize: '8.5px', padding: '1px 5px', borderRadius: '3px',
+                          background: 'rgba(244,63,94,0.12)', border: '1px solid rgba(244,63,94,0.3)',
+                          color: 'rgba(244,63,94,0.9)', display: 'inline-flex', alignItems: 'center', gap: '3px'
+                        }}
+                      >
+                        {name.length > 12 ? name.slice(0, 12) + '…' : name}
+                        <button
+                          onClick={() => includeNode(id)}
+                          style={{ background: 'transparent', border: 'none', color: 'inherit', cursor: 'pointer', fontSize: '9px', padding: 0 }}
+                        >
+                          ×
+                        </button>
+                      </span>
+                    );
+                  })}
+                </div>
+              )}
+
+              <input
+                className="glass-input"
+                style={{ padding: '4px 8px', fontSize: '11px' }}
+                placeholder="Exclude a node..."
+                value={excludeQuery}
+                onChange={e => setExcludeQuery(e.target.value)}
+              />
+              {excludeResults.length > 0 && (
+                <div className="glass-panel" style={{
+                  position: 'absolute', bottom: '105%', left: 0, right: 0,
+                  maxHeight: 110, overflowY: 'auto', zIndex: 500, padding: 3,
+                  background: 'var(--bg-surface)'
+                }}>
+                  {excludeResults.map(node => (
+                    <button
+                      key={node.id}
+                      onClick={() => {
+                        if (selectedStart?.id === node.id || selectedTarget?.id === node.id) {
+                          alert('Source or target node cannot be in the excluded list.');
+                          return;
+                        }
+                        excludeNode(node.id);
+                        setExcludeQuery('');
+                        setExcludeResults([]);
+                      }}
+                      style={{
+                        width: '100%', padding: '4px 6px', background: 'transparent',
+                        border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center',
+                        gap: '6px', borderRadius: '4px', textAlign: 'left',
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                    >
+                      <span style={{ fontSize: '10px', color: 'var(--silver-200)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {node.fullName}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
             {/* Active Trace Controls */}
             <div style={{ display: 'flex', gap: '6px', marginTop: '4px' }}>
               {tracedPath.length > 0 && (
@@ -265,13 +407,13 @@ export default function PathfinderPanel() {
               <button
                 className="glass-button font-semibold"
                 onClick={handleTrace}
-                disabled={!selectedStart || !selectedTarget}
+                disabled={(!selectedStart && !startQuery.trim()) || (!selectedTarget && !targetQuery.trim())}
                 style={{
                   flex: 2, fontSize: '10px', padding: '4px 8px',
                   borderColor: `${accentColor}60`,
                   color: accentColor,
                   background: `${accentColor}10`,
-                  opacity: (!selectedStart || !selectedTarget) ? 0.5 : 1,
+                  opacity: ((!selectedStart && !startQuery.trim()) || (!selectedTarget && !targetQuery.trim())) ? 0.5 : 1,
                 }}
               >
                 {isImdb ? '🎬 Find Collaboration Path' : '⚡ Trace Dijkstra Route'}
@@ -283,14 +425,42 @@ export default function PathfinderPanel() {
             {/* Path Tracer results list */}
             {tracedPath.length > 0 ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: 'var(--silver-500)' }}>
-                  <span>Active traversal route</span>
-                  <span className="text-mono" style={{ color: 'var(--silver-400)', fontWeight: 700 }}>Weight: {pathCost}</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '9px', color: 'var(--silver-500)' }}>
+                  <span>Found Paths ({tracedPaths.length})</span>
+                  <span className="text-mono" style={{ color: 'var(--silver-400)', fontWeight: 700 }}>Cost: {pathCost}</span>
                 </div>
+
+                {/* Path selector tabs */}
+                {tracedPaths.length > 1 && (
+                  <div style={{ display: 'flex', gap: '4px', overflowX: 'auto', paddingBottom: '2px' }}>
+                    {tracedPaths.map((p, idx) => {
+                      const isActive = idx === activePathIndex;
+                      return (
+                        <button
+                          key={idx}
+                          onClick={() => setActivePathIndex(idx)}
+                          style={{
+                            flexShrink: 0,
+                            fontSize: '9.5px',
+                            fontWeight: isActive ? 700 : 500,
+                            padding: '3px 8px',
+                            borderRadius: '4px',
+                            border: isActive ? `1px solid ${accentColor}` : '1px solid rgba(255,255,255,0.1)',
+                            background: isActive ? `${accentColor}20` : 'rgba(255,255,255,0.03)',
+                            color: isActive ? accentColor : 'var(--silver-400)',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          Path {idx + 1}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
 
                 <div style={{
                   display: 'flex', flexDirection: 'column', gap: '4px',
-                  maxHeight: 120, overflowY: 'auto', paddingRight: '4px'
+                  maxHeight: 110, overflowY: 'auto', paddingRight: '4px'
                 }}>
                   {tracedPath.map((pNode, index) => {
                     const isTarget = pNode.id === selectedTarget?.id;
@@ -304,7 +474,7 @@ export default function PathfinderPanel() {
                             boxShadow: isRoot || isTarget ? '0 0 4px currentColor' : 'none',
                           }} />
                           {index < tracedPath.length - 1 && (
-                            <div style={{ width: 1, height: 16, background: 'rgba(255,255,255,0.08)' }} />
+                            <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.08)' }} />
                           )}
                         </div>
                         <div style={{ flex: 1, display: 'flex', justifyContent: 'space-between', fontSize: '10px' }}>
@@ -319,6 +489,29 @@ export default function PathfinderPanel() {
                     );
                   })}
                 </div>
+
+                {/* Load More Button */}
+                {hasMorePaths && (
+                  <button
+                    onClick={loadMorePaths}
+                    disabled={isLoadingMorePaths}
+                    style={{
+                      marginTop: '4px',
+                      width: '100%',
+                      fontSize: '9.5px',
+                      fontWeight: 600,
+                      padding: '4px 8px',
+                      borderRadius: '4px',
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      background: 'rgba(255, 255, 255, 0.04)',
+                      color: 'var(--silver-200)',
+                      cursor: isLoadingMorePaths ? 'wait' : 'pointer',
+                      opacity: isLoadingMorePaths ? 0.6 : 1,
+                    }}
+                  >
+                    {isLoadingMorePaths ? 'Loading paths...' : '+ Load More Alternatives'}
+                  </button>
+                )}
               </div>
             ) : traversalError ? (
               <div style={{

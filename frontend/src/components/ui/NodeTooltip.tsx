@@ -9,7 +9,7 @@ interface NodeTooltipProps {
 
 export default function NodeTooltip({ node }: NodeTooltipProps) {
   const { activeProvider, providerCapabilities } = useGraphStore();
-  const isImdb = activeProvider === 'imdb';
+  const isImdb = false;
   const accentColor = providerCapabilities.accentColor;
 
   const isReal = node.nodeType === 'REAL';

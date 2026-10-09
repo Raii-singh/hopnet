@@ -55,21 +55,24 @@ export default function SudoLoginModal({ onClose }: { onClose: () => void }) {
       <div
         className="glass-panel"
         style={{
-          width: '320px',
+          width: '330px',
           padding: '24px',
-          background: 'rgba(15, 23, 42, 0.9)',
+          background: 'rgba(5, 5, 5, 0.94)',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+          boxShadow: '0 16px 48px rgba(0,0,0,0.6), 0 0 20px rgba(255,255,255,0.06)',
+          borderRadius: '12px',
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', color: '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+        <h3 style={{ margin: '0 0 16px 0', fontSize: '15px', fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', gap: '8px', letterSpacing: '-0.01em' }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
             <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
             <path d="M7 11V7a5 5 0 0 1 10 0v4" />
           </svg>
           SUDO Authentication
         </h3>
 
-        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           <input
             type="password"
             autoFocus
@@ -81,24 +84,26 @@ export default function SudoLoginModal({ onClose }: { onClose: () => void }) {
             }}
             style={{
               width: '100%',
-              padding: '10px 12px',
-              background: 'rgba(0,0,0,0.3)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              borderRadius: '6px',
+              padding: '10px 14px',
+              background: 'rgba(0, 0, 0, 0.5)',
+              border: '1px solid rgba(255, 255, 255, 0.18)',
+              borderRadius: '8px',
               color: '#fff',
               outline: 'none',
               fontFamily: 'monospace',
+              fontSize: '13px',
+              transition: 'border-color 0.2s',
             }}
           />
 
-          {error && <div style={{ color: '#ef4444', fontSize: '12px' }}>{error}</div>}
+          {error && <div style={{ color: '#f87171', fontSize: '12px' }}>{error}</div>}
 
-          <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+          <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
             <button
               type="button"
               className="glass-button"
               onClick={onClose}
-              style={{ flex: 1, padding: '8px', fontSize: '13px' }}
+              style={{ flex: 1, padding: '10px', fontSize: '13px', borderColor: 'rgba(255,255,255,0.15)' }}
             >
               Cancel
             </button>
@@ -107,15 +112,29 @@ export default function SudoLoginModal({ onClose }: { onClose: () => void }) {
               disabled={loading}
               style={{
                 flex: 1,
-                padding: '8px',
+                padding: '10px',
                 fontSize: '13px',
-                background: '#3b82f6',
+                background: 'rgba(255, 255, 255, 0.12)',
                 color: '#fff',
-                border: 'none',
-                borderRadius: '6px',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                borderRadius: '8px',
                 fontWeight: 600,
                 cursor: loading ? 'not-allowed' : 'pointer',
                 opacity: loading ? 0.7 : 1,
+                boxShadow: '0 0 12px rgba(255, 255, 255, 0.08)',
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={e => {
+                if (!loading) {
+                  (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.2)';
+                  (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.5)';
+                }
+              }}
+              onMouseLeave={e => {
+                if (!loading) {
+                  (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.12)';
+                  (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.3)';
+                }
               }}
             >
               {loading ? 'Authenticating...' : 'Authenticate'}
