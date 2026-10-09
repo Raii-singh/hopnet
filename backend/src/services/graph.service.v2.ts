@@ -67,8 +67,10 @@ import { computeWeight } from '../domain/relationship';
 import {
   bfsSubgraph,
   collegeConstraint,
+  createCollegeConstraint,
   dijkstra,
   reconstructPath,
+  yenKShortestPaths,
 } from '@hopnet/shared/graph-engine';
 import type { EngineNode, EngineEdge } from '@hopnet/shared/graph-engine';
 import { validationError, nodeNotFound } from './errors';
@@ -162,21 +164,23 @@ export interface GraphSubgraphResponse {
  *   A lower totalCost means a stronger / more trusted path.
  *   Range: 0.0 (all max-strength edges) to N (N edges each with zero strength).
  */
+export interface PathItem {
+  nodeIds: string[];
+  nodes: GraphNode[];
+  links: GraphLink[];
+  totalCost: number;
+}
+
 export interface PathResponse {
   exists: boolean;
   path: {
-    /** Ordered node IDs from start (fromId) to end (toId). */
     nodeIds: string[];
-    /** Full GraphNode objects (same order as nodeIds, hopDistance = position from start). */
     nodes: GraphNode[];
+    links: GraphLink[];
   } | null;
-  /**
-   * Minimum accumulated Dijkstra traversal cost along the path.
-   * Cost per edge = 1 - weight (1 - connection_strength).
-   * Lower totalCost = stronger / more trusted path.
-   * null when no path exists.
-   */
+  paths: PathItem[];
   totalCost: number | null;
+  hasMore: boolean;
 }
 
 /** Single-node profile response (node + its direct connections). */
@@ -436,21 +440,25 @@ export async function findPath(
   toId: string,
   maxDepth: number = MAX_DEPTH,
   includeDemo: boolean = true,
-  filters?: GraphFilters
+  filters?: GraphFilters,
+  k: number = 3,
+  offset: number = 0
 ): Promise<PathResponse> {
   if (!fromId?.trim()) throw validationError('fromId is required');
   if (!toId?.trim())   throw validationError('toId is required');
   if (fromId === toId) throw validationError('fromId and toId must be different nodes');
+  if (filters?.excludedNodeIds && (filters.excludedNodeIds.has(fromId) || filters.excludedNodeIds.has(toId))) {
+    throw validationError('Source or target node cannot be in the excluded list');
+  }
 
   const clampedDepth = Math.min(Math.max(1, Math.floor(maxDepth) || MAX_DEPTH), MAX_DEPTH);
+  const clampedK = Math.min(Math.max(1, Math.floor(k) || 3), 10);
+  const clampedOffset = Math.max(0, Math.floor(offset) || 0);
 
   // ── Step 1: Raw neighbourhood from Neo4j (centered on fromId) ─────────
-  // Fetches all nodes/relationships reachable within maxDepth hops from fromId.
-  // includeDemo controls whether DEMO nodes appear in the Cypher traversal.
   const raw = await getNeighbourhood(fromId, clampedDepth, { includeDemo, filters });
 
   if (raw.nodes.length === 0) {
-    // fromId not found or soft-deleted
     throw nodeNotFound(fromId);
   }
 
@@ -458,73 +466,80 @@ export async function findPath(
   const engineNodes: EngineNode[] = raw.nodes.map(toEngineNode);
   const engineEdges: EngineEdge[] = raw.relationships.map(toEngineEdge);
 
-  // ── Step 3: BFS with collegeConstraint ───────────────────────────────
-  // Same constraint as getSubgraph — ensures path/subgraph connectivity agree.
+  const constraint = createCollegeConstraint(filters?.excludedNodeIds);
+
+  // ── Step 3: BFS with collegeConstraint & exclusion ───────────────────
   const bfsResult = bfsSubgraph(
     fromId,
     clampedDepth,
     includeDemo,
     engineNodes,
     engineEdges,
-    collegeConstraint
+    constraint
   );
 
   // ── Step 4: Check reachability ────────────────────────────────────────
-  // toId must be in the constraint-approved set. If not, no valid HOPNet path exists.
   if (!bfsResult.visitedNodeIds.has(toId)) {
-    return { exists: false, path: null, totalCost: null };
+    return { exists: false, path: null, paths: [], totalCost: null, hasMore: false };
   }
 
   // ── Step 5: Build approved-only engine sets ───────────────────────────
   const approvedNodes = engineNodes.filter(n => bfsResult.visitedNodeIds.has(n.id));
   const approvedEdges = engineEdges.filter(e => bfsResult.visitedEdgeIds.has(e.id));
 
-  // ── Step 6: Dijkstra on approved subgraph (cost = 1 - weight) ─────────
-  // The shared Dijkstra already converts weight → cost internally.
-  // collegeConstraint is passed again to ensure no constraint bypass during Dijkstra.
-  const dijkResult = dijkstra(fromId, approvedNodes, approvedEdges, collegeConstraint);
+  // ── Step 6: Yen's K-Shortest Paths ────────────────────────────────────
+  const yenResult = yenKShortestPaths(
+    fromId,
+    toId,
+    approvedNodes,
+    approvedEdges,
+    clampedK,
+    constraint,
+    clampedDepth,
+    clampedOffset
+  );
 
-  const cost = dijkResult.distance.get(toId) ?? Infinity;
-  if (cost === Infinity) {
-    // Defensive: Dijkstra confirms unreachable (should match BFS check above)
-    return { exists: false, path: null, totalCost: null };
+  if (yenResult.paths.length === 0) {
+    return { exists: false, path: null, paths: [], totalCost: null, hasMore: false };
   }
 
-  // ── Step 7: Reconstruct ordered path ─────────────────────────────────
-  const pathNodeIds = reconstructPath(toId, dijkResult.previous);
-
-  if (pathNodeIds.length === 0) {
-    return { exists: false, path: null, totalCost: null };
-  }
-
-  // ── Step 8: Build GraphNodes with hopDistance = position in path ──────
-  // Retrieve full PersonNode for each path node from the raw neighbourhood.
+  // ── Step 7: Build GraphNodes & GraphLinks for each path ──────────────
   const nodeById = new Map(raw.nodes.map(n => [n.id, n]));
 
-  // Compute path-local subgraphDegree from edges between path nodes.
-  // An edge is a path edge if both its endpoints are in pathNodeIds.
-  const pathNodeSet = new Set(pathNodeIds);
-  const pathEdges = raw.relationships.filter(
-    r => bfsResult.visitedEdgeIds.has(r.id)
-      && pathNodeSet.has(r.sourceId)
-      && pathNodeSet.has(r.targetId)
-  );
-  const pathLinks: GraphLink[] = pathEdges.map(toGraphLink);
-  const pathSubgraphDegrees = computeSubgraphDegrees(pathNodeIds, pathLinks);
+  const mappedPaths: PathItem[] = yenResult.paths.map(ePath => {
+    const pathNodeIds = ePath.nodeIds;
+    const pathNodeSet = new Set(pathNodeIds);
 
-  const pathNodes: GraphNode[] = pathNodeIds.map((id, idx) => {
-    const personNode = nodeById.get(id);
-    if (!personNode) throw new Error(`Path node ${id} missing from neighbourhood`);
-    return toGraphNode(personNode, idx, pathSubgraphDegrees.get(id) ?? 0);
+    const pathEdges = raw.relationships.filter(
+      r => bfsResult.visitedEdgeIds.has(r.id)
+        && pathNodeSet.has(r.sourceId)
+        && pathNodeSet.has(r.targetId)
+    );
+    const pathLinks: GraphLink[] = pathEdges.map(toGraphLink);
+    const pathSubgraphDegrees = computeSubgraphDegrees(pathNodeIds, pathLinks);
+
+    const pathNodes: GraphNode[] = pathNodeIds.map((id, idx) => {
+      const personNode = nodeById.get(id);
+      if (!personNode) throw new Error(`Path node ${id} missing from neighbourhood`);
+      return toGraphNode(personNode, idx, pathSubgraphDegrees.get(id) ?? 0);
+    });
+
+    return {
+      nodeIds: pathNodeIds,
+      nodes: pathNodes,
+      links: pathLinks,
+      totalCost: ePath.totalCost,
+    };
   });
 
-  // totalCost = Dijkstra accumulated friction (sum of 1 - weight per edge)
-  const totalCost = Math.round(cost * 10000) / 10000;
+  const firstPath = mappedPaths[0] ?? null;
 
   return {
     exists: true,
-    path: { nodeIds: pathNodeIds, nodes: pathNodes },
-    totalCost,
+    path: firstPath ? { nodeIds: firstPath.nodeIds, nodes: firstPath.nodes, links: firstPath.links } : null,
+    paths: mappedPaths,
+    totalCost: firstPath ? firstPath.totalCost : null,
+    hasMore: yenResult.hasMore,
   };
 }
 

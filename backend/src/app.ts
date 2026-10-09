@@ -5,7 +5,6 @@ import cookieParser from 'cookie-parser';
 import graphRouter from './routes/graph.routes';
 import usersRouter from './routes/users.routes';
 import connectorsRouter from './routes/connectors.routes';
-import imdbRouter from './routes/imdb.routes';
 // v2 — Neo4j-backed API
 import personsV2Router from './routes/v2/persons.routes';
 import relationshipsV2Router from './routes/v2/relationships.routes';
@@ -32,11 +31,10 @@ app.get('/api/v2/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// ── v1 Routes (Prisma-backed — unchanged) ─────────────────────────────────
+// ── v1 Routes (Prisma-backed) ─────────────────────────────────────────────
 app.use('/api/graph', graphRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/connectors', connectorsRouter);
-app.use('/api/imdb', imdbRouter);
 
 // ── v2 Routes (Neo4j-backed) ───────────────────────────────────────────────
 app.use('/api/v2/auth', authRouter);

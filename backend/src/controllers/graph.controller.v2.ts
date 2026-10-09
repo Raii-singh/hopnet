@@ -45,7 +45,15 @@ function parseFilters(req: Request): GraphFilters | undefined {
     }
   }
 
-  return (filters.minTrustScore !== undefined || filters.relationshipTypes !== undefined) ? filters : undefined;
+  const excludeRaw = req.query['exclude'];
+  if (excludeRaw !== undefined && typeof excludeRaw === 'string') {
+    const ids = excludeRaw.split(',').map(s => s.trim()).filter(s => s.length > 0);
+    if (ids.length > 0) {
+      filters.excludedNodeIds = new Set(ids);
+    }
+  }
+
+  return (filters.minTrustScore !== undefined || filters.relationshipTypes !== undefined || filters.excludedNodeIds !== undefined) ? filters : undefined;
 }
 
 // ── GET /api/v2/graph ──────────────────────────────────────────────────────
@@ -116,9 +124,11 @@ export async function getPath(
     const to          = (req.query['to'] as string)   ?? '';
     const maxDepth    = parseInt(req.query['maxDepth'] as string, 10) || 6;
     const includeDemo = req.query['includeDemo'] !== 'false';
+    const k           = parseInt(req.query['k'] as string, 10) || 3;
+    const offset      = parseInt(req.query['offset'] as string, 10) || 0;
     const filters     = parseFilters(req);
 
-    const result = await findPath(from, to, maxDepth, includeDemo, filters);
+    const result = await findPath(from, to, maxDepth, includeDemo, filters, k, offset);
     res.json(result);
   } catch (err) {
     next(err);

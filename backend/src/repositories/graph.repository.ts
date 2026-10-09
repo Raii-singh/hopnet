@@ -73,7 +73,15 @@ function recordToPersonNode(record: Neo4jRecord, alias = 'p'): PersonNode {
  */
 function recordToRelationship(record: Neo4jRecord, alias = 'r'): Relationship {
   const rel = record.get(alias);
-  return rel.properties as Relationship;
+  const props = { ...(rel.properties || {}) };
+
+  if (!props.sourceId && record.keys.includes('sourceId')) {
+    props.sourceId = record.get('sourceId');
+  }
+  if (!props.targetId && record.keys.includes('targetId')) {
+    props.targetId = record.get('targetId');
+  }
+  return props as Relationship;
 }
 
 // ── Return types ──────────────────────────────────────────────────────────
@@ -102,6 +110,7 @@ export interface NodeDegree {
 export interface GraphFilters {
   relationshipTypes?: string[];
   minTrustScore?: number;
+  excludedNodeIds?: Set<string>;
 }
 
 /** Options for neighbourhood queries. */
@@ -161,8 +170,10 @@ export async function getNeighbourhood(
     // Construct dynamic path filters ensuring all edges in path satisfy conditions
     let pathTypeFilter = '';
     let pathTrustFilter = '';
+    let nodeExcludeFilter = '';
     const hasTypes = filters?.relationshipTypes && filters.relationshipTypes.length > 0;
     const hasMinTrust = filters?.minTrustScore !== undefined;
+    const hasExclude = filters?.excludedNodeIds && filters.excludedNodeIds.size > 0;
 
     if (hasTypes) {
       pathTypeFilter = 'AND ALL(r IN rels WHERE r.relationshipType IN $types)';
@@ -170,18 +181,22 @@ export async function getNeighbourhood(
     if (hasMinTrust) {
       pathTrustFilter = 'AND ALL(r IN rels WHERE r.trustScore >= $minTrustScore)';
     }
+    if (hasExclude) {
+      nodeExcludeFilter = 'AND NOT n.id IN $excludeIds AND NOT n.publicId IN $excludeIds';
+    }
 
     const q1 = `
       MATCH (root:Person)
       WHERE (root.id = $rootId OR root.publicId = $rootId) AND root.deletedAt IS NULL
       OPTIONAL MATCH (root)-[rels:CONNECTED*1..${clampedDepth}]-(n:Person)
-      WHERE n.deletedAt IS NULL ${demoFilter} ${pathTypeFilter} ${pathTrustFilter}
+      WHERE n.deletedAt IS NULL ${demoFilter} ${nodeExcludeFilter} ${pathTypeFilter} ${pathTrustFilter}
       RETURN root.id AS rootId, COLLECT(DISTINCT n.id) AS neighbourIds
     `;
 
     const q1Params: Record<string, any> = { rootId };
     if (hasTypes) q1Params.types = filters.relationshipTypes;
     if (hasMinTrust) q1Params.minTrustScore = filters.minTrustScore;
+    if (hasExclude) q1Params.excludeIds = Array.from(filters.excludedNodeIds!);
 
     const q1Result = await session.run(q1, q1Params);
 
@@ -220,11 +235,15 @@ export async function getNeighbourhood(
     // Both endpoints must be in allIds (i.e. within the subgraph).
     let relTypeFilter = '';
     let relTrustFilter = '';
+    let relExcludeFilter = '';
     if (hasTypes) {
       relTypeFilter = 'AND r.relationshipType IN $types';
     }
     if (hasMinTrust) {
       relTrustFilter = 'AND r.trustScore >= $minTrustScore';
+    }
+    if (hasExclude) {
+      relExcludeFilter = 'AND NOT a.id IN $excludeIds AND NOT b.id IN $excludeIds';
     }
 
     const q3 = `
@@ -234,12 +253,14 @@ export async function getNeighbourhood(
         AND r.deletedAt IS NULL
         ${relTypeFilter}
         ${relTrustFilter}
-      RETURN DISTINCT r
+        ${relExcludeFilter}
+      RETURN DISTINCT r, a.id AS sourceId, b.id AS targetId
     `;
 
     const q3Params: Record<string, any> = { ids: allIds };
     if (hasTypes) q3Params.types = filters.relationshipTypes;
     if (hasMinTrust) q3Params.minTrustScore = filters.minTrustScore;
+    if (hasExclude) q3Params.excludeIds = Array.from(filters.excludedNodeIds!);
 
     const q3Result = await session.run(q3, q3Params);
     const relationships = q3Result.records.map(r => recordToRelationship(r, 'r'));

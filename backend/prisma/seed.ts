@@ -1,11 +1,11 @@
 /**
- * HOPNet CollegeGraph — PostgreSQL Seed Script
+ * HOPNet Live Graph — Seed Script
  * ─────────────────────────────────────────────────────────────────────────────
- * Seeds the database dynamically by reading from the canonical CollegeGraph
+ * Seeds the database dynamically by reading from Rai Singh's authentic Live
  * dataset snapshot.
  *
  * Source Snapshot:
- *   database/graph-providers/college/datasets/snapshots/seed_v1_snapshot.json
+ *   database/graph-providers/live/seed_live.json
  * ─────────────────────────────────────────────────────────────────────────────
  */
 import 'dotenv/config';
@@ -16,20 +16,20 @@ import * as path from 'path';
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('🌱 Seeding HOPNet V2 database from canonical snapshot...\n');
+  console.log('🌱 Seeding HOPNet database from Rai Singh authentic live snapshot...\n');
 
   // 1. Clean up existing records
   await prisma.edge.deleteMany();
   await prisma.user.deleteMany();
 
   // 2. Load and parse the canonical snapshot
-  const snapshotPath = path.resolve(__dirname, '../../database/graph-providers/college/datasets/snapshots/seed_v1_snapshot.json');
+  const snapshotPath = path.resolve(__dirname, '../../database/graph-providers/live/seed_live.json');
   if (!fs.existsSync(snapshotPath)) {
     throw new Error(`Canonical seed snapshot not found at path: ${snapshotPath}`);
   }
 
   const snapshot = JSON.parse(fs.readFileSync(snapshotPath, 'utf8'));
-  const { realNodes, demoNodes, edges } = snapshot;
+  const { realNodes, demoNodes = [], edges } = snapshot;
 
   const pad = (num: number, size: number) => {
     let s = num + '';
