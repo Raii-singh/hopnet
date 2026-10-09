@@ -21,16 +21,12 @@ import neo4j, { Driver, Session } from 'neo4j-driver';
 
 // ── Validate required config ───────────────────────────────────────────────
 const NEO4J_URI      = process.env.NEO4J_URI      || 'bolt://localhost:7687';
-const NEO4J_USERNAME = process.env.NEO4J_USERNAME  || 'neo4j';
-const NEO4J_PASSWORD = process.env.NEO4J_PASSWORD;
+const NEO4J_USERNAME = process.env.NEO4J_USERNAME  || process.env.NEO4J_USER || 'neo4j';
+const NEO4J_PASSWORD = process.env.NEO4J_PASSWORD  || 'R@!51ngh';
 const NEO4J_DATABASE = process.env.NEO4J_DATABASE  || 'neo4j';
 
-if (!NEO4J_PASSWORD) {
-  // Fail fast on startup rather than silently using an empty password
-  throw new Error(
-    '[Neo4j] NEO4J_PASSWORD environment variable is required but not set. ' +
-    'Check backend/.env and ensure it is loaded before this module.'
-  );
+if (!process.env.NEO4J_PASSWORD) {
+  console.warn('[Neo4j] ⚠️ NEO4J_PASSWORD environment variable is not set. Using default fallback password.');
 }
 
 // ── Driver singleton ──────────────────────────────────────────────────────
