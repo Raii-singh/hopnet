@@ -16,10 +16,20 @@ const app = express();
 
 const allowedOrigins = [
   'http://localhost:3000',
+  'https://hopnet-two.vercel.app',
   process.env.FRONTEND_URL,
 ].filter(Boolean) as string[];
 
-app.use(cors({ origin: allowedOrigins, credentials: true }));
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
+      callback(null, true);
+    } else {
+      callback(null, true);
+    }
+  },
+  credentials: true,
+}));
 app.use(express.json());
 app.use(cookieParser());
 
