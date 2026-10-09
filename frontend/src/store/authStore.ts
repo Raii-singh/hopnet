@@ -18,7 +18,13 @@ export const useAuthStore = create<AuthState>((set) => ({
   setIsAdmin: (isAdmin, username = null) => set({ isAdmin, username }),
   checkAuth: async () => {
     try {
-      const res = await fetch(`${BASE_URL_V2}/auth/status`, { credentials: 'include' });
+      const token = typeof window !== 'undefined' ? localStorage.getItem('hopnet_sudo_token') : null;
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+        headers['x-sudo-token'] = token;
+      }
+      const res = await fetch(`${BASE_URL_V2}/auth/status`, { credentials: 'include', headers });
       if (res.ok) {
         const data = await res.json();
         set({ isAdmin: !!data.isAdmin, username: data.username || null, isChecking: false });
@@ -31,10 +37,22 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
   logout: async () => {
     try {
-      await fetch(`${BASE_URL_V2}/auth/logout`, { method: 'POST', credentials: 'include' });
+      const token = typeof window !== 'undefined' ? localStorage.getItem('hopnet_sudo_token') : null;
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+        headers['x-sudo-token'] = token;
+      }
+      await fetch(`${BASE_URL_V2}/auth/logout`, { method: 'POST', credentials: 'include', headers });
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('hopnet_sudo_token');
+      }
       set({ isAdmin: false, username: null });
     } catch {
-      // Ignore errors
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('hopnet_sudo_token');
+      }
+      set({ isAdmin: false, username: null });
     }
   }
 }));

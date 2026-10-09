@@ -25,10 +25,14 @@ export default function SudoLoginModal({ onClose }: { onClose: () => void }) {
       });
 
       if (res.ok) {
+        const json = await res.json().catch(() => ({}));
+        if (json.token && typeof window !== 'undefined') {
+          localStorage.setItem('hopnet_sudo_token', json.token);
+        }
         await checkAuth();
         onClose();
       } else {
-        const json = await res.json();
+        const json = await res.json().catch(() => ({}));
         setError(json.message || json.error?.message || 'Invalid credentials');
       }
     } catch {

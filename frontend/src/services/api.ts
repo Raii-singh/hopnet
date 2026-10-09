@@ -353,7 +353,13 @@ async function apiFetchV2<T>(path: string, timeoutMs = 8000): Promise<T> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const res = await fetch(`${BASE_URL_V2}${path}`, { signal: controller.signal, credentials: 'include' });
+    const token = typeof window !== 'undefined' ? localStorage.getItem('hopnet_sudo_token') : null;
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+      headers['x-sudo-token'] = token;
+    }
+    const res = await fetch(`${BASE_URL_V2}${path}`, { signal: controller.signal, credentials: 'include', headers });
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
       throw new Error(body?.message ?? `v2 API ${res.status}: ${res.statusText}`);
@@ -638,9 +644,15 @@ async function apiFetchV2Mutation<T>(
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 10000);
   try {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('hopnet_sudo_token') : null;
+    const headers: Record<string, string> = body !== undefined ? { 'Content-Type': 'application/json' } : {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+      headers['x-sudo-token'] = token;
+    }
     const res = await fetch(`${BASE_URL_V2}${path}`, {
       method,
-      headers: body !== undefined ? { 'Content-Type': 'application/json' } : {},
+      headers,
       body: body !== undefined ? JSON.stringify(body) : undefined,
       signal: controller.signal,
       credentials: 'include',

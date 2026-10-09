@@ -15,15 +15,17 @@ export class AuthController {
         throw unauthorized('Invalid credentials');
       }
 
-      // Set HTTP-only cookie
+      const isProduction = process.env.NODE_ENV === 'production';
+
+      // Set HTTP-only cookie with sameSite: 'none' for cross-domain support (Vercel <-> Render)
       res.cookie('sudo_token', token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
+        secure: isProduction,
+        sameSite: isProduction ? 'none' : 'lax',
         maxAge: 24 * 60 * 60 * 1000, // 24 hours
       });
 
-      res.status(200).json({ success: true, message: 'Logged in successfully' });
+      res.status(200).json({ success: true, token, message: 'Logged in successfully' });
     } catch (error) {
       next(error);
     }
@@ -31,7 +33,12 @@ export class AuthController {
 
   static async logout(req: Request, res: Response, next: NextFunction) {
     try {
-      res.clearCookie('sudo_token');
+      const isProduction = process.env.NODE_ENV === 'production';
+      res.clearCookie('sudo_token', {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: isProduction ? 'none' : 'lax',
+      });
       res.status(200).json({ success: true, message: 'Logged out successfully' });
     } catch (error) {
       next(error);
@@ -40,7 +47,7 @@ export class AuthController {
 
   static async status(req: Request, res: Response, next: NextFunction) {
     try {
-      const token = req.cookies?.sudo_token;
+      const token = req.cookies?.sudo_token || (req.headers['x-sudo-token'] as string) || (req.headers['authorization']?.replace('Bearer ', ''));
       if (!token) {
         return res.status(200).json({ isAdmin: false });
       }
