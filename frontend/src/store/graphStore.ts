@@ -415,16 +415,20 @@ export const useGraphStore = create<GraphState>((set, get) => ({
           const dbNodes = get().databaseNodes;
 
           if (dbNodes.length === 0) {
+            const dummyRoot = ALL_NODES.find(n => n.id === 'r-001' || n.id === 'rai-singh') || ALL_NODES[0];
+            const rootId = dummyRoot ? dummyRoot.id : 'r-001';
+            const fallbackSubgraph = getDummySubgraph(rootId, 3, true, ALL_NODES, ALL_EDGES);
             set({
-              dataSource: 'api-v2',
-              primaryNodeId: null,
-              rootNodeId: '',
+              dataSource: 'dummy',
+              primaryNodeId: rootId,
+              rootNodeId: rootId,
               isApiHealthy: true,
-              visibleNodes: [],
-              visibleLinks: [],
-              allNodes: [],
-              allEdges: [],
-              meta: EMPTY_META,
+              visibleNodes: fallbackSubgraph.nodes,
+              visibleLinks: fallbackSubgraph.links,
+              databaseNodes: ALL_NODES,
+              allNodes: ALL_NODES,
+              allEdges: ALL_EDGES,
+              meta: computeMeta(fallbackSubgraph.nodes, fallbackSubgraph.links, rootId, 3),
             });
             if (typeof window !== 'undefined') {
               localStorage.removeItem('hopnet_primary_node_live');
@@ -462,17 +466,21 @@ export const useGraphStore = create<GraphState>((set, get) => ({
       }
 
       // If we reach here, v2 health check failed or network request failed
-      console.error('[HOPNet] Live Graph API is unreachable or failed to initialize.');
+      console.warn('[HOPNet] Live Graph API is unreachable or unconfigured. Falling back to demo dataset.');
+      const dummyRoot = ALL_NODES.find(n => n.id === 'r-001' || n.id === 'rai-singh') || ALL_NODES[0];
+      const rootId = dummyRoot ? dummyRoot.id : 'r-001';
+      const fallbackSubgraph = getDummySubgraph(rootId, 3, true, ALL_NODES, ALL_EDGES);
       set({
-        dataSource: 'api-v2', // keep data source as api-v2 to avoid dummy fallback elsewhere
-        rootNodeId: '',
+        dataSource: 'dummy',
+        primaryNodeId: rootId,
+        rootNodeId: rootId,
         isApiHealthy: false,
-        visibleNodes: [],
-        visibleLinks: [],
-        allNodes: [],
-        allEdges: [],
-        databaseNodes: [],
-        meta: EMPTY_META,
+        visibleNodes: fallbackSubgraph.nodes,
+        visibleLinks: fallbackSubgraph.links,
+        databaseNodes: ALL_NODES,
+        allNodes: ALL_NODES,
+        allEdges: ALL_EDGES,
+        meta: computeMeta(fallbackSubgraph.nodes, fallbackSubgraph.links, rootId, 3),
       });
 
     }
