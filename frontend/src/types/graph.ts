@@ -67,6 +67,7 @@ export interface GraphEdge {
   edgeKind?: EdgeKind;
 
   weight: number;
+  isLayoutAnchor?: boolean;
 }
 
 export interface GraphData {

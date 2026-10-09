@@ -272,33 +272,23 @@ export async function finalizeConnectorIngest(connectorType: string, filename: s
 }
 
 export async function fetchImdbGraph(): Promise<ApiGraphData> {
-  // 1. Try to load from the build-time JSON cache first (offline-first for demo mode)
   const loadOfflineFallback = (): ApiGraphData => {
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const offlineData = require('../data/imdb/imdb_graph_demo.json');
-      // The JSON uses 'edges', but the API contract uses 'links'
-      const edgeArray: ApiEdge[] = (offlineData.edges || offlineData.links || []);
-      return {
-        nodes: offlineData.nodes || [],
-        links: edgeArray,
-        meta: {
-          totalNodes: (offlineData.nodes || []).length,
-          totalEdges: edgeArray.length,
-          realNodes: (offlineData.nodes || []).length,
-          demoNodes: 0,
-          realEdges: edgeArray.length,
-          demoEdges: 0,
-          avgHopCount: 2.4,
-          rootNodeId: offlineData.nodes?.[0]?.id || '',
-          depth: 3,
-          constraintActive: false,
-        },
-      };
-    } catch (fallbackError) {
-      console.error('[API] Offline IMDb fallback failed:', fallbackError);
-      throw new Error('IMDb offline fallback unavailable');
-    }
+    return {
+      nodes: [],
+      links: [],
+      meta: {
+        totalNodes: 0,
+        totalEdges: 0,
+        realNodes: 0,
+        demoNodes: 0,
+        realEdges: 0,
+        demoEdges: 0,
+        avgHopCount: 0,
+        rootNodeId: '',
+        depth: 0,
+        constraintActive: false,
+      },
+    };
   };
 
   try {
@@ -451,6 +441,13 @@ export interface ApiPathNodeV2 extends ApiNodeV2 {
   hopDistance: number;
 }
 
+export interface ApiPathItemV2 {
+  nodeIds: string[];
+  nodes: ApiPathNodeV2[];
+  links: ApiEdgeV2[];
+  totalCost: number;
+}
+
 export interface ApiPathResponseV2 {
   exists: boolean;
   path: {
@@ -458,7 +455,9 @@ export interface ApiPathResponseV2 {
     nodes: ApiPathNodeV2[];
     links: ApiEdgeV2[];
   } | null;
+  paths: ApiPathItemV2[];
   totalCost: number | null;
+  hasMore: boolean;
 }
 
 // ── v2 health check ───────────────────────────────────────────────────────
@@ -565,19 +564,26 @@ export async function fetchPathV2(
   to: string,
   maxDepth = 6,
   includeDemo = true,
-  filters?: { types: string[]; minTrust: number }
+  filters?: { types?: string[]; minTrust?: number; exclude?: string[] },
+  k = 3,
+  offset = 0
 ): Promise<ApiPathResponseV2> {
   const params = new URLSearchParams({
     from,
     to,
     maxDepth: String(maxDepth),
     includeDemo: String(includeDemo),
+    k: String(k),
+    offset: String(offset),
   });
   if (filters?.types && filters.types.length > 0) {
     params.set('types', filters.types.join(','));
   }
   if (filters?.minTrust !== undefined) {
     params.set('minTrust', String(filters.minTrust));
+  }
+  if (filters?.exclude && filters.exclude.length > 0) {
+    params.set('exclude', filters.exclude.join(','));
   }
   return apiFetchV2<ApiPathResponseV2>(`/graph/path?${params}`);
 }

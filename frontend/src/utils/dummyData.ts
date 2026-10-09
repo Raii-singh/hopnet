@@ -21,17 +21,10 @@
  */
 import { GraphNode, GraphEdge } from '@/types/graph';
 
-// ============================================================
-// DATA LOADERS — Canonical Source of Truth Bridge
-// ============================================================
-import demoGraph from '../data/college/college_graph_demo.json';
-
-const graphData = demoGraph as any;
-
-export const REAL_NODES = graphData.nodes.filter((n: any) => n.nodeType === 'REAL') as GraphNode[];
-export const DEMO_NODES = graphData.nodes.filter((n: any) => n.nodeType === 'DEMO') as GraphNode[];
-export const ALL_NODES: GraphNode[] = [...REAL_NODES, ...DEMO_NODES];
-export const ALL_EDGES = graphData.edges as unknown as GraphEdge[];
+export const REAL_NODES: GraphNode[] = [];
+export const DEMO_NODES: GraphNode[] = [];
+export const ALL_NODES: GraphNode[] = [];
+export const ALL_EDGES: GraphEdge[] = [];
 
 
 // ============================================================

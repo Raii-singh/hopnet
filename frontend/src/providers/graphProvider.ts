@@ -6,7 +6,7 @@
  * to determine what features are available for the active provider.
  */
 
-export type ProviderId = 'college' | 'imdb' | 'pantheon';
+export type ProviderId = 'live';
 
 export interface ProviderCapabilities {
   readOnly: boolean;
@@ -30,7 +30,7 @@ export interface ProviderCapabilities {
 }
 
 export const PROVIDER_REGISTRY: Record<ProviderId, ProviderCapabilities> = {
-  college: {
+  live: {
     readOnly: false,
     hasPersonalProfiles: true,
     hasCRUD: true,
@@ -44,57 +44,15 @@ export const PROVIDER_REGISTRY: Record<ProviderId, ProviderCapabilities> = {
     hasDemoNodes: true,
     nodeLabel: 'Person',
     edgeLabel: 'Connection',
-    displayName: 'College Graph',
-    icon: '🎓',
-    description: 'Personal professional network — editable, connectors, trust analysis',
+    displayName: 'Live Graph',
+    icon: '🌐',
+    description: 'Rai Singh Authentic Network — verified trust relationships',
     accentColor: '#60a5fa',
     available: true,
   },
-
-  imdb: {
-    readOnly: true,
-    hasPersonalProfiles: false,
-    hasCRUD: false,
-    hasConnectors: false,
-    hasWorkspaceMode: false,
-    hasTrustAnalysis: false,
-    hasCollaborationAnalysis: true,
-    hasClustering: true,
-    hasPathfinding: true,
-    hasCentrality: true,
-    hasDemoNodes: false,
-    nodeLabel: 'Actor',
-    edgeLabel: 'Collaboration',
-    displayName: 'IMDb Graph',
-    icon: '🎬',
-    description: 'Actor collaboration network — read-only, shortest paths, separation analysis',
-    accentColor: '#f59e0b',
-    available: true,
-  },
-
-  pantheon: {
-    readOnly: true,
-    hasPersonalProfiles: false,
-    hasCRUD: false,
-    hasConnectors: false,
-    hasWorkspaceMode: false,
-    hasTrustAnalysis: false,
-    hasCollaborationAnalysis: false,
-    hasClustering: true,
-    hasPathfinding: true,
-    hasCentrality: true,
-    hasDemoNodes: false,
-    nodeLabel: 'Historical Figure',
-    edgeLabel: 'Influence',
-    displayName: 'Pantheon Graph',
-    icon: '🏛️',
-    description: 'Historical influence network — centrality exploration, read-only',
-    accentColor: '#a78bfa',
-    available: false,
-  },
 };
 
-export const DEFAULT_PROVIDER: ProviderId = 'college';
+export const DEFAULT_PROVIDER: ProviderId = 'live';
 
 export function getCapabilities(providerId: ProviderId): ProviderCapabilities {
   return PROVIDER_REGISTRY[providerId];
