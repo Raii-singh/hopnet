@@ -32,6 +32,21 @@ export const collegeConstraint: TraversalConstraint = (from: EngineNode, to: Eng
 };
 
 /**
+ * Creates a CollegeGraph constraint that also blocks traversal to/from any node ID in `excludedNodeIds`.
+ */
+export function createCollegeConstraint(excludedNodeIds?: Set<string>): TraversalConstraint {
+  if (!excludedNodeIds || excludedNodeIds.size === 0) {
+    return collegeConstraint;
+  }
+  return (from: EngineNode, to: EngineNode): boolean => {
+    if (excludedNodeIds.has(from.id) || excludedNodeIds.has(to.id)) {
+      return false;
+    }
+    return !(from.kind === 'DEMO' && to.kind === 'REAL');
+  };
+}
+
+/**
  * IMDb constraint:
  *   All actor-to-actor traversals are allowed.
  *   No trust boundaries exist in a read-only collaboration graph.

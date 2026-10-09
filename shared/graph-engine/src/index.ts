@@ -22,6 +22,7 @@ export type {
 // Constraints
 export {
   collegeConstraint,
+  createCollegeConstraint,
   imdbConstraint,
   pantheonConstraint,
   noConstraint,
@@ -35,6 +36,11 @@ export { bfsSubgraph } from './bfs';
 // Dijkstra
 export { dijkstra, reconstructPath } from './dijkstra';
 
+// Yen's K-Shortest Paths
+export type { EnginePath, YenResult } from './yen';
+export { yenKShortestPaths } from './yen';
+
 // Centrality
 export type { RealEdgePredicate } from './centrality';
 export { computeScores, rankNodes } from './centrality';
+
