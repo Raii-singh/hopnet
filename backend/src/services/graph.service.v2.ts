@@ -71,8 +71,8 @@ import {
   dijkstra,
   reconstructPath,
   yenKShortestPaths,
-} from '@hopnet/shared/graph-engine';
-import type { EngineNode, EngineEdge } from '@hopnet/shared/graph-engine';
+} from '../../../shared/graph-engine/src';
+import type { EngineNode, EngineEdge } from '../../../shared/graph-engine/src';
 import { validationError, nodeNotFound } from './errors';
 
 // ── Constants ─────────────────────────────────────────────────────────────
