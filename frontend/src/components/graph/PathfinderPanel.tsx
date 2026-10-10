@@ -75,6 +75,7 @@ export default function PathfinderPanel() {
     const { visibleNodes, primaryNodeId, rootNodeId } = useGraphStore.getState();
     if (visibleNodes.length > 0 && !selectedStart) {
       const activePrimary = visibleNodes.find(n => n.id === primaryNodeId || n.publicId === primaryNodeId)
+        || visibleNodes.find(n => n.publicId === 'HNP-000001' || n.id === 'f02bb0c5-43e0-4e5e-b54a-033a852f1645' || n.fullName.trim().toLowerCase() === 'rai singh')
         || visibleNodes.find(n => n.id === rootNodeId)
         || visibleNodes[0];
       if (activePrimary) {

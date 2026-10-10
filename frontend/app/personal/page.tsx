@@ -8,7 +8,7 @@ import PersonalProfileView from '@/components/profile/PersonalProfileView';
 import NodeCreateModal from '@/components/modals/NodeCreateModal';
 
 export default function PersonalPage() {
-  const { databaseNodes, visibleLinks, rootNodeId, isLoading, refreshDatabase } = useGraphStore();
+  const { databaseNodes, visibleLinks, rootNodeId, primaryNodeId, isLoading, refreshDatabase } = useGraphStore();
   const { isAdmin } = useAuthStore();
   const [isMounted, setIsMounted] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -18,8 +18,11 @@ export default function PersonalPage() {
     refreshDatabase();
   }, [refreshDatabase]);
 
-  // Active person: current root node or first person in Neo4j
-  const activePerson = databaseNodes.find(n => n.id === rootNodeId) ?? databaseNodes[0];
+  // Active person: primary node, or root node, or Rai Singh (default primary identity)
+  const activePerson = (primaryNodeId ? databaseNodes.find(n => n.id === primaryNodeId || n.publicId === primaryNodeId) : null)
+    ?? (rootNodeId ? databaseNodes.find(n => n.id === rootNodeId || n.publicId === rootNodeId) : null)
+    ?? databaseNodes.find(n => n.publicId === 'HNP-000001' || n.id === 'f02bb0c5-43e0-4e5e-b54a-033a852f1645' || n.fullName.trim().toLowerCase() === 'rai singh')
+    ?? databaseNodes[0];
 
   if (isLoading || !isMounted) {
     return (

@@ -269,6 +269,22 @@ const EMPTY_META: SubgraphMeta = {
 
 const ROOT_DUMMY = 'r-001';
 
+export const DEFAULT_PRIMARY_NODE_ID = 'f02bb0c5-43e0-4e5e-b54a-033a852f1645';
+export const DEFAULT_PRIMARY_PUBLIC_ID = 'HNP-000001';
+export const DEFAULT_PRIMARY_NAME = 'Rai Singh';
+
+export function findDefaultPrimaryNode(nodes: GraphNode[]): GraphNode | undefined {
+  if (!nodes || nodes.length === 0) return undefined;
+  return (
+    nodes.find(n => n.publicId === DEFAULT_PRIMARY_PUBLIC_ID) ||
+    nodes.find(n => n.id === DEFAULT_PRIMARY_NODE_ID) ||
+    nodes.find(n => n.fullName?.trim().toLowerCase() === DEFAULT_PRIMARY_NAME.toLowerCase()) ||
+    nodes.find(n => n.username?.trim().toLowerCase() === 'rai1819') ||
+    nodes.find(n => n.nodeType === 'REAL') ||
+    nodes[0]
+  );
+}
+
 function buildDummySubgraph(
   rootNodeId: string,
   hopDepth: number,
@@ -298,8 +314,8 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   dataSource: 'api-v2',
   isApiHealthy: false,
 
-  primaryNodeId: null,
-  rootNodeId: '',
+  primaryNodeId: DEFAULT_PRIMARY_NODE_ID,
+  rootNodeId: DEFAULT_PRIMARY_NODE_ID,
   hopDepth: 3,
   showDemoNodes: false,
   selectedNode: null,
@@ -379,8 +395,12 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   },
 
   setPrimaryNode: async (id: string | null) => {
+    const { databaseNodes } = get();
+    const defaultPrimaryNode = findDefaultPrimaryNode(databaseNodes);
+    const defaultPrimaryId = defaultPrimaryNode ? defaultPrimaryNode.id : DEFAULT_PRIMARY_NODE_ID;
+
     if (!id) {
-      set({ primaryNodeId: null });
+      set({ primaryNodeId: defaultPrimaryId, rootNodeId: defaultPrimaryId });
       if (typeof window !== 'undefined') {
         localStorage.removeItem('hopnet_primary_node_live');
       }
@@ -388,7 +408,6 @@ export const useGraphStore = create<GraphState>((set, get) => ({
       return;
     }
 
-    const { databaseNodes } = get();
     const matched = databaseNodes.find(n => n.id === id || n.publicId === id);
     const targetId = matched ? matched.id : id;
 
@@ -440,16 +459,22 @@ export const useGraphStore = create<GraphState>((set, get) => ({
           let savedPrimaryId = typeof window !== 'undefined' ? localStorage.getItem('hopnet_primary_node_live') : null;
           let matched = savedPrimaryId ? dbNodes.find(n => n.id === savedPrimaryId || n.publicId === savedPrimaryId) : null;
 
-          let activePrimaryId: string | null = null;
+          // Default primary node is hardcoded to Rai Singh (HNP-000001)
+          const defaultPrimaryNode = findDefaultPrimaryNode(dbNodes);
+          const defaultPrimaryId = defaultPrimaryNode ? defaultPrimaryNode.id : DEFAULT_PRIMARY_NODE_ID;
+
+          let activePrimaryId: string;
           if (matched) {
             activePrimaryId = matched.id;
-          } else if (savedPrimaryId) {
-            // Saved primary node was deleted from Neo4j — clear preference gracefully
-            if (typeof window !== 'undefined') localStorage.removeItem('hopnet_primary_node_live');
-            activePrimaryId = null;
+          } else {
+            if (savedPrimaryId && typeof window !== 'undefined') {
+              // Saved primary node was deleted from Neo4j — clear preference gracefully
+              localStorage.removeItem('hopnet_primary_node_live');
+            }
+            activePrimaryId = defaultPrimaryId;
           }
 
-          const effectiveRootId = activePrimaryId || (dbNodes[0]?.id ?? '');
+          const effectiveRootId = activePrimaryId || defaultPrimaryId;
 
           set({
             dataSource: 'api-v2',
@@ -629,15 +654,16 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   setNodeDistanceScale: (scale) => set({ nodeDistanceScale: scale }),
 
   resetGraph: () => {
-    const { dataSource, allNodes, activeProvider } = get();
-    // For v2 mode, the current rootNodeId is already the correct UUID.
-    // For dummy mode, reset to static root.
-    const currentRootNodeId = get().rootNodeId;
-    const rootNodeId = dataSource === 'dummy'
-      ? ROOT_DUMMY
-      : dataSource === 'api-v2'
-        ? currentRootNodeId
-        : allNodes.find(n => n.nodeType === 'REAL')?.id ?? ROOT_DUMMY;
+    const { dataSource, allNodes, databaseNodes, primaryNodeId, activeProvider } = get();
+    let rootNodeId: string;
+    if (dataSource === 'api-v2') {
+      const defaultPrimary = findDefaultPrimaryNode(databaseNodes);
+      rootNodeId = primaryNodeId || defaultPrimary?.id || DEFAULT_PRIMARY_NODE_ID;
+    } else if (dataSource === 'dummy') {
+      rootNodeId = ROOT_DUMMY;
+    } else {
+      rootNodeId = allNodes.find(n => n.nodeType === 'REAL')?.id ?? ROOT_DUMMY;
+    }
 
     set({
       rootNodeId,

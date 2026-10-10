@@ -272,7 +272,7 @@ export async function listPersons(
             sum(CASE WHEN other.nodeType = 'REAL' THEN 1 ELSE 0 END) AS realConn,
             sum(CASE WHEN other.nodeType = 'DEMO' THEN 1 ELSE 0 END) AS demoConn
        RETURN p, totalConn, realConn, demoConn
-       ORDER BY p.createdAt DESC
+       ORDER BY CASE WHEN p.publicId = 'HNP-000001' OR toLower(p.fullName) = 'rai singh' THEN 0 ELSE 1 END, p.createdAt DESC
        SKIP $skip
        LIMIT $limit`,
       { nodeType: nodeType ?? null, skip: neo4j.int(skip), limit: neo4j.int(limit) }

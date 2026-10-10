@@ -125,7 +125,9 @@ export default function GraphCanvas() {
   const zoomInClose = useCallback(() => {
     if (!graphRef.current) return;
     const fg = graphRef.current;
-    const primaryNode = (primaryNodeId ? visibleNodes.find(n => n.id === primaryNodeId || n.publicId === primaryNodeId) : null) || visibleNodes[0];
+    const primaryNode = (primaryNodeId ? visibleNodes.find(n => n.id === primaryNodeId || n.publicId === primaryNodeId) : null)
+      || visibleNodes.find(n => n.publicId === 'HNP-000001' || n.id === 'f02bb0c5-43e0-4e5e-b54a-033a852f1645' || n.fullName.trim().toLowerCase() === 'rai singh')
+      || visibleNodes[0];
     if (primaryNode && typeof primaryNode.x === 'number' && typeof primaryNode.y === 'number' && isFinite(primaryNode.x) && isFinite(primaryNode.y)) {
       fg.centerAt(primaryNode.x, primaryNode.y, 400);
     } else {
@@ -480,8 +482,10 @@ export default function GraphCanvas() {
 
     if (visibleNodes.length <= 1) return links;
 
-    // Find the primary node object in visibleNodes (or fallback to first node)
-    const primaryNode = (primaryNodeId ? visibleNodes.find(n => n.id === primaryNodeId || n.publicId === primaryNodeId) : null) || visibleNodes[0];
+    // Find the primary node object in visibleNodes (or fallback to Rai Singh, then first node)
+    const primaryNode = (primaryNodeId ? visibleNodes.find(n => n.id === primaryNodeId || n.publicId === primaryNodeId) : null)
+      || visibleNodes.find(n => n.publicId === 'HNP-000001' || n.id === 'f02bb0c5-43e0-4e5e-b54a-033a852f1645' || n.fullName.trim().toLowerCase() === 'rai singh')
+      || visibleNodes[0];
     if (!primaryNode) return links;
 
     // 2. Perform BFS from primaryNode to find all nodes reachable via real edges
