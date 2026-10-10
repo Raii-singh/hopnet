@@ -469,15 +469,41 @@ export interface ApiPathResponseV2 {
 // ── v2 health check ───────────────────────────────────────────────────────
 
 /**
+ * Fire an immediate background keep-alive/warmup ping to Render backend.
+ * Called on landing page mount to spin up container from cold hibernation.
+ */
+export async function prewarmBackend(): Promise<boolean> {
+  if (typeof window === 'undefined') return false;
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 45000);
+    const res = await fetch(`${BASE_URL_V2}/health`, {
+      method: 'GET',
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Returns true if the v2 API is reachable and Neo4j is connected.
  * Used by graphStore.initGraph to decide which data path to activate.
  */
-export async function checkHealthV2(): Promise<boolean> {
+export async function checkHealthV2(timeoutMs = 12000): Promise<boolean> {
   try {
-    const result = await apiFetchV2<{ status: string }>('/health', 3000);
+    const result = await apiFetchV2<{ status: string }>('/health', timeoutMs);
     return result?.status === 'ok';
   } catch {
-    return false;
+    try {
+      await new Promise(r => setTimeout(r, 1500));
+      const retryResult = await apiFetchV2<{ status: string }>('/health', 8000);
+      return retryResult?.status === 'ok';
+    } catch {
+      return false;
+    }
   }
 }
 

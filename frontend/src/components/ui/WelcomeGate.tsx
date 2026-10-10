@@ -11,14 +11,28 @@
 import { useEffect, useState } from 'react';
 import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
+import { prewarmBackend } from '@/services/api';
 
 export default function WelcomeGate() {
   const { setAppMode } = useAppStore();
   const { isChecking } = useAuthStore();
   const [mounted, setMounted] = useState(false);
+  const [serverStatus, setServerStatus] = useState<'warming' | 'ready' | 'idle'>('warming');
+  const [showNotification, setShowNotification] = useState(true);
 
-  // Avoid SSR mismatch
-  useEffect(() => { setMounted(true); }, []);
+  // Avoid SSR mismatch and trigger pre-warm ping on mount
+  useEffect(() => {
+    setMounted(true);
+    let isSubscribed = true;
+    prewarmBackend().then((ok) => {
+      if (isSubscribed) {
+        setServerStatus(ok ? 'ready' : 'idle');
+      }
+    });
+    return () => {
+      isSubscribed = false;
+    };
+  }, []);
 
   // Don't flash anything while auth is resolving
   if (!mounted || isChecking) return null;
@@ -37,6 +51,116 @@ export default function WelcomeGate() {
         overflow: 'hidden',
       }}
     >
+      {/* Top-Right Free Tier Hosting Cold-Start Notification */}
+      {showNotification && (
+        <aside
+          aria-label="Cloud Server Hosting Status"
+          className="glass-panel animate-fade-in"
+          style={{
+            position: 'fixed',
+            top: 'calc(var(--navbar-height, 64px) + 14px)',
+            right: '20px',
+            zIndex: 99999,
+            width: 'calc(100vw - 40px)',
+            maxWidth: '340px',
+            padding: '12px 14px',
+            borderRadius: '12px',
+            background: 'rgba(10, 15, 29, 0.82)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            border: serverStatus === 'ready'
+              ? '1px solid rgba(34, 197, 94, 0.35)'
+              : '1px solid rgba(234, 179, 8, 0.35)',
+            boxShadow: '0 10px 30px -5px rgba(0, 0, 0, 0.6), 0 0 15px rgba(255, 255, 255, 0.03)',
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '10px',
+          }}
+        >
+          {/* Animated Status Indicator Dot */}
+          <div style={{ marginTop: '3px', flexShrink: 0 }}>
+            {serverStatus === 'ready' ? (
+              <span
+                style={{
+                  display: 'inline-block',
+                  width: 8,
+                  height: 8,
+                  borderRadius: '50%',
+                  background: '#22c55e',
+                  boxShadow: '0 0 10px #22c55e',
+                }}
+              />
+            ) : (
+              <span
+                className="animate-pulse"
+                style={{
+                  display: 'inline-block',
+                  width: 8,
+                  height: 8,
+                  borderRadius: '50%',
+                  background: '#eab308',
+                  boxShadow: '0 0 10px #eab308',
+                }}
+              />
+            )}
+          </div>
+
+          {/* Message Text */}
+          <div style={{ flex: 1, textAlign: 'left' }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: '2px',
+              }}
+            >
+              <span
+                style={{
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  letterSpacing: '0.04em',
+                  textTransform: 'uppercase',
+                  color: serverStatus === 'ready' ? '#4ade80' : '#facc15',
+                }}
+              >
+                {serverStatus === 'ready' ? 'Cloud Server Ready' : 'Free Tier Cold-Start'}
+              </span>
+              <button
+                onClick={() => setShowNotification(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--silver-400)',
+                  cursor: 'pointer',
+                  padding: '0 2px',
+                  fontSize: '15px',
+                  lineHeight: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+                aria-label="Dismiss notification"
+              >
+                ×
+              </button>
+            </div>
+            <p
+              style={{
+                margin: 0,
+                fontSize: '11.5px',
+                color: 'var(--silver-300)',
+                lineHeight: 1.45,
+              }}
+            >
+              {serverStatus === 'ready'
+                ? 'Backend is warm & connected. Graph intelligence will load instantly.'
+                : 'Current hosting uses Render free tier (hibernates on idle). Pre-warming server now — first load may take ~30s.'}
+            </p>
+          </div>
+        </aside>
+      )}
+
       {/* Centered Welcome Modal Box — Pure Golden Standard Glass Theme */}
       <div
         className="glass-panel-strong animate-fade-in-scale"
