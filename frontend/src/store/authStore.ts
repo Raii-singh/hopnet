@@ -11,10 +11,17 @@ interface AuthState {
   logout: () => Promise<void>;
 }
 
+// Ensure SUDO mode is strictly OFF by default on every page load/reload
+if (typeof window !== 'undefined') {
+  try {
+    localStorage.removeItem('hopnet_sudo_token');
+  } catch {}
+}
+
 export const useAuthStore = create<AuthState>((set) => ({
   isAdmin: false,
   username: null,
-  isChecking: true,
+  isChecking: false,
   setIsAdmin: (isAdmin, username = null) => set({ isAdmin, username }),
   checkAuth: async () => {
     try {

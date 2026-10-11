@@ -15,7 +15,6 @@ import { prewarmBackend } from '@/services/api';
 
 export default function WelcomeGate() {
   const { setAppMode } = useAppStore();
-  const { isChecking } = useAuthStore();
   const [mounted, setMounted] = useState(false);
   const [serverStatus, setServerStatus] = useState<'warming' | 'ready' | 'idle'>('warming');
   const [showNotification, setShowNotification] = useState(true);
@@ -34,8 +33,8 @@ export default function WelcomeGate() {
     };
   }, []);
 
-  // Don't flash anything while auth is resolving
-  if (!mounted || isChecking) return null;
+  // Avoid SSR hydration mismatch
+  if (!mounted) return null;
 
   return (
     <div

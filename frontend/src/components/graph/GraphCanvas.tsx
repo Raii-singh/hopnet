@@ -755,7 +755,7 @@ export default function GraphCanvas() {
         />
       )}
 
-      {isLoading && (
+      {isLoading && visibleNodes.length > 0 && (
         <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(2,2,2,0.65)', backdropFilter: 'blur(10px)', zIndex: 50 }}>
           <div style={{ textAlign: 'center' }}>
             <div style={{ width: 32, height: 32, border: `2px solid ${accentColor}30`, borderTopColor: accentColor, borderRadius: '50%', animation: 'spin 0.7s linear infinite', margin: '0 auto 10px' }} />

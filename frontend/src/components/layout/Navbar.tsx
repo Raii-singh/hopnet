@@ -14,12 +14,8 @@ import SudoLoginModal from '@/components/modals/SudoLoginModal';
 
 export default function Navbar() {
   const pathname = usePathname();
-  const { isAdmin, checkAuth, logout } = useAuthStore();
+  const { isAdmin, logout } = useAuthStore();
   const [showLoginModal, setShowLoginModal] = useState(false);
-
-  useEffect(() => {
-    checkAuth();
-  }, [checkAuth]);
 
   const {
     workspaceMode,

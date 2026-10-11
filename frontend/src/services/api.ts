@@ -468,6 +468,16 @@ export interface ApiPathResponseV2 {
 
 // ── v2 health check ───────────────────────────────────────────────────────
 
+let _isBackendWarm = false;
+
+export function getIsBackendWarm(): boolean {
+  return _isBackendWarm;
+}
+
+export function setIsBackendWarm(val: boolean): void {
+  _isBackendWarm = val;
+}
+
 /**
  * Fire an immediate background keep-alive/warmup ping to Render backend.
  * Called on landing page mount to spin up container from cold hibernation.
@@ -482,6 +492,9 @@ export async function prewarmBackend(): Promise<boolean> {
       signal: controller.signal,
     });
     clearTimeout(timer);
+    if (res.ok) {
+      _isBackendWarm = true;
+    }
     return res.ok;
   } catch {
     return false;
@@ -495,12 +508,20 @@ export async function prewarmBackend(): Promise<boolean> {
 export async function checkHealthV2(timeoutMs = 12000): Promise<boolean> {
   try {
     const result = await apiFetchV2<{ status: string }>('/health', timeoutMs);
-    return result?.status === 'ok';
+    const ok = result?.status === 'ok';
+    if (ok) {
+      _isBackendWarm = true;
+    }
+    return ok;
   } catch {
     try {
       await new Promise(r => setTimeout(r, 1500));
       const retryResult = await apiFetchV2<{ status: string }>('/health', 8000);
-      return retryResult?.status === 'ok';
+      const ok = retryResult?.status === 'ok';
+      if (ok) {
+        _isBackendWarm = true;
+      }
+      return ok;
     } catch {
       return false;
     }

@@ -7,6 +7,7 @@ import WorkspacePanel from '@/components/graph/WorkspacePanel';
 import GraphLegend from '@/components/graph/GraphLegend';
 import BottomInfoBar from '@/components/ui/BottomInfoBar';
 import WelcomeGate from '@/components/ui/WelcomeGate';
+import ColdStartProgressBar from '@/components/ui/ColdStartProgressBar';
 import { useGraphStore } from '@/store/graphStore';
 import { useAppStore } from '@/store/appStore';
 
@@ -56,6 +57,7 @@ export default function HomePage() {
       <WorkspacePanel />
       <GraphLegend />
       <BottomInfoBar meta={meta} isLoading={isLoading} />
+      <ColdStartProgressBar />
     </main>
   );
 }
