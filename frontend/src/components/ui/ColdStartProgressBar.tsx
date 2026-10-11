@@ -105,8 +105,8 @@ export default function ColdStartProgressBar() {
           left: 0,
           width: `${progress}%`,
           height: '2.5px',
-          background: 'linear-gradient(90deg, #3b82f6 0%, #60a5fa 60%, #93c5fd 90%, #ffffff 100%)',
-          boxShadow: '0 0 12px rgba(96, 165, 250, 0.9), 0 0 20px rgba(59, 130, 246, 0.5)',
+          background: 'linear-gradient(90deg, #64748b 0%, #cbd5e1 40%, #f1f5f9 80%, #ffffff 100%)',
+          boxShadow: '0 0 10px rgba(255, 255, 255, 0.7), 0 0 20px rgba(226, 232, 240, 0.4)',
           transition: isWarmMode ? 'width 0.1s linear' : 'width 0.25s ease-out',
           zIndex: 99999,
           pointerEvents: 'none',
@@ -122,7 +122,7 @@ export default function ColdStartProgressBar() {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: 'rgba(2, 6, 23, 0.45)',
+            background: 'rgba(0, 0, 0, 0.6)',
             backdropFilter: 'blur(12px)',
             WebkitBackdropFilter: 'blur(12px)',
             zIndex: 99998,
@@ -137,8 +137,8 @@ export default function ColdStartProgressBar() {
               maxWidth: 480,
               padding: '24px 28px',
               textAlign: 'center',
-              boxShadow: '0 20px 50px rgba(0, 0, 0, 0.7), 0 0 30px rgba(96, 165, 250, 0.1)',
-              border: '1px solid rgba(255, 255, 255, 0.12)',
+              boxShadow: '0 20px 50px rgba(0, 0, 0, 0.85), 0 0 30px rgba(255, 255, 255, 0.04)',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
             }}
           >
             {/* Header info */}
@@ -158,8 +158,8 @@ export default function ColdStartProgressBar() {
                     width: 7,
                     height: 7,
                     borderRadius: '50%',
-                    background: '#60a5fa',
-                    boxShadow: '0 0 10px #60a5fa',
+                    background: '#e2e8f0',
+                    boxShadow: '0 0 10px rgba(255, 255, 255, 0.9)',
                   }}
                 />
                 <span
@@ -179,7 +179,7 @@ export default function ColdStartProgressBar() {
                   fontFamily: 'monospace',
                   fontSize: '13px',
                   fontWeight: 800,
-                  color: '#60a5fa',
+                  color: '#f8fafc',
                 }}
               >
                 {currentPercent}%
@@ -201,8 +201,8 @@ export default function ColdStartProgressBar() {
                 style={{
                   width: `${progress}%`,
                   height: '100%',
-                  background: 'linear-gradient(90deg, #2563eb 0%, #60a5fa 70%, #ffffff 100%)',
-                  boxShadow: '0 0 10px #60a5fa',
+                  background: 'linear-gradient(90deg, #64748b 0%, #cbd5e1 50%, #ffffff 100%)',
+                  boxShadow: '0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(203, 213, 225, 0.35)',
                   transition: 'width 0.3s ease-out',
                   borderRadius: '999px',
                 }}
