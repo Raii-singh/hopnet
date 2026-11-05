@@ -29,7 +29,7 @@ Key capabilities:
 | Visualization | React Force Graph 2D, Three.js, Vanta.js |
 | Animation | Framer Motion |
 | Backend | Node.js, Express v5, TypeScript |
-| Database | PostgreSQL, Prisma ORM v6 |
+| Database | Neo4j, PostgreSQL |
 | Graph Engine | Custom BFS + Dijkstra (shared module) |
 | State | Zustand |
 
