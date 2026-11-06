@@ -17,3 +17,6 @@ bin/
 *.png
 bin.txt
 hopnet_onboarding_report.md
+*.pptx
+*.pdf
+disposable/

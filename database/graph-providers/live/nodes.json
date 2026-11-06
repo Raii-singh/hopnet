@@ -1,27 +1,28 @@
 [
   {
-    "id": "f02bb0c5-43e0-4e5e-b54a-033a852f1645",
+    "id": "ba81e688-04a2-401a-8ede-9059f4a030fa",
     "publicId": "HNP-000001",
-    "fullName": "Rai Singh",
+    "fullName": "Rai",
     "username": "rai1819",
     "email": "rai1819.dox@gmail.com",
-    "phone": "+91 9015 135691",
-    "company": "KA3L",
+    "phone": "09015135691",
+    "company": "HOPNet",
     "cluster": "Tech",
-    "influenceScore": 0,
+    "influenceScore": 100,
+    "nodeType": "REAL",
     "tags": [
-      "PolyMath"
+      "Polymath",
+      "Creator"
     ],
     "sourceConnectors": [
       "Manual Workspace"
     ],
-    "nodeType": "REAL",
-    "createdAt": "2026-09-11T11:24:10.551Z",
-    "updatedAt": "2026-09-11T11:24:10.551Z",
-    "createdBy": "Manual Workspace"
+    "createdAt": "2026-10-09T19:46:04.316Z",
+    "updatedAt": "2026-10-11T20:27:34.121Z",
+    "createdBy": "LiveGraph Seed v2"
   },
   {
-    "id": "e1019ff9-c129-4952-8a8e-7fb3f5f58ff6",
+    "id": "64c87fd5-a088-4991-9ff3-419b969c75da",
     "publicId": "HNP-000002",
     "fullName": "Yashasvi",
     "username": "yaini",
@@ -30,37 +31,36 @@
     "company": "HOPNet",
     "cluster": "Core",
     "influenceScore": 50,
+    "nodeType": "REAL",
     "tags": [],
     "sourceConnectors": [
       "Manual Workspace"
     ],
-    "nodeType": "REAL",
-    "createdAt": "2026-09-11T11:25:47.913Z",
-    "updatedAt": "2026-09-11T16:32:15.344Z",
-    "createdBy": "Manual Workspace"
+    "createdAt": "2026-10-09T19:46:04.851Z",
+    "updatedAt": "2026-10-09T19:46:04.851Z",
+    "createdBy": "LiveGraph Seed v2"
   },
   {
-    "id": "70cebea6-0a1e-4033-8d19-82f130796d3c",
-    "publicId": "HNP-000005",
+    "id": "c2e06822-c00f-4fd5-85fb-bcbe46a06f58",
+    "publicId": "HNP-000003",
     "fullName": "Parshant",
     "username": "parshant",
     "email": "parshant@hopnet.io",
-    "phone": null,
     "company": "HOPNet",
     "cluster": "Tech",
     "influenceScore": 0,
+    "nodeType": "REAL",
     "tags": [],
     "sourceConnectors": [
       "Manual Workspace"
     ],
-    "nodeType": "REAL",
-    "createdAt": "2026-09-11T11:44:47.707Z",
-    "updatedAt": "2026-09-11T11:44:47.707Z",
-    "createdBy": "Manual Workspace"
+    "createdAt": "2026-10-09T19:46:05.337Z",
+    "updatedAt": "2026-10-09T19:46:05.337Z",
+    "createdBy": "LiveGraph Seed v2"
   },
   {
-    "id": "24e5cbec-131a-4278-805d-ddb705a00345",
-    "publicId": "HNP-000008",
+    "id": "6c4ef18c-e612-4dfc-b4bd-4e2eaf286c8d",
+    "publicId": "HNP-000004",
     "fullName": "Aditaya Mishra",
     "username": "akm",
     "email": "aditaya_mishra@hopnet.io",
@@ -68,37 +68,391 @@
     "company": "HOPNet",
     "cluster": "Tech",
     "influenceScore": 0,
+    "nodeType": "REAL",
     "tags": [],
     "sourceConnectors": [
       "Manual Workspace"
     ],
-    "nodeType": "REAL",
-    "createdAt": "2026-09-11T15:17:45.593Z",
-    "updatedAt": "2026-09-11T15:17:45.593Z",
-    "createdBy": "Manual Workspace"
+    "createdAt": "2026-10-09T19:46:05.813Z",
+    "updatedAt": "2026-10-09T19:46:05.813Z",
+    "createdBy": "LiveGraph Seed v2"
   },
   {
-    "id": "a2b9fc5d-b3c8-4892-a20c-33b4f3fe201e",
-    "publicId": "HNP-000009",
+    "id": "d31c7b26-31b5-4a71-9dda-d7d206979354",
+    "publicId": "HNP-000010",
+    "fullName": "Sonu Bala",
+    "username": "sonu_bala",
+    "email": "sonu_bala@hopnet.io",
+    "company": "HOPNet",
+    "cluster": "Core",
+    "influenceScore": 0,
+    "nodeType": "REAL",
+    "tags": [],
+    "sourceConnectors": [
+      "Manual Workspace"
+    ],
+    "createdAt": "2026-10-09T19:46:08.606Z",
+    "updatedAt": "2026-10-09T19:46:08.606Z",
+    "createdBy": "LiveGraph Seed v2"
+  },
+  {
+    "id": "cfcd72bf-2aad-49c9-94e3-a737703dfabc",
+    "publicId": "HNP-000012",
+    "fullName": "Ram Singh",
+    "username": "ram_singh",
+    "email": "ram_singh@hopnet.io",
+    "company": "HOPNet",
+    "cluster": "Academia",
+    "influenceScore": 0,
+    "nodeType": "REAL",
+    "tags": [],
+    "sourceConnectors": [
+      "Manual Workspace"
+    ],
+    "createdAt": "2026-10-09T19:46:09.567Z",
+    "updatedAt": "2026-10-09T19:46:09.567Z",
+    "createdBy": "LiveGraph Seed v2"
+  },
+  {
+    "id": "7b5006cc-9438-47c9-ac8a-d5fea9f713e2",
+    "publicId": "HNP-000013",
+    "fullName": "Tanmay",
+    "username": "tanmay",
+    "email": "tanmay@hopnet.io",
+    "company": "HOPNet",
+    "cluster": "Tech",
+    "influenceScore": 0,
+    "nodeType": "REAL",
+    "tags": [],
+    "sourceConnectors": [
+      "Manual Workspace"
+    ],
+    "createdAt": "2026-10-09T19:46:10.021Z",
+    "updatedAt": "2026-10-09T19:46:10.021Z",
+    "createdBy": "LiveGraph Seed v2"
+  },
+  {
+    "id": "78164369-98c9-4374-95f1-0f48d315f291",
+    "publicId": "HNP-000016",
+    "fullName": "Priyanshu R.",
+    "username": "priyanshu_r.",
+    "email": "priyanshu_r.@hopnet.io",
+    "company": "HOPNet",
+    "cluster": "Tech",
+    "influenceScore": 50,
+    "nodeType": "REAL",
+    "tags": [],
+    "sourceConnectors": [
+      "Manual Workspace"
+    ],
+    "createdAt": "2026-10-09T19:46:11.477Z",
+    "updatedAt": "2026-10-09T19:46:11.477Z",
+    "createdBy": "LiveGraph Seed v2"
+  },
+  {
+    "id": "4b241f10-07df-4e0f-a6c9-b1d3be64547b",
+    "publicId": "HNP-000018",
+    "fullName": "Kanav Sharma",
+    "cluster": "Health",
+    "influenceScore": 100,
+    "nodeType": "REAL",
+    "tags": [],
+    "sourceConnectors": [
+      "Manual Workspace"
+    ],
+    "createdAt": "2026-10-09T21:07:54.441Z",
+    "updatedAt": "2026-10-09T21:07:54.441Z",
+    "createdBy": "LiveGraph Seed v2"
+  },
+  {
+    "id": "08f401dc-c884-49ae-ae54-ce2b739d59a8",
+    "publicId": "HNP-000020",
+    "fullName": "Ritanjay",
+    "cluster": "Venture",
+    "influenceScore": 88,
+    "nodeType": "REAL",
+    "tags": [],
+    "sourceConnectors": [
+      "Manual Workspace"
+    ],
+    "createdAt": "2026-10-09T21:07:55.433Z",
+    "updatedAt": "2026-10-09T21:07:55.433Z",
+    "createdBy": "LiveGraph Seed v2"
+  },
+  {
+    "id": "c4df42f7-d21d-40f6-b9f1-2cc193c4b37b",
+    "publicId": "HNP-000021",
+    "fullName": "Mritunjay",
+    "cluster": "Academia",
+    "influenceScore": 81,
+    "nodeType": "REAL",
+    "tags": [],
+    "sourceConnectors": [
+      "Manual Workspace"
+    ],
+    "createdAt": "2026-10-09T21:07:55.910Z",
+    "updatedAt": "2026-10-09T21:07:55.910Z",
+    "createdBy": "LiveGraph Seed v2"
+  },
+  {
+    "id": "10667380-f6bc-4851-b04d-ebb01527c33e",
+    "publicId": "HNP-000025",
+    "fullName": "Harshit Dhiman",
+    "cluster": "Venture",
+    "influenceScore": 0,
+    "nodeType": "REAL",
+    "tags": [],
+    "sourceConnectors": [
+      "Manual Workspace"
+    ],
+    "createdAt": "2026-10-09T21:07:57.818Z",
+    "updatedAt": "2026-10-09T21:07:57.818Z",
+    "createdBy": "LiveGraph Seed v2"
+  },
+  {
+    "id": "ef1956b2-6488-4962-b214-d9554ce40cde",
+    "publicId": "HNP-000037",
+    "fullName": "Abhinav Sharma",
+    "cluster": "Tech",
+    "influenceScore": 0,
+    "nodeType": "REAL",
+    "tags": [],
+    "sourceConnectors": [
+      "Manual Workspace"
+    ],
+    "createdAt": "2026-10-09T21:08:05.903Z",
+    "updatedAt": "2026-10-09T21:08:05.903Z",
+    "createdBy": "LiveGraph Seed v2"
+  },
+  {
+    "id": "8cdff94d-61a3-4276-b6f5-4a14ec2cf4b3",
+    "publicId": "HNP-000041",
+    "fullName": "Himanshi",
+    "cluster": "Academia",
+    "influenceScore": 0,
+    "nodeType": "REAL",
+    "tags": [],
+    "sourceConnectors": [
+      "Manual Workspace"
+    ],
+    "createdAt": "2026-10-09T21:08:09.842Z",
+    "updatedAt": "2026-10-09T21:08:09.842Z",
+    "createdBy": "LiveGraph Seed v2"
+  },
+  {
+    "id": "69560b90-759e-4a2a-9378-4b1c705e4573",
+    "publicId": "HNP-000042",
+    "fullName": "Rishabh",
+    "cluster": "Venture",
+    "influenceScore": 0,
+    "nodeType": "REAL",
+    "tags": [],
+    "sourceConnectors": [
+      "Manual Workspace"
+    ],
+    "createdAt": "2026-10-09T21:08:10.321Z",
+    "updatedAt": "2026-10-09T21:08:10.321Z",
+    "createdBy": "LiveGraph Seed v2"
+  },
+  {
+    "id": "d2855399-4fe0-42dd-950f-22eb2354514f",
+    "publicId": "HNP-000005",
     "fullName": "Atul Guleria",
     "username": "atul",
     "email": "atul_guleria@hopnet.io",
-    "phone": null,
     "company": "HOPNet",
     "cluster": "Health",
     "influenceScore": 0,
+    "nodeType": "REAL",
     "tags": [],
     "sourceConnectors": [
       "Manual Workspace"
     ],
-    "nodeType": "REAL",
-    "createdAt": "2026-09-11T15:20:30.534Z",
-    "updatedAt": "2026-09-11T15:20:30.534Z",
-    "createdBy": "Manual Workspace"
+    "createdAt": "2026-10-09T19:46:06.276Z",
+    "updatedAt": "2026-10-09T19:46:06.276Z",
+    "createdBy": "LiveGraph Seed v2"
   },
   {
-    "id": "183f19be-c724-437a-aeea-69294c57bf6e",
-    "publicId": "HNP-000010",
+    "id": "22fc75d9-cf38-4477-a3eb-1456bec7543d",
+    "publicId": "HNP-000014",
+    "fullName": "Abhishek Thakur",
+    "username": "abhishek_thakur",
+    "email": "abhishek_thakur@hopnet.io",
+    "company": "DRDO",
+    "cluster": "Tech",
+    "influenceScore": 50,
+    "nodeType": "REAL",
+    "tags": [],
+    "sourceConnectors": [
+      "Manual Workspace"
+    ],
+    "createdAt": "2026-10-09T19:46:10.485Z",
+    "updatedAt": "2026-10-09T19:46:10.485Z",
+    "createdBy": "LiveGraph Seed v2"
+  },
+  {
+    "id": "6aafd619-c400-4652-ac68-22d44f44ca7b",
+    "publicId": "HNP-000015",
+    "fullName": "Sachin Thakur",
+    "username": "sachin_thakur",
+    "email": "sachin_thakur@hopnet.io",
+    "company": "HOPNet",
+    "cluster": "Finance",
+    "influenceScore": 50,
+    "nodeType": "REAL",
+    "tags": [],
+    "sourceConnectors": [
+      "Manual Workspace"
+    ],
+    "createdAt": "2026-10-09T19:46:10.959Z",
+    "updatedAt": "2026-10-09T19:46:10.959Z",
+    "createdBy": "LiveGraph Seed v2"
+  },
+  {
+    "id": "f1e83067-7659-4a12-b7ba-9efddf5c74f6",
+    "publicId": "HNP-000026",
+    "fullName": "Mayank yadhav",
+    "cluster": "Tech",
+    "influenceScore": 0,
+    "nodeType": "REAL",
+    "tags": [],
+    "sourceConnectors": [
+      "Manual Workspace"
+    ],
+    "createdAt": "2026-10-09T21:07:58.281Z",
+    "updatedAt": "2026-10-09T21:07:58.281Z",
+    "createdBy": "LiveGraph Seed v2"
+  },
+  {
+    "id": "32bf4fc1-3c7b-4c4e-b555-2a3d66372887",
+    "publicId": "HNP-000033",
+    "fullName": "Satvik Sharma",
+    "cluster": "Tech",
+    "influenceScore": 0,
+    "nodeType": "REAL",
+    "tags": [
+      "JNV"
+    ],
+    "sourceConnectors": [
+      "Manual Workspace"
+    ],
+    "createdAt": "2026-10-09T21:08:01.842Z",
+    "updatedAt": "2026-10-09T21:08:01.842Z",
+    "createdBy": "LiveGraph Seed v2"
+  },
+  {
+    "id": "810a3817-3abd-49f6-a0eb-797e602d158a",
+    "publicId": "HNP-000034",
+    "fullName": "Anshul Sonkhala",
+    "cluster": "Tech",
+    "influenceScore": 0,
+    "nodeType": "REAL",
+    "tags": [
+      "JNV"
+    ],
+    "sourceConnectors": [
+      "Manual Workspace"
+    ],
+    "createdAt": "2026-10-09T21:08:03.639Z",
+    "updatedAt": "2026-10-09T21:08:03.639Z",
+    "createdBy": "LiveGraph Seed v2"
+  },
+  {
+    "id": "7b4b79f5-5ff6-4062-8b38-aeb31f6914b3",
+    "publicId": "HNP-000035",
+    "fullName": "Akhil Dhadwal",
+    "cluster": "Academia",
+    "influenceScore": 50,
+    "nodeType": "REAL",
+    "tags": [],
+    "sourceConnectors": [
+      "Manual Workspace"
+    ],
+    "createdAt": "2026-10-09T21:08:04.917Z",
+    "updatedAt": "2026-10-09T21:08:04.917Z",
+    "createdBy": "LiveGraph Seed v2"
+  },
+  {
+    "id": "5be278d8-f1de-41da-90b0-071f0b490f7b",
+    "publicId": "HNP-000036",
+    "fullName": "Anmol Rana",
+    "cluster": "Finance",
+    "influenceScore": 0,
+    "nodeType": "REAL",
+    "tags": [],
+    "sourceConnectors": [
+      "Manual Workspace"
+    ],
+    "createdAt": "2026-10-09T21:08:05.407Z",
+    "updatedAt": "2026-10-09T21:08:05.407Z",
+    "createdBy": "LiveGraph Seed v2"
+  },
+  {
+    "id": "72a99d98-c69e-45fc-99cd-2f5af124fb0f",
+    "publicId": "HNP-000029",
+    "fullName": "Pari",
+    "cluster": "Finance",
+    "influenceScore": 0,
+    "nodeType": "REAL",
+    "tags": [],
+    "sourceConnectors": [
+      "Manual Workspace"
+    ],
+    "createdAt": "2026-10-09T21:07:59.747Z",
+    "updatedAt": "2026-10-09T21:07:59.747Z",
+    "createdBy": "LiveGraph Seed v2"
+  },
+  {
+    "id": "05955056-d46c-4125-aac2-2c154c12304e",
+    "publicId": "HNP-000030",
+    "fullName": "Ria",
+    "cluster": "Finance",
+    "influenceScore": 0,
+    "nodeType": "REAL",
+    "tags": [],
+    "sourceConnectors": [
+      "Manual Workspace"
+    ],
+    "createdAt": "2026-10-09T21:08:00.246Z",
+    "updatedAt": "2026-10-09T21:08:00.246Z",
+    "createdBy": "LiveGraph Seed v2"
+  },
+  {
+    "id": "12247669-1188-4602-8852-897ed03c6738",
+    "publicId": "HNP-000031",
+    "fullName": "Shiwalika",
+    "cluster": "Academia",
+    "influenceScore": 0,
+    "nodeType": "REAL",
+    "tags": [],
+    "sourceConnectors": [
+      "Manual Workspace"
+    ],
+    "createdAt": "2026-10-09T21:08:00.744Z",
+    "updatedAt": "2026-10-09T21:08:00.744Z",
+    "createdBy": "LiveGraph Seed v2"
+  },
+  {
+    "id": "e75cfe0b-6bd7-4ffb-a7ee-c0a8f4490bb3",
+    "publicId": "HNP-000007",
+    "fullName": "Basu",
+    "username": "basu",
+    "email": "basu@hopnet.io",
+    "company": "ShramSetu",
+    "cluster": "Venture",
+    "influenceScore": 50,
+    "nodeType": "REAL",
+    "tags": [],
+    "sourceConnectors": [
+      "Manual Workspace"
+    ],
+    "createdAt": "2026-10-09T19:46:07.201Z",
+    "updatedAt": "2026-10-09T19:46:07.201Z",
+    "createdBy": "LiveGraph Seed v2"
+  },
+  {
+    "id": "6b19342d-c799-492f-ad19-bdb06a9bbd08",
+    "publicId": "HNP-000006",
     "fullName": "Raj Singh",
     "username": "raj",
     "email": "raj_singh@hopnet.io",
@@ -106,226 +460,301 @@
     "company": "Visa",
     "cluster": "Tech",
     "influenceScore": 0,
+    "nodeType": "REAL",
     "tags": [
       "sde"
     ],
     "sourceConnectors": [
       "Manual Workspace"
     ],
-    "nodeType": "REAL",
-    "createdAt": "2026-09-11T15:24:54.846Z",
-    "updatedAt": "2026-09-11T15:24:54.846Z",
-    "createdBy": "Manual Workspace"
+    "createdAt": "2026-10-09T19:46:06.739Z",
+    "updatedAt": "2026-10-09T19:46:06.739Z",
+    "createdBy": "LiveGraph Seed v2"
   },
   {
-    "id": "56313951-9d64-42eb-8c56-a9c69c7d747a",
+    "id": "a7885065-9a31-484c-8a6a-7b28f8118a6c",
     "publicId": "HNP-000011",
-    "fullName": "Basu",
-    "username": "basu",
-    "email": "basu@hopnet.io",
-    "phone": null,
-    "company": "ShramSetu",
-    "cluster": "Venture",
-    "influenceScore": 50,
+    "fullName": "Ankit Kumar",
+    "username": "ankit_kumar",
+    "email": "ankit_kumar@hopnet.io",
+    "company": "HOPNet",
+    "cluster": "Tech",
+    "influenceScore": 0,
+    "nodeType": "REAL",
     "tags": [],
     "sourceConnectors": [
       "Manual Workspace"
     ],
+    "createdAt": "2026-10-09T19:46:09.081Z",
+    "updatedAt": "2026-10-09T19:46:09.081Z",
+    "createdBy": "LiveGraph Seed v2"
+  },
+  {
+    "id": "146040f7-8a41-4a67-8253-5135197acd87",
+    "publicId": "HNP-000044",
+    "fullName": "Divyansh",
+    "company": "tatav",
+    "cluster": "Venture",
+    "influenceScore": 0,
     "nodeType": "REAL",
-    "createdAt": "2026-09-11T16:27:19.111Z",
-    "updatedAt": "2026-09-11T16:51:09.394Z",
+    "tags": [],
+    "sourceConnectors": [
+      "Manual Workspace"
+    ],
+    "createdAt": "2026-11-01T20:49:02.212Z",
+    "updatedAt": "2026-11-01T20:49:02.212Z",
     "createdBy": "Manual Workspace"
   },
   {
-    "id": "fe78bb3c-739a-4997-9a04-1de95699bd4c",
-    "publicId": "HNP-000012",
+    "id": "ab904685-06d6-4398-9dee-6982fb0394a5",
+    "publicId": "HNP-000008",
     "fullName": "Rajat",
     "username": "rajat",
     "email": "rajat@hopnet.io",
-    "phone": null,
     "company": "HOPNet",
     "cluster": "Academia",
     "influenceScore": 0,
+    "nodeType": "REAL",
     "tags": [
       "phd"
     ],
     "sourceConnectors": [
       "Manual Workspace"
     ],
-    "nodeType": "REAL",
-    "createdAt": "2026-09-11T16:28:59.587Z",
-    "updatedAt": "2026-09-11T16:28:59.587Z",
-    "createdBy": "Manual Workspace"
+    "createdAt": "2026-10-09T19:46:07.659Z",
+    "updatedAt": "2026-10-09T19:46:07.659Z",
+    "createdBy": "LiveGraph Seed v2"
   },
   {
-    "id": "91988e94-81d4-42c0-ab1c-49be9a0ed9d1",
-    "publicId": "HNP-000013",
+    "id": "c87128a6-d155-4f72-b144-09f055c4c144",
+    "publicId": "HNP-000009",
     "fullName": "Saurabh",
     "username": "saurabh",
     "email": "saurabh@hopnet.io",
-    "phone": null,
     "company": "HOPNet",
     "cluster": "Tech",
     "influenceScore": 0,
+    "nodeType": "REAL",
     "tags": [],
     "sourceConnectors": [
       "Manual Workspace"
     ],
-    "nodeType": "REAL",
-    "createdAt": "2026-09-11T16:29:57.887Z",
-    "updatedAt": "2026-09-11T16:29:57.887Z",
-    "createdBy": "Manual Workspace"
+    "createdAt": "2026-10-09T19:46:08.120Z",
+    "updatedAt": "2026-10-09T19:46:08.120Z",
+    "createdBy": "LiveGraph Seed v2"
   },
   {
-    "id": "5001afac-c1e2-4104-a0ab-6a6fa827eb6c",
-    "publicId": "HNP-000014",
-    "fullName": "Sonu Bala",
-    "username": "sonu_bala",
-    "email": "sonu_bala@hopnet.io",
-    "phone": null,
-    "company": "HOPNet",
-    "cluster": "Core",
-    "influenceScore": 0,
-    "tags": [],
-    "sourceConnectors": [
-      "Manual Workspace"
-    ],
-    "nodeType": "REAL",
-    "createdAt": "2026-09-11T16:30:21.319Z",
-    "updatedAt": "2026-09-11T16:30:21.319Z",
-    "createdBy": "Manual Workspace"
-  },
-  {
-    "id": "104d504a-09db-43a8-919d-0c925966893f",
-    "publicId": "HNP-000015",
-    "fullName": "Ankit Kumar",
-    "username": "ankit_kumar",
-    "email": "ankit_kumar@hopnet.io",
-    "phone": null,
-    "company": "HOPNet",
-    "cluster": "Tech",
-    "influenceScore": 0,
-    "tags": [],
-    "sourceConnectors": [
-      "Manual Workspace"
-    ],
-    "nodeType": "REAL",
-    "createdAt": "2026-09-11T16:36:05.425Z",
-    "updatedAt": "2026-09-11T16:36:05.425Z",
-    "createdBy": "Manual Workspace"
-  },
-  {
-    "id": "f7de7318-9508-4f01-8d5f-d1fb7206809a",
-    "publicId": "HNP-000016",
-    "fullName": "Ram Singh",
-    "username": "ram_singh",
-    "email": "ram_singh@hopnet.io",
-    "phone": null,
-    "company": "HOPNet",
+    "id": "b02f17dc-518d-41f9-985f-423b99759841",
+    "publicId": "HNP-000023",
+    "fullName": "Soham Sharma",
     "cluster": "Academia",
     "influenceScore": 0,
+    "nodeType": "REAL",
     "tags": [],
     "sourceConnectors": [
       "Manual Workspace"
     ],
-    "nodeType": "REAL",
-    "createdAt": "2026-09-11T19:24:36.922Z",
-    "updatedAt": "2026-09-11T19:24:36.922Z",
-    "createdBy": "Manual Workspace"
+    "createdAt": "2026-10-09T21:07:56.858Z",
+    "updatedAt": "2026-10-09T21:07:56.858Z",
+    "createdBy": "LiveGraph Seed v2"
   },
   {
-    "id": "2a4ae7a3-c53e-41f1-907f-4bf03f945cf4",
-    "publicId": "HNP-000017",
-    "fullName": "Tanmay",
-    "username": "tanmay",
-    "email": "tanmay@hopnet.io",
-    "phone": null,
-    "company": "HOPNet",
-    "cluster": "Tech",
-    "influenceScore": 0,
-    "tags": [],
-    "sourceConnectors": [
-      "Manual Workspace"
-    ],
-    "nodeType": "REAL",
-    "createdAt": "2026-09-11T19:28:44.917Z",
-    "updatedAt": "2026-09-11T19:28:44.917Z",
-    "createdBy": "Manual Workspace"
-  },
-  {
-    "id": "6caf46c9-0919-474d-ae51-7efbabffbf9b",
-    "publicId": "HNP-000018",
-    "fullName": "Abhishek Thakur",
-    "username": "abhishek_thakur",
-    "email": "abhishek_thakur@hopnet.io",
-    "phone": null,
-    "company": "DRDO",
-    "cluster": "Tech",
-    "influenceScore": 50,
-    "tags": [],
-    "sourceConnectors": [
-      "Manual Workspace"
-    ],
-    "nodeType": "REAL",
-    "createdAt": "2026-09-11T19:30:15.770Z",
-    "updatedAt": "2026-09-11T19:32:31.926Z",
-    "createdBy": "Manual Workspace"
-  },
-  {
-    "id": "51ce2498-0692-472d-bb3a-5aa21900a3d7",
-    "publicId": "HNP-000019",
-    "fullName": "Sachin Thakur",
-    "username": "sachin_thakur",
-    "email": "sachin_thakur@hopnet.io",
-    "phone": null,
-    "company": "HOPNet",
+    "id": "8b093a1d-7e7c-458e-9b58-a9e37302c3d4",
+    "publicId": "HNP-000040",
+    "fullName": "Ayush",
     "cluster": "Finance",
-    "influenceScore": 50,
+    "influenceScore": 0,
+    "nodeType": "REAL",
     "tags": [],
     "sourceConnectors": [
       "Manual Workspace"
     ],
-    "nodeType": "REAL",
-    "createdAt": "2026-09-11T19:30:31.962Z",
-    "updatedAt": "2026-09-11T19:32:07.510Z",
+    "createdAt": "2026-10-15T11:06:51.196Z",
+    "updatedAt": "2026-10-15T11:06:51.196Z",
     "createdBy": "Manual Workspace"
   },
   {
-    "id": "dbc6be02-05aa-4d4a-bf05-08c3527dca6a",
-    "publicId": "HNP-000020",
-    "fullName": "Priyanshu R.",
-    "username": "priyanshu_r.",
-    "email": "priyanshu_r.@hopnet.io",
-    "phone": null,
-    "company": "HOPNet",
-    "cluster": "Tech",
-    "influenceScore": 50,
-    "tags": [],
-    "sourceConnectors": [
-      "Manual Workspace"
-    ],
-    "nodeType": "REAL",
-    "createdAt": "2026-09-11T20:30:08.738Z",
-    "updatedAt": "2026-09-11T20:31:41.828Z",
-    "createdBy": "Manual Workspace"
-  },
-  {
-    "id": "311917bc-243a-45da-9fef-ce90eb73432a",
-    "publicId": "HNP-000021",
+    "id": "9b6c6a87-a065-4bc7-bbc8-3c67222e7cfa",
+    "publicId": "HNP-000017",
     "fullName": "Kanika Thakur",
     "username": "kanika_thakur",
     "email": "kanika_thakur@hopnet.io",
-    "phone": null,
     "company": "HOPNet",
     "cluster": "Health",
     "influenceScore": 0,
+    "nodeType": "REAL",
     "tags": [],
     "sourceConnectors": [
       "Manual Workspace"
     ],
+    "createdAt": "2026-10-09T19:46:11.983Z",
+    "updatedAt": "2026-10-09T19:46:11.983Z",
+    "createdBy": "LiveGraph Seed v2"
+  },
+  {
+    "id": "20f47f86-f40a-4db8-bd82-89332ec1ea9c",
+    "publicId": "HNP-000022",
+    "fullName": "Rudraksh sharma",
+    "cluster": "Tech",
+    "influenceScore": 0,
     "nodeType": "REAL",
-    "createdAt": "2026-09-11T20:32:28.853Z",
-    "updatedAt": "2026-09-11T20:32:28.853Z",
+    "tags": [],
+    "sourceConnectors": [
+      "Manual Workspace"
+    ],
+    "createdAt": "2026-10-09T21:07:56.377Z",
+    "updatedAt": "2026-10-09T21:07:56.377Z",
+    "createdBy": "LiveGraph Seed v2"
+  },
+  {
+    "id": "6c959e17-3eab-4086-b4ba-137129dcd282",
+    "publicId": "HNP-000027",
+    "fullName": "Kailash",
+    "cluster": "Tech",
+    "influenceScore": 50,
+    "nodeType": "REAL",
+    "tags": [],
+    "sourceConnectors": [
+      "Manual Workspace"
+    ],
+    "createdAt": "2026-10-09T21:07:58.768Z",
+    "updatedAt": "2026-10-09T21:07:58.768Z",
+    "createdBy": "LiveGraph Seed v2"
+  },
+  {
+    "id": "faa3ceee-e0d0-40dd-b22e-21fb074330ec",
+    "publicId": "HNP-000028",
+    "fullName": "Bikesh",
+    "cluster": "Finance",
+    "influenceScore": 0,
+    "nodeType": "REAL",
+    "tags": [],
+    "sourceConnectors": [
+      "Manual Workspace"
+    ],
+    "createdAt": "2026-10-09T21:07:59.261Z",
+    "updatedAt": "2026-10-09T21:07:59.261Z",
+    "createdBy": "LiveGraph Seed v2"
+  },
+  {
+    "id": "cc79af60-bd8b-429b-9b30-626cc266ad48",
+    "publicId": "HNP-000032",
+    "fullName": "Shiva",
+    "cluster": "Finance",
+    "influenceScore": 0,
+    "nodeType": "REAL",
+    "tags": [],
+    "sourceConnectors": [
+      "Manual Workspace"
+    ],
+    "createdAt": "2026-10-09T21:08:01.239Z",
+    "updatedAt": "2026-10-09T21:08:01.239Z",
+    "createdBy": "LiveGraph Seed v2"
+  },
+  {
+    "id": "6411b5ed-c001-476e-8e2a-dac2c6d5d754",
+    "publicId": "HNP-000024",
+    "fullName": "Arihant",
+    "cluster": "Venture",
+    "influenceScore": 0,
+    "nodeType": "REAL",
+    "tags": [],
+    "sourceConnectors": [
+      "Manual Workspace"
+    ],
+    "createdAt": "2026-10-09T21:07:57.335Z",
+    "updatedAt": "2026-10-09T21:07:57.335Z",
+    "createdBy": "LiveGraph Seed v2"
+  },
+  {
+    "id": "87048df4-2eaa-432b-a28d-76055de78b89",
+    "publicId": "HNP-000046",
+    "fullName": "john",
+    "cluster": "Tech",
+    "influenceScore": 0,
+    "nodeType": "REAL",
+    "tags": [],
+    "sourceConnectors": [
+      "Manual Workspace"
+    ],
+    "createdAt": "2026-11-11T08:41:06.087Z",
+    "updatedAt": "2026-11-11T08:41:06.087Z",
+    "createdBy": "Manual Workspace"
+  },
+  {
+    "id": "f8121d4b-c575-4da5-b24c-00cb0ab36627",
+    "publicId": "HNP-000039",
+    "fullName": "Anvesha",
+    "company": "VISA",
+    "cluster": "Tech",
+    "influenceScore": 50,
+    "nodeType": "REAL",
+    "tags": [],
+    "sourceConnectors": [
+      "Manual Workspace"
+    ],
+    "createdAt": "2026-10-09T21:08:08.873Z",
+    "updatedAt": "2026-10-09T21:08:08.873Z",
+    "createdBy": "LiveGraph Seed v2"
+  },
+  {
+    "id": "0b6f973a-a527-4357-af07-5ec5bcc79c6b",
+    "publicId": "HNP-000045",
+    "fullName": "Aditaya raichand",
+    "cluster": "Venture",
+    "influenceScore": 0,
+    "nodeType": "REAL",
+    "tags": [],
+    "sourceConnectors": [
+      "Manual Workspace"
+    ],
+    "createdAt": "2026-11-01T20:51:29.180Z",
+    "updatedAt": "2026-11-01T20:51:29.180Z",
+    "createdBy": "Manual Workspace"
+  },
+  {
+    "id": "97476cbd-7d0d-45bd-bbe2-c729004deade",
+    "publicId": "HNP-000043",
+    "fullName": "Abhinav",
+    "cluster": "Tech",
+    "influenceScore": 0,
+    "nodeType": "REAL",
+    "tags": [],
+    "sourceConnectors": [
+      "Manual Workspace"
+    ],
+    "createdAt": "2026-10-15T11:07:08.536Z",
+    "updatedAt": "2026-10-15T11:07:08.536Z",
+    "createdBy": "Manual Workspace"
+  },
+  {
+    "id": "f0df60a9-e5ec-40bd-aa29-712d75fb6be6",
+    "publicId": "DNP-000001",
+    "fullName": "Varsha",
+    "cluster": "Tech",
+    "influenceScore": 0,
+    "nodeType": "DEMO",
+    "tags": [],
+    "sourceConnectors": [
+      "Manual Workspace"
+    ],
+    "createdAt": "2026-10-09T21:08:10.803Z",
+    "updatedAt": "2026-10-09T21:08:10.803Z",
+    "createdBy": "LiveGraph Seed v2"
+  },
+  {
+    "id": "0d1f8e73-0b54-4621-a6d9-35ea0089452e",
+    "publicId": "DNP-000002",
+    "fullName": "EV",
+    "cluster": "Tech",
+    "influenceScore": 0,
+    "nodeType": "DEMO",
+    "tags": [],
+    "sourceConnectors": [
+      "Manual Workspace"
+    ],
+    "createdAt": "2026-11-01T20:53:22.325Z",
+    "updatedAt": "2026-11-01T20:53:22.325Z",
     "createdBy": "Manual Workspace"
   }
 ]
