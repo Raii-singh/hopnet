@@ -257,14 +257,30 @@ export async function findPersonBySourceRecord(
 export async function listPersons(
   nodeType?: NodeType,
   limit = 500,
-  skip = 0
+  skip = 0,
+  dataset?: string
 ): Promise<PersonNode[]> {
   const session = getSession();
   try {
     const typeFilter = nodeType ? 'AND p.nodeType = $nodeType' : '';
+    let datasetFilter = '';
+    let orderByClause = "CASE WHEN p.publicId = 'HNP-000001' OR toLower(p.fullName) = 'rai singh' THEN 0 ELSE 1 END, p.createdAt DESC";
+    
+    if (dataset === 'raj') {
+      datasetFilter = "AND p.sourceDataset = 'raj'";
+      orderByClause = "CASE WHEN p.publicId = 'HNP-RS000001' OR toLower(p.fullName) = 'raj shamani' THEN 0 ELSE 1 END, p.influenceScore DESC";
+    } else if (dataset === 'live') {
+      datasetFilter = "AND (p.sourceDataset = 'live_authentic' OR p.sourceDataset IS NULL OR p.sourceDataset <> 'raj')";
+      orderByClause = "CASE WHEN p.publicId = 'HNP-000001' OR toLower(p.fullName) = 'rai singh' THEN 0 ELSE 1 END, p.createdAt DESC";
+    }
+
     const result = await session.run(
       `MATCH (p:Person)
-       WHERE p.deletedAt IS NULL ${typeFilter}
+       WHERE p.deletedAt IS NULL ${typeFilter} ${datasetFilter}
+       WITH p
+       ORDER BY ${orderByClause}
+       SKIP $skip
+       LIMIT $limit
        OPTIONAL MATCH (p)-[r:CONNECTED]-(other:Person)
        WHERE r.deletedAt IS NULL AND other.deletedAt IS NULL
        WITH p,
@@ -272,9 +288,7 @@ export async function listPersons(
             sum(CASE WHEN other.nodeType = 'REAL' THEN 1 ELSE 0 END) AS realConn,
             sum(CASE WHEN other.nodeType = 'DEMO' THEN 1 ELSE 0 END) AS demoConn
        RETURN p, totalConn, realConn, demoConn
-       ORDER BY CASE WHEN p.publicId = 'HNP-000001' OR toLower(p.fullName) = 'rai singh' THEN 0 ELSE 1 END, p.createdAt DESC
-       SKIP $skip
-       LIMIT $limit`,
+       ORDER BY ${orderByClause}`,
       { nodeType: nodeType ?? null, skip: neo4j.int(skip), limit: neo4j.int(limit) }
     );
     return result.records.map(r => recordToPersonNode(r));

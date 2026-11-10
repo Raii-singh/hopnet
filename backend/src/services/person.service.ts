@@ -73,6 +73,7 @@ export interface ListPersonsOptions {
   nodeType?: NodeType;
   limit?: number;
   skip?: number;
+  dataset?: string;
 }
 
 export interface SearchPersonsOptions {
@@ -200,11 +201,11 @@ export async function getPersonByPublicId(publicId: string): Promise<PersonNode>
  * Both REAL and DEMO are returned by default.
  */
 export async function listPersons(opts: ListPersonsOptions = {}): Promise<PersonNode[]> {
-  const { nodeType, limit = 100, skip = 0 } = opts;
+  const { nodeType, limit = 100, skip = 0, dataset } = opts;
   if (nodeType && !VALID_NODE_TYPES.has(nodeType)) {
     throw invalidNodeType(nodeType);
   }
-  return repoCall(() => personRepo.listPersons(nodeType, limit, skip));
+  return repoCall(() => personRepo.listPersons(nodeType, limit, skip, dataset));
 }
 
 /**

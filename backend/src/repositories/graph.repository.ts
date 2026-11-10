@@ -50,8 +50,8 @@ import type { Relationship } from '../domain/relationship';
 
 // ── Constants ─────────────────────────────────────────────────────────────
 
-/** Maximum traversal depth accepted by the repository. Hard cap for safety. */
-const MAX_DEPTH = 6;
+/** Maximum traversal depth accepted by the repository. Hard cap for safety (1-6 hops, 7 = Full Graph). */
+const MAX_DEPTH = 7;
 
 // ── Internal helpers ──────────────────────────────────────────────────────
 
@@ -155,6 +155,11 @@ export async function getNeighbourhood(
   const { includeDemo = true, filters } = opts;
   const clampedDepth = Math.min(Math.max(1, Math.floor(depth)), MAX_DEPTH);
 
+  // Depth 7 corresponds to Full Graph of the requested provider
+  if (clampedDepth === 7) {
+    return getFullDatasetNeighbourhood(rootId, opts);
+  }
+
   const session = getSession();
   try {
     // ── Query 1: Collect IDs of all reachable Person nodes ──────────────
@@ -185,10 +190,11 @@ export async function getNeighbourhood(
       nodeExcludeFilter = 'AND NOT n.id IN $excludeIds AND NOT n.publicId IN $excludeIds';
     }
 
+    const relsVar = (hasTypes || hasMinTrust) ? 'rels:' : '';
     const q1 = `
       MATCH (root:Person)
       WHERE (root.id = $rootId OR root.publicId = $rootId) AND root.deletedAt IS NULL
-      OPTIONAL MATCH (root)-[rels:CONNECTED*1..${clampedDepth}]-(n:Person)
+      OPTIONAL MATCH (root)-[${relsVar}CONNECTED*1..${clampedDepth}]-(n:Person)
       WHERE n.deletedAt IS NULL ${demoFilter} ${nodeExcludeFilter} ${pathTypeFilter} ${pathTrustFilter}
       RETURN root.id AS rootId, COLLECT(DISTINCT n.id) AS neighbourIds
     `;
@@ -264,6 +270,99 @@ export async function getNeighbourhood(
 
     const q3Result = await session.run(q3, q3Params);
     const relationships = q3Result.records.map(r => recordToRelationship(r, 'r'));
+
+    return { nodes, relationships };
+  } finally {
+    await session.close();
+  }
+}
+
+/**
+ * Retrieve the complete network (all nodes and relationships) for the dataset
+ * associated with `rootId`. Used when depth=7 (Full Graph mode).
+ */
+export async function getFullDatasetNeighbourhood(
+  rootId: string,
+  opts: NeighbourhoodOptions = {}
+): Promise<RawSubgraph> {
+  const { includeDemo = true, filters } = opts;
+  const session = getSession();
+  try {
+    // 1. Resolve rootId to determine dataset
+    const rootCheck = await session.run(
+      `MATCH (root:Person)
+       WHERE (root.id = $rootId OR root.publicId = $rootId) AND root.deletedAt IS NULL
+       RETURN root.id AS id, root.sourceDataset AS sourceDataset`,
+      { rootId }
+    );
+    if (rootCheck.records.length === 0) {
+      return { nodes: [], relationships: [] };
+    }
+    const rootRec = rootCheck.records[0];
+    const sourceDataset = rootRec.get('sourceDataset') as string | null;
+
+    let datasetCondition = '';
+    if (sourceDataset === 'raj') {
+      datasetCondition = "p.sourceDataset = 'raj'";
+    } else {
+      datasetCondition = "(p.sourceDataset = 'live_authentic' OR p.sourceDataset IS NULL OR p.sourceDataset <> 'raj')";
+    }
+
+    const demoFilter = includeDemo ? '' : "AND p.nodeType = 'REAL'";
+    let nodeExcludeFilter = '';
+    const hasExclude = filters?.excludedNodeIds && filters.excludedNodeIds.size > 0;
+    if (hasExclude) {
+      nodeExcludeFilter = 'AND NOT p.id IN $excludeIds AND NOT p.publicId IN $excludeIds';
+    }
+
+    // 2. Fetch all nodes for this dataset
+    const qNodes = `
+      MATCH (p:Person)
+      WHERE p.deletedAt IS NULL AND ${datasetCondition} ${demoFilter} ${nodeExcludeFilter}
+      RETURN p
+    `;
+    const nodeParams: Record<string, any> = {};
+    if (hasExclude) nodeParams.excludeIds = Array.from(filters.excludedNodeIds!);
+    const nodeResult = await session.run(qNodes, nodeParams);
+    const nodes = nodeResult.records.map(r => recordToPersonNode(r, 'p'));
+
+    if (nodes.length === 0) {
+      return { nodes: [], relationships: [] };
+    }
+
+    // 3. Fetch all active relationships between nodes in this dataset
+    const hasTypes = filters?.relationshipTypes && filters.relationshipTypes.length > 0;
+    const hasMinTrust = filters?.minTrustScore !== undefined;
+
+    let relTypeFilter = '';
+    let relTrustFilter = '';
+    let relExcludeFilter = '';
+    if (hasTypes) relTypeFilter = 'AND r.relationshipType IN $types';
+    if (hasMinTrust) relTrustFilter = 'AND r.trustScore >= $minTrustScore';
+    if (hasExclude) relExcludeFilter = 'AND NOT a.id IN $excludeIds AND NOT b.id IN $excludeIds';
+
+    let relDatasetCondition = '';
+    if (sourceDataset === 'raj') {
+      relDatasetCondition = "a.sourceDataset = 'raj' AND b.sourceDataset = 'raj'";
+    } else {
+      relDatasetCondition = "(a.sourceDataset = 'live_authentic' OR a.sourceDataset IS NULL OR a.sourceDataset <> 'raj') AND (b.sourceDataset = 'live_authentic' OR b.sourceDataset IS NULL OR b.sourceDataset <> 'raj')";
+    }
+
+    const qRels = `
+      MATCH (a:Person)-[r:CONNECTED]->(b:Person)
+      WHERE a.deletedAt IS NULL AND b.deletedAt IS NULL
+        AND ${relDatasetCondition}
+        AND r.deletedAt IS NULL
+        ${relTypeFilter} ${relTrustFilter} ${relExcludeFilter}
+      RETURN DISTINCT r, a.id AS sourceId, b.id AS targetId
+    `;
+    const relParams: Record<string, any> = {};
+    if (hasTypes) relParams.types = filters.relationshipTypes;
+    if (hasMinTrust) relParams.minTrustScore = filters.minTrustScore;
+    if (hasExclude) relParams.excludeIds = Array.from(filters.excludedNodeIds!);
+
+    const relResult = await session.run(qRels, relParams);
+    const relationships = relResult.records.map(r => recordToRelationship(r, 'r'));
 
     return { nodes, relationships };
   } finally {

@@ -46,6 +46,7 @@ export async function listPersons(
 ): Promise<void> {
   try {
     const nodeType = req.query['nodeType'] as NodeType | undefined;
+    const dataset = req.query['dataset'] as string | undefined;
     const limit = req.query['limit'] !== undefined
       ? Math.max(1, Math.min(500, parseInt(req.query['limit'] as string, 10) || 100))
       : 100;
@@ -53,7 +54,7 @@ export async function listPersons(
       ? Math.max(0, parseInt(req.query['skip'] as string, 10) || 0)
       : 0;
 
-    const persons = await personSvc.listPersons({ nodeType, limit, skip });
+    const persons = await personSvc.listPersons({ nodeType, limit, skip, dataset });
     res.json({ data: persons, count: persons.length });
   } catch (err) {
     next(err);

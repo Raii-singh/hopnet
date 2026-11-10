@@ -77,7 +77,7 @@ import { validationError, nodeNotFound } from './errors';
 
 // ── Constants ─────────────────────────────────────────────────────────────
 
-const MAX_DEPTH = 6;
+const MAX_DEPTH = 7;
 const DEFAULT_DEPTH = 2;
 
 // ── Response types ────────────────────────────────────────────────────────
@@ -322,12 +322,13 @@ export async function getSubgraph(
     collegeConstraint
   );
 
-  // ── Step 4: Filter to BFS-approved set ───────────────────────────────
+  // ── Step 4: Filter to BFS-approved set (or keep all nodes if depth=7 Full Graph) ─────
   const approvedNodeIds = bfsResult.visitedNodeIds;
   const approvedEdgeIds = bfsResult.visitedEdgeIds;
 
-  const filteredNodes = raw.nodes.filter(n => approvedNodeIds.has(n.id));
-  const filteredRels  = raw.relationships.filter(r => approvedEdgeIds.has(r.id));
+  const isFullGraph = clampedDepth === 7;
+  const filteredNodes = isFullGraph ? raw.nodes : raw.nodes.filter(n => approvedNodeIds.has(n.id));
+  const filteredRels  = isFullGraph ? raw.relationships : raw.relationships.filter(r => approvedEdgeIds.has(r.id));
 
   // ── Step 5: Build GraphLinks ─────────────────────────────────────────
   const links: GraphLink[] = filteredRels.map(toGraphLink);
@@ -345,7 +346,7 @@ export async function getSubgraph(
 
   // ── Step 8: Build GraphNodes ─────────────────────────────────────────
   const nodes: GraphNode[] = filteredNodes.map(p => {
-    const hopDistance    = bfsResult.hopMap.get(p.id) ?? 0;
+    const hopDistance    = bfsResult.hopMap.get(p.id) ?? (isFullGraph ? 7 : 0);
     const subgraphDeg    = subgraphDegrees.get(p.id) ?? 0;
     const isCenter       = p.id === resolvedCenterId;
     return toGraphNode(p, hopDistance, subgraphDeg, isCenter ? globalConnectionCount : undefined);
@@ -549,39 +550,57 @@ import { getAllActiveRealNodes, mergeDuplicateNodes } from '../repositories/grap
 
 export async function detectDuplicatesV2() {
   const activeUsers = await getAllActiveRealNodes();
-  // Sort by fullName
-  activeUsers.sort((a, b) => (a.fullName || '').localeCompare(b.fullName || ''));
-
   const suggestions: { userA: any; userB: any; reason: string; similarity: number }[] = [];
 
-  for (let i = 0; i < activeUsers.length; i++) {
-    for (let j = i + 1; j < activeUsers.length; j++) {
-      const uA = activeUsers[i];
-      const uB = activeUsers[j];
+  const emailMap = new Map<string, any[]>();
+  const nameMap = new Map<string, any[]>();
 
-      // Check 1: Exact Email Match
-      const emailMatch = uA.email && uB.email && uA.email.toLowerCase() === uB.email.toLowerCase();
-      
-      // Check 2: Exact Full Name Match (if email is missing)
-      const nameMatch = uA.fullName && uB.fullName && uA.fullName.toLowerCase() === uB.fullName.toLowerCase();
+  for (const u of activeUsers) {
+    if (u.email && typeof u.email === 'string' && u.email.trim()) {
+      const email = u.email.trim().toLowerCase();
+      if (!emailMap.has(email)) emailMap.set(email, []);
+      emailMap.get(email)!.push(u);
+    }
+    if (u.fullName && typeof u.fullName === 'string' && u.fullName.trim()) {
+      const name = u.fullName.trim().toLowerCase();
+      if (!nameMap.has(name)) nameMap.set(name, []);
+      nameMap.get(name)!.push(u);
+    }
+  }
 
-      if (emailMatch) {
-        suggestions.push({
-          userA: { id: uA.id, publicId: uA.publicId, fullName: uA.fullName, email: uA.email },
-          userB: { id: uB.id, publicId: uB.publicId, fullName: uB.fullName, email: uB.email },
-          reason: `Identical email address`,
-          similarity: 100,
-        });
-      } else if (nameMatch) {
-        suggestions.push({
-          userA: { id: uA.id, publicId: uA.publicId, fullName: uA.fullName, email: uA.email },
-          userB: { id: uB.id, publicId: uB.publicId, fullName: uB.fullName, email: uB.email },
-          reason: `Identical full name`,
-          similarity: 90,
-        });
+  for (const [, users] of emailMap.entries()) {
+    if (users.length > 1) {
+      for (let i = 0; i < users.length; i++) {
+        for (let j = i + 1; j < users.length; j++) {
+          suggestions.push({
+            userA: { id: users[i].id, publicId: users[i].publicId, fullName: users[i].fullName, email: users[i].email },
+            userB: { id: users[j].id, publicId: users[j].publicId, fullName: users[j].fullName, email: users[j].email },
+            reason: `Identical email address`,
+            similarity: 100,
+          });
+        }
       }
     }
   }
+
+  for (const [, users] of nameMap.entries()) {
+    if (users.length > 1) {
+      for (let i = 0; i < users.length; i++) {
+        for (let j = i + 1; j < users.length; j++) {
+          const uA = users[i];
+          const uB = users[j];
+          if (uA.email && uB.email && uA.email.toLowerCase() === uB.email.toLowerCase()) continue;
+          suggestions.push({
+            userA: { id: uA.id, publicId: uA.publicId, fullName: uA.fullName, email: uA.email },
+            userB: { id: uB.id, publicId: uB.publicId, fullName: uB.fullName, email: uB.email },
+            reason: `Identical full name`,
+            similarity: 90,
+          });
+        }
+      }
+    }
+  }
+
   return suggestions;
 }
 
