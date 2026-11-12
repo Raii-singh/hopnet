@@ -26,7 +26,7 @@ export default function BottomInfoBar({ meta, isLoading }: BottomInfoBarProps) {
         { label: 'Actors', value: meta.totalNodes, color: accentColor },
         { label: 'Collabs', value: meta.totalEdges, color: 'var(--silver-200)' },
         { label: 'Avg Hops', value: meta.avgHopCount.toFixed(1), color: 'var(--silver-200)' },
-        { label: 'Depth', value: `${meta.depth ?? 3} hop${(meta.depth ?? 3) !== 1 ? 's' : ''}`, color: 'var(--silver-400)' },
+        { label: 'Depth', value: (meta.depth ?? 3) >= 7 ? 'Full Graph' : `${meta.depth ?? 3} hop${(meta.depth ?? 3) !== 1 ? 's' : ''}`, color: 'var(--silver-400)' },
       ]
     : [
         { label: 'Nodes', value: meta.totalNodes, color: 'var(--silver-200)' },
@@ -35,7 +35,7 @@ export default function BottomInfoBar({ meta, isLoading }: BottomInfoBarProps) {
         { label: 'Demo', value: meta.demoNodes, color: 'var(--silver-500)' },
         { label: 'Real Ratio', value: `${realRatio}%`, color: '#ffffff' },
         { label: 'Avg Hop', value: meta.avgHopCount.toFixed(1), color: 'var(--silver-200)' },
-        { label: 'Depth', value: `${meta.depth ?? 1} hop${(meta.depth ?? 1) !== 1 ? 's' : ''}`, color: 'var(--silver-400)' },
+        { label: 'Depth', value: (meta.depth ?? 1) >= 7 ? 'Full Graph' : `${meta.depth ?? 1} hop${(meta.depth ?? 1) !== 1 ? 's' : ''}`, color: 'var(--silver-400)' },
       ];
 
   return (

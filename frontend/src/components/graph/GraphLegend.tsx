@@ -20,6 +20,22 @@ const COLLEGE_CLUSTERS = [
   { color: '#a78bfa', label: 'Academia' },
 ];
 
+// ── Raj shamani 10k cluster definitions ────────────────────────────────────────
+const RAJ_CLUSTERS = [
+  { color: '#f59e0b', label: 'Podcasts & Media' },
+  { color: '#60a5fa', label: 'Tech & AI' },
+  { color: '#10b981', label: 'Startups & Venture' },
+  { color: '#ec4899', label: 'Shark Tank & D2C' },
+  { color: '#34d399', label: 'Finance & Markets' },
+  { color: '#06b6d4', label: 'Open Source' },
+  { color: '#8b5cf6', label: 'Leadership' },
+  { color: '#ef4444', label: 'Global Politics' },
+  { color: '#f97316', label: 'Authors' },
+  { color: '#d946ef', label: 'Entertainment' },
+  { color: '#eab308', label: 'Sports' },
+  { color: '#22c55e', label: 'Science' },
+];
+
 // ── IMDb birth-decade definitions ─────────────────────────────────────────────
 const IMDB_DECADE_CLUSTERS = [
   { color: '#ef4444', label: '1920s' },
@@ -41,7 +57,7 @@ export default function GraphLegend() {
   const isImdb = false;
   const accentColor = providerCapabilities.accentColor;
 
-  const clusterList = isImdb ? IMDB_DECADE_CLUSTERS : COLLEGE_CLUSTERS;
+  const clusterList = activeProvider === 'raj' ? RAJ_CLUSTERS : (isImdb ? IMDB_DECADE_CLUSTERS : COLLEGE_CLUSTERS);
 
   return (
     <div
@@ -69,7 +85,7 @@ export default function GraphLegend() {
             background: `${accentColor}20`, color: accentColor,
             border: `1px solid ${accentColor}40`, fontWeight: 700,
           }}>
-            {isAdmin ? 'LIVE GRAPH' : 'RAI NETWORK'}
+            {activeProvider === 'raj' ? 'RAJ NETWORK' : (isAdmin ? 'LIVE GRAPH' : 'RAI NETWORK')}
           </div>
         </div>
 

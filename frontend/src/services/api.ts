@@ -349,7 +349,7 @@ export async function fetchImdbGraph(): Promise<ApiGraphData> {
 
 const BASE_URL_V2 = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api') + '/v2';
 
-async function apiFetchV2<T>(path: string, timeoutMs = 8000): Promise<T> {
+async function apiFetchV2<T>(path: string, timeoutMs = 15000): Promise<T> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -565,8 +565,9 @@ export async function fetchGraphV2(
  * Fetch a list of persons (REAL and DEMO).
  * Used for populating the Universal Database.
  */
-export async function fetchPersonsV2(limit = 500, skip = 0): Promise<ApiSearchResultV2> {
+export async function fetchPersonsV2(limit = 500, skip = 0, dataset?: string): Promise<ApiSearchResultV2> {
   const params = new URLSearchParams({ limit: String(limit), skip: String(skip) });
+  if (dataset) params.set('dataset', dataset);
   return apiFetchV2<ApiSearchResultV2>(`/persons?${params}`);
 }
 

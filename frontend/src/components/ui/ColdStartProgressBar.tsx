@@ -18,7 +18,7 @@ import { getIsBackendWarm } from '@/services/api';
  *    - If Render is already awake, finishes very fast (~0.8s - 1.0s) and vanishes.
  */
 export default function ColdStartProgressBar() {
-  const { isLoading, visibleNodes } = useGraphStore();
+  const { isLoading, visibleNodes, activeProvider } = useGraphStore();
   const [visible, setVisible] = useState(true);
   const [progress, setProgress] = useState(0);
   const [isWarmMode, setIsWarmMode] = useState(false);
@@ -85,7 +85,7 @@ export default function ColdStartProgressBar() {
   // Dynamic status text for cold-start HUD
   let statusText = 'Booting cloud container on Render...';
   if (currentPercent >= 100) {
-    statusText = 'Connected! Initializing Rai’s Network...';
+    statusText = activeProvider === 'raj' ? 'Connected! Initializing Raj’s Network...' : 'Connected! Initializing Rai’s Network...';
   } else if (currentPercent >= 92) {
     statusText = 'Almost ready, assembling graph intelligence...';
   } else if (currentPercent >= 75) {

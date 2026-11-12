@@ -6,7 +6,7 @@
  * to determine what features are available for the active provider.
  */
 
-export type ProviderId = 'live';
+export type ProviderId = 'live' | 'raj';
 
 export interface ProviderCapabilities {
   readOnly: boolean;
@@ -48,6 +48,26 @@ export const PROVIDER_REGISTRY: Record<ProviderId, ProviderCapabilities> = {
     icon: '🌐',
     description: 'Rai Singh Authentic Network — verified trust relationships',
     accentColor: '#60a5fa',
+    available: true,
+  },
+  raj: {
+    readOnly: false,
+    hasPersonalProfiles: true,
+    hasCRUD: true,
+    hasConnectors: true,
+    hasWorkspaceMode: true,
+    hasTrustAnalysis: true,
+    hasCollaborationAnalysis: false,
+    hasClustering: true,
+    hasPathfinding: true,
+    hasCentrality: true,
+    hasDemoNodes: false,
+    nodeLabel: 'Person',
+    edgeLabel: 'Connection',
+    displayName: "Raj's Network",
+    icon: '🎙️',
+    description: 'Raj Shamani Global & Creator Network — 10,000 verified connections',
+    accentColor: '#f59e0b',
     available: true,
   },
 };

@@ -84,7 +84,7 @@ export default function Navbar() {
         >
           <span style={{ fontSize: '15px', lineHeight: 1 }}>{providerCapabilities.icon}</span>
           <span style={{ fontSize: '12px', fontWeight: 600, color: accentColor, letterSpacing: '0.01em' }}>
-            {isAdmin ? 'Live Graph' : "Rai's Network"}
+            {activeProvider === 'raj' ? "Raj's Network" : (isAdmin ? 'Live Graph' : "Rai's Network")}
           </span>
           <svg
             width="10" height="10" viewBox="0 0 24 24" fill="none"
