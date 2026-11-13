@@ -144,7 +144,7 @@ export default function GraphCanvas() {
     if (!graphRef.current) return;
     const fg = graphRef.current;
     const primaryNode = (primaryNodeId ? visibleNodes.find(n => n.id === primaryNodeId || n.publicId === primaryNodeId) : null)
-      || visibleNodes.find(n => n.publicId === 'HNP-000001' || n.id === 'f02bb0c5-43e0-4e5e-b54a-033a852f1645' || n.fullName.trim().toLowerCase() === 'rai singh')
+      || visibleNodes.find(n => n.publicId === 'HNP-000001' || n.id === 'ba81e688-04a2-401a-8ede-9059f4a030fa' || n.id === 'f02bb0c5-43e0-4e5e-b54a-033a852f1645' || n.fullName.trim().toLowerCase() === 'rai' || n.fullName.trim().toLowerCase() === 'rai singh')
       || visibleNodes[0];
     if (primaryNode && typeof primaryNode.x === 'number' && typeof primaryNode.y === 'number' && isFinite(primaryNode.x) && isFinite(primaryNode.y)) {
       fg.centerAt(primaryNode.x, primaryNode.y, 400);
@@ -653,6 +653,7 @@ export default function GraphCanvas() {
     // Find the primary node object in visibleNodes (or fallback to Rai Singh, then first node)
     const primaryNode = (primaryNodeId ? nodeMap.get(primaryNodeId) : null)
       || nodeMap.get('HNP-000001')
+      || nodeMap.get('ba81e688-04a2-401a-8ede-9059f4a030fa')
       || nodeMap.get('f02bb0c5-43e0-4e5e-b54a-033a852f1645')
       || visibleNodes[0];
     if (!primaryNode) return links;

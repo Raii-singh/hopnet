@@ -417,15 +417,17 @@ export async function getFullDatasetNeighbourhood(
       relDatasetCondition = "(a.sourceDataset = 'live_authentic' OR a.sourceDataset IS NULL OR a.sourceDataset <> 'raj') AND (b.sourceDataset = 'live_authentic' OR b.sourceDataset IS NULL OR b.sourceDataset <> 'raj')";
     }
 
+    const nodeIds = nodes.map(n => n.id);
     const qRels = `
       MATCH (a:Person)-[r:CONNECTED]->(b:Person)
-      WHERE a.deletedAt IS NULL AND b.deletedAt IS NULL
+      WHERE a.id IN $nodeIds AND b.id IN $nodeIds
+        AND a.deletedAt IS NULL AND b.deletedAt IS NULL
         AND ${relDatasetCondition}
         AND r.deletedAt IS NULL
         ${relTypeFilter} ${relTrustFilter} ${relExcludeFilter}
       RETURN DISTINCT r, a.id AS sourceId, b.id AS targetId
     `;
-    const relParams: Record<string, any> = {};
+    const relParams: Record<string, any> = { nodeIds };
     if (hasTypes) relParams.types = filters.relationshipTypes;
     if (hasActiveMinTrust) relParams.minTrustScore = activeMinTrust;
     if (hasExclude) relParams.excludeIds = Array.from(filters.excludedNodeIds!);

@@ -277,9 +277,9 @@ const EMPTY_META: SubgraphMeta = {
 
 const ROOT_DUMMY = 'r-001';
 
-export const DEFAULT_PRIMARY_NODE_ID = 'f02bb0c5-43e0-4e5e-b54a-033a852f1645';
+export const DEFAULT_PRIMARY_NODE_ID = 'ba81e688-04a2-401a-8ede-9059f4a030fa';
 export const DEFAULT_PRIMARY_PUBLIC_ID = 'HNP-000001';
-export const DEFAULT_PRIMARY_NAME = 'Rai Singh';
+export const DEFAULT_PRIMARY_NAME = 'Rai';
 
 export const RAJ_PRIMARY_NODE_ID = '89f930c3-a7c2-41b6-8940-459324663485';
 export const RAJ_PRIMARY_PUBLIC_ID = 'HNP-RS000001';
@@ -298,7 +298,8 @@ export function findDefaultPrimaryNode(nodes: GraphNode[], provider: ProviderId 
   return (
     nodes.find(n => n.publicId === DEFAULT_PRIMARY_PUBLIC_ID) ||
     nodes.find(n => n.id === DEFAULT_PRIMARY_NODE_ID) ||
-    nodes.find(n => n.fullName?.trim().toLowerCase() === DEFAULT_PRIMARY_NAME.toLowerCase()) ||
+    nodes.find(n => n.id === 'f02bb0c5-43e0-4e5e-b54a-033a852f1645') ||
+    nodes.find(n => n.fullName?.trim().toLowerCase() === 'rai' || n.fullName?.trim().toLowerCase() === 'rai singh') ||
     nodes.find(n => n.username?.trim().toLowerCase() === 'rai1819') ||
     nodes.find(n => n.nodeType === 'REAL') ||
     nodes[0]
