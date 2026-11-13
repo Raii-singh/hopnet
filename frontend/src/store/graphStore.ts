@@ -216,9 +216,13 @@ interface GraphState {
   fontSizeScale: number;
   nodeSizeScale: number;
   nodeDistanceScale: number;
+  showNodeLabels: boolean;
+  edgeOpacity: number;
   setFontSizeScale: (scale: number) => void;
   setNodeSizeScale: (scale: number) => void;
   setNodeDistanceScale: (scale: number) => void;
+  setShowNodeLabels: (show: boolean) => void;
+  setEdgeOpacity: (opacity: number) => void;
 
   // WORKSPACE ACTIONS (V2.5)
   toggleWorkspaceMode: () => void;
@@ -273,8 +277,20 @@ export const DEFAULT_PRIMARY_NODE_ID = 'f02bb0c5-43e0-4e5e-b54a-033a852f1645';
 export const DEFAULT_PRIMARY_PUBLIC_ID = 'HNP-000001';
 export const DEFAULT_PRIMARY_NAME = 'Rai Singh';
 
-export function findDefaultPrimaryNode(nodes: GraphNode[]): GraphNode | undefined {
+export const RAJ_PRIMARY_NODE_ID = '89f930c3-a7c2-41b6-8940-459324663485';
+export const RAJ_PRIMARY_PUBLIC_ID = 'HNP-RS000001';
+export const RAJ_PRIMARY_NAME = 'Raj Shamani';
+
+export function findDefaultPrimaryNode(nodes: GraphNode[], provider: ProviderId = 'live'): GraphNode | undefined {
   if (!nodes || nodes.length === 0) return undefined;
+  if (provider === 'raj') {
+    return (
+      nodes.find(n => n.publicId === RAJ_PRIMARY_PUBLIC_ID) ||
+      nodes.find(n => n.id === RAJ_PRIMARY_NODE_ID) ||
+      nodes.find(n => n.fullName?.trim().toLowerCase() === RAJ_PRIMARY_NAME.toLowerCase()) ||
+      nodes[0]
+    );
+  }
   return (
     nodes.find(n => n.publicId === DEFAULT_PRIMARY_PUBLIC_ID) ||
     nodes.find(n => n.id === DEFAULT_PRIMARY_NODE_ID) ||
@@ -292,6 +308,17 @@ function buildDummySubgraph(
   allNodes: GraphNode[],
   allEdges: GraphEdge[]
 ) {
+  if (hopDepth >= 7) {
+    const nodes = showDemoNodes ? allNodes : allNodes.filter(n => n.nodeType === 'REAL');
+    const nodeIds = new Set(nodes.map(n => n.id));
+    const links = allEdges.filter(e => {
+      const s = typeof e.source === 'string' ? e.source : (e.source as any).id;
+      const t = typeof e.target === 'string' ? e.target : (e.target as any).id;
+      return nodeIds.has(s) && nodeIds.has(t);
+    });
+    const meta = computeMeta(nodes, links, rootNodeId, 7);
+    return { nodes, links, meta };
+  }
   const { nodes, links } = getDummySubgraph(rootNodeId, hopDepth, showDemoNodes, allNodes, allEdges);
   const meta = computeMeta(nodes, links, rootNodeId, hopDepth);
   return { nodes, links, meta };
@@ -332,6 +359,8 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   fontSizeScale: 1.7,
   nodeSizeScale: 1.0,
   nodeDistanceScale: 0.75,
+  showNodeLabels: true,
+  edgeOpacity: 0.5,
 
   // Workspace default states
   workspaceMode: false,
@@ -354,11 +383,16 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   // ── PROVIDER SWITCHING (V4.0) ───────────────────────────────
   switchProvider: async (id: ProviderId) => {
     const caps = getCapabilities(id);
+    const targetRootId = id === 'raj' ? RAJ_PRIMARY_NODE_ID : DEFAULT_PRIMARY_NODE_ID;
 
     // Reset everything and apply new provider
     set({
       activeProvider: id,
       providerCapabilities: caps,
+      dataSource: 'api-v2',
+      primaryNodeId: targetRootId,
+      rootNodeId: targetRootId,
+      databaseNodes: [],
 
       // Reset graph state
       allNodes: [],
@@ -395,14 +429,15 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   },
 
   setPrimaryNode: async (id: string | null) => {
-    const { databaseNodes } = get();
-    const defaultPrimaryNode = findDefaultPrimaryNode(databaseNodes);
-    const defaultPrimaryId = defaultPrimaryNode ? defaultPrimaryNode.id : DEFAULT_PRIMARY_NODE_ID;
+    const { databaseNodes, activeProvider } = get();
+    const defaultPrimaryNode = findDefaultPrimaryNode(databaseNodes, activeProvider);
+    const defaultPrimaryId = defaultPrimaryNode ? defaultPrimaryNode.id : (activeProvider === 'raj' ? RAJ_PRIMARY_NODE_ID : DEFAULT_PRIMARY_NODE_ID);
+    const storageKey = activeProvider === 'raj' ? 'hopnet_primary_node_raj' : 'hopnet_primary_node_live';
 
     if (!id) {
       set({ primaryNodeId: defaultPrimaryId, rootNodeId: defaultPrimaryId });
       if (typeof window !== 'undefined') {
-        localStorage.removeItem('hopnet_primary_node_live');
+        localStorage.removeItem(storageKey);
       }
       await get().refreshSubgraph();
       return;
@@ -413,7 +448,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
 
     set({ primaryNodeId: targetId, rootNodeId: targetId });
     if (typeof window !== 'undefined') {
-      localStorage.setItem('hopnet_primary_node_live', targetId);
+      localStorage.setItem(storageKey, targetId);
     }
     await get().refreshSubgraph();
   },
@@ -424,18 +459,23 @@ export const useGraphStore = create<GraphState>((set, get) => ({
     const healthy = await checkHealth();
     set({ isApiHealthy: healthy });
 
-    if (activeProvider === 'live') {
+    if (activeProvider === 'live' || activeProvider === 'raj') {
       // ── Primary path: v2 / Neo4j ────────────────────────────────────────
       const v2Healthy = await checkHealthV2();
 
       if (v2Healthy) {
         try {
+          set({ dataSource: 'api-v2' });
           await get().refreshDatabase();
           const dbNodes = get().databaseNodes;
 
+          const defaultPrimaryNode = findDefaultPrimaryNode(dbNodes, activeProvider);
+          const defaultPrimaryId = defaultPrimaryNode ? defaultPrimaryNode.id : (activeProvider === 'raj' ? RAJ_PRIMARY_NODE_ID : DEFAULT_PRIMARY_NODE_ID);
+          const storageKey = activeProvider === 'raj' ? 'hopnet_primary_node_raj' : 'hopnet_primary_node_live';
+
           if (dbNodes.length === 0) {
             const dummyRoot = ALL_NODES.find(n => n.id === 'r-001' || n.id === 'rai-singh') || ALL_NODES[0];
-            const rootId = dummyRoot ? dummyRoot.id : 'r-001';
+            const rootId = activeProvider === 'raj' ? RAJ_PRIMARY_NODE_ID : (dummyRoot ? dummyRoot.id : 'r-001');
             const fallbackSubgraph = getDummySubgraph(rootId, 3, true, ALL_NODES, ALL_EDGES);
             set({
               dataSource: 'dummy',
@@ -450,18 +490,14 @@ export const useGraphStore = create<GraphState>((set, get) => ({
               meta: computeMeta(fallbackSubgraph.nodes, fallbackSubgraph.links, rootId, 3),
             });
             if (typeof window !== 'undefined') {
-              localStorage.removeItem('hopnet_primary_node_live');
+              localStorage.removeItem(storageKey);
             }
             return;
           }
 
           // Check if saved primary node preference exists in live Neo4j database
-          let savedPrimaryId = typeof window !== 'undefined' ? localStorage.getItem('hopnet_primary_node_live') : null;
+          let savedPrimaryId = typeof window !== 'undefined' ? localStorage.getItem(storageKey) : null;
           let matched = savedPrimaryId ? dbNodes.find(n => n.id === savedPrimaryId || n.publicId === savedPrimaryId) : null;
-
-          // Default primary node is hardcoded to Rai Singh (HNP-000001)
-          const defaultPrimaryNode = findDefaultPrimaryNode(dbNodes);
-          const defaultPrimaryId = defaultPrimaryNode ? defaultPrimaryNode.id : DEFAULT_PRIMARY_NODE_ID;
 
           let activePrimaryId: string;
           if (matched) {
@@ -469,7 +505,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
           } else {
             if (savedPrimaryId && typeof window !== 'undefined') {
               // Saved primary node was deleted from Neo4j — clear preference gracefully
-              localStorage.removeItem('hopnet_primary_node_live');
+              localStorage.removeItem(storageKey);
             }
             activePrimaryId = defaultPrimaryId;
           }
@@ -493,7 +529,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
       // If we reach here, v2 health check failed or network request failed
       console.warn('[HOPNet] Live Graph API is unreachable or unconfigured. Falling back to demo dataset.');
       const dummyRoot = ALL_NODES.find(n => n.id === 'r-001' || n.id === 'rai-singh') || ALL_NODES[0];
-      const rootId = dummyRoot ? dummyRoot.id : 'r-001';
+      const rootId = activeProvider === 'raj' ? RAJ_PRIMARY_NODE_ID : (dummyRoot ? dummyRoot.id : 'r-001');
       const fallbackSubgraph = getDummySubgraph(rootId, 3, true, ALL_NODES, ALL_EDGES);
       set({
         dataSource: 'dummy',
@@ -517,7 +553,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
     set({ isLoading: true });
 
     try {
-      if (activeProvider === 'live') {
+      if (activeProvider === 'live' || activeProvider === 'raj') {
         if (!rootNodeId) {
           set({ visibleNodes: [], visibleLinks: [], meta: EMPTY_META });
           return;
@@ -528,7 +564,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
         if (dbNodes.length === 0) {
           try {
             const { fetchPersonsV2 } = await import('@/services/api');
-            const res = await fetchPersonsV2(500);
+            const res = await fetchPersonsV2(500, 0, activeProvider);
             dbNodes = res.data.map(apiNodeV2ToGraph);
             set({ databaseNodes: dbNodes });
           } catch (e) {
@@ -603,22 +639,25 @@ export const useGraphStore = create<GraphState>((set, get) => ({
       }
     } catch (err) {
       console.error('[refreshSubgraph]', err);
-      set({ visibleNodes: [], visibleLinks: [], meta: EMPTY_META });
+      if (get().visibleNodes.length === 0) {
+        set({ visibleNodes: [], visibleLinks: [], meta: EMPTY_META });
+      }
     } finally {
       set({ isLoading: false });
     }
   },
 
   refreshDatabase: async () => {
-    const { activeProvider, dataSource } = get();
-    if (activeProvider === 'live' && dataSource === 'api-v2') {
+    const { activeProvider } = get();
+    if (activeProvider === 'live' || activeProvider === 'raj') {
       try {
         const { fetchPersonsV2 } = await import('@/services/api');
-        const res = await fetchPersonsV2(500);
+        const res = await fetchPersonsV2(500, 0, activeProvider);
         const databaseNodes = res.data.map(apiNodeV2ToGraph);
         set({ databaseNodes });
       } catch (err) {
         console.error('[refreshDatabase] Failed to fetch V2 persons:', err);
+        set({ databaseNodes: get().allNodes });
       }
     } else {
       set({ databaseNodes: get().allNodes });
@@ -652,13 +691,16 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   setFontSizeScale: (scale) => set({ fontSizeScale: scale }),
   setNodeSizeScale: (scale) => set({ nodeSizeScale: scale }),
   setNodeDistanceScale: (scale) => set({ nodeDistanceScale: scale }),
+  setShowNodeLabels: (show) => set({ showNodeLabels: show }),
+  setEdgeOpacity: (opacity) => set({ edgeOpacity: opacity }),
 
   resetGraph: () => {
     const { dataSource, allNodes, databaseNodes, primaryNodeId, activeProvider } = get();
     let rootNodeId: string;
     if (dataSource === 'api-v2') {
-      const defaultPrimary = findDefaultPrimaryNode(databaseNodes);
-      rootNodeId = primaryNodeId || defaultPrimary?.id || DEFAULT_PRIMARY_NODE_ID;
+      const defaultPrimary = findDefaultPrimaryNode(databaseNodes, activeProvider);
+      const fallbackRoot = activeProvider === 'raj' ? RAJ_PRIMARY_NODE_ID : DEFAULT_PRIMARY_NODE_ID;
+      rootNodeId = primaryNodeId || defaultPrimary?.id || fallbackRoot;
     } else if (dataSource === 'dummy') {
       rootNodeId = ROOT_DUMMY;
     } else {
@@ -678,6 +720,8 @@ export const useGraphStore = create<GraphState>((set, get) => ({
       fontSizeScale: 1.7,
       nodeSizeScale: 1.0,
       nodeDistanceScale: 0.75,
+      showNodeLabels: true,
+      edgeOpacity: 0.5,
     });
     get().refreshSubgraph();
   },

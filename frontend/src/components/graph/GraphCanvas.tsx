@@ -24,15 +24,29 @@ const ForceGraph2D = dynamic(() => import('react-force-graph-2d'), {
   ),
 });
 
-// ── College cluster palette (Faded Muted Pastels) ────────────────────────────
+// ── Cluster palette (Raj & Rai Network Pastels) ────────────────────────────
 function getCollegeClusterColor(cluster?: string): string {
   if (!cluster) return '#94a3b8';
-  switch (cluster.toLowerCase()) {
-    case 'tech': return '#60a5fa';     // Soft pastel sky blue
-    case 'finance': return '#34d399';  // Soft pastel mint green
-    case 'health': return '#f87171';   // Soft pastel coral rose
-    case 'venture': return '#fbbf24';  // Soft pastel warm amber
-    case 'academia': return '#a78bfa'; // Soft pastel lavender
+  const c = cluster.toLowerCase();
+  if (c.includes('podcast') || c.includes('media')) return '#f59e0b';
+  if (c.includes('shark tank') || c.includes('d2c')) return '#ec4899';
+  if (c.includes('open source') || c.includes('system')) return '#06b6d4';
+  if (c.includes('tech') || c.includes('ai')) return '#60a5fa';
+  if (c.includes('venture') || c.includes('startup')) return '#10b981';
+  if (c.includes('finance') || c.includes('market')) return '#34d399';
+  if (c.includes('corporate') || c.includes('leadership')) return '#8b5cf6';
+  if (c.includes('politic') || c.includes('policy')) return '#ef4444';
+  if (c.includes('author') || c.includes('intellectual')) return '#f97316';
+  if (c.includes('entertainment') || c.includes('art')) return '#d946ef';
+  if (c.includes('sport') || c.includes('athletic')) return '#eab308';
+  if (c.includes('science') || c.includes('longevity') || c.includes('health')) return '#22c55e';
+  if (c.includes('academia')) return '#a78bfa';
+  switch (c) {
+    case 'tech': return '#60a5fa';
+    case 'finance': return '#34d399';
+    case 'health': return '#f87171';
+    case 'venture': return '#fbbf24';
+    case 'academia': return '#a78bfa';
     default: return '#94a3b8';
   }
 }
@@ -90,6 +104,9 @@ export default function GraphCanvas() {
   const hasInitialZoomedRef = useRef(false);
   const prevPrimaryNodeIdRef = useRef<string | null>(null);
   const lastNodeClickRef = useRef<{ time: number; id: string } | null>(null);
+  const isModifierPressedRef = useRef(false);
+  const isIsolatedDragRef = useRef(false);
+  const prevLinkStrengthRef = useRef<any>(null);
 
   const [dimensions, setDimensions] = useState({ w: 0, h: 0 });
   const [activeSmallCardNode, setActiveSmallCardNode] = useState<GraphNode | null>(null);
@@ -105,6 +122,7 @@ export default function GraphCanvas() {
     setConnectorSourceNode, setVisualConnectMode, createNewEdge,
     rootNodeId, primaryNodeId, setPrimaryNode,
     fontSizeScale, nodeSizeScale, nodeDistanceScale,
+    showNodeLabels, edgeOpacity,
   } = useGraphStore();
 
   const tooltipContainerRef = useRef<HTMLDivElement>(null);
@@ -137,61 +155,109 @@ export default function GraphCanvas() {
     fg.zoom?.(2.3, 400);
   }, [primaryNodeId, visibleNodes]);
 
-  // ── Node size (WITH NODE SIZE SCALE SLIDER) ───────────────────────────────
+  // ── High-performance O(1) Lookup Maps ─────────────────────────────────────────
+  const nodeMap = useMemo(() => new Map<string, GraphNode>(visibleNodes.map(n => [n.id, n])), [visibleNodes]);
+  const linkMap = useMemo(() => new Map<string, GraphEdge>(visibleLinks.map(l => [l.id, l])), [visibleLinks]);
+
+  // ── Node size: Connection- & Influence-based hierarchy (STABLE: independent of hover/selection so physics never restarts on cursor movement) ──
   const getNodeSize = useCallback((node: any) => {
     const n = node as GraphNode;
-    const base = (isImdb
-      ? 2.5 + Math.min((n.influenceScore / 100) * 3.5, 3.5)
-      : (n.nodeType === 'REAL' ? 3.5 + Math.min((n.influenceScore / 100) * 3, 3) : 2.8)) * nodeSizeScale;
-    if (hoveredNode?.id === n.id) return base * 1.7;
-    if (selectedNode?.id === n.id) return base * 1.8;
-    return base;
-  }, [hoveredNode, selectedNode, isImdb, nodeSizeScale]);
+    const conns = Math.max(1, n.connectionCount ?? (n as any).realConnections ?? (n as any).subgraphDegree ?? 1);
 
-  // ── Auto-center, configure adaptive physics forces, and fit graph on updates ──
+    // For large networks, scale gracefully by degree so leaf nodes stay delicate and hubs stand out
+    let base: number;
+    if (visibleNodes.length > 100) {
+      if (conns >= 30) {
+        base = 5.8 + Math.min(conns * 0.04, 3.2); // Primary hubs (e.g. Raj, Elon, Modi, Rogan)
+      } else if (conns >= 10) {
+        base = 4.0 + Math.min(conns * 0.07, 1.8); // Secondary connectors
+      } else if (conns >= 4) {
+        base = 2.8;
+      } else {
+        base = 1.9; // Leaf nodes: small, clean, prevents overlapping blob
+      }
+    } else {
+      base = (n.nodeType === 'REAL' ? 3.5 + Math.min((n.influenceScore / 100) * 3, 3) : 2.8);
+    }
+
+    return base * nodeSizeScale;
+  }, [visibleNodes.length, nodeSizeScale]);
+
+  // ── Auto-center, configure connection-based physics forces, and fit graph on updates ──
   useEffect(() => {
     if (!graphRef.current || visibleNodes.length === 0) return;
     const fg = graphRef.current;
 
-    // Unpin fixed coordinates so force simulation can naturally adjust and untangle
+    // Unpin fixed coordinates so force simulation can naturally adjust and untangle initially
     visibleNodes.forEach((n: any) => {
       n.fx = undefined;
       n.fy = undefined;
     });
 
-    const densityFactor = calculateDensityFactor(visibleNodes.length);
+    const nodeCount = visibleNodes.length;
+    const densityFactor = calculateDensityFactor(nodeCount);
 
-    // 1. Adaptive Link Distance: smaller on dense graphs, larger on sparse graphs
+    // 1. Connection-Aware Link Distance:
+    // Hub-to-Hub bridges need breathing room; local connections remain compact
     const adaptiveLinkDistance = (BASE_LINK_DISTANCE / Math.sqrt(densityFactor)) * nodeDistanceScale;
     const layoutAnchorDistance = adaptiveLinkDistance * 1.8;
 
     fg.d3Force('link')
       ?.distance((link: any) => {
         if (link.isLayoutAnchor || link.edgeType === 'LAYOUT_ANCHOR') return layoutAnchorDistance;
+        const srcNode = typeof link.source === 'object' ? link.source : nodeMap.get(link.source);
+        const tgtNode = typeof link.target === 'object' ? link.target : nodeMap.get(link.target);
+        const srcConns = Math.max(1, srcNode?.connectionCount ?? srcNode?.realConnections ?? 1);
+        const tgtConns = Math.max(1, tgtNode?.connectionCount ?? tgtNode?.realConnections ?? 1);
+
+        if (srcConns >= 15 && tgtConns >= 15) {
+          return Math.max(adaptiveLinkDistance * 1.8, 80 * nodeDistanceScale);
+        }
+        if (srcConns >= 8 && tgtConns >= 8) {
+          return Math.max(adaptiveLinkDistance * 1.3, 55 * nodeDistanceScale);
+        }
         return adaptiveLinkDistance;
       })
       ?.strength((link: any) => {
-        if (link.isLayoutAnchor || link.edgeType === 'LAYOUT_ANCHOR') return 0.12;
-        return 0.70;
+        if (link.isLayoutAnchor || link.edgeType === 'LAYOUT_ANCHOR') return 0.08;
+        return 0.65;
       });
 
-    // 2. Adaptive Repulsion (Charge): bounded scaling to keep dense graphs untangled without exploding
-    const adaptiveChargeStrength = (BASE_CHARGE_STRENGTH * Math.pow(densityFactor, 0.7)) * nodeDistanceScale;
-    const adaptiveChargeMax = (BASE_CHARGE_DISTANCE_MAX * Math.sqrt(densityFactor)) * nodeDistanceScale;
-
+    // 2. Connection-Based Repulsion (Gravity):
+    // Higher-degree hubs repel strongly to let nodes take their space without central clumping
     fg.d3Force('charge')
-      ?.strength(adaptiveChargeStrength)
-      ?.distanceMax(adaptiveChargeMax);
+      ?.strength((node: any) => {
+        const conns = Math.max(1, node.connectionCount ?? node.realConnections ?? node.subgraphDegree ?? 1);
+        if (nodeCount > 500) {
+          return (-26 - Math.min(conns * 4.0, 320)) * nodeDistanceScale;
+        } else if (nodeCount > 100) {
+          return (-32 - Math.min(conns * 2.8, 180)) * nodeDistanceScale;
+        }
+        return BASE_CHARGE_STRENGTH * nodeDistanceScale;
+      })
+      ?.distanceMax(nodeCount > 500 ? 900 * nodeDistanceScale : 500 * nodeDistanceScale);
 
-    // 3. Node-Aware Collision: Uses actual rendered node radius + padding (NOT static 24px)
-    fg.d3Force('collide', forceCollide((node: any) => {
-      const r = getNodeSize(node);
-      return r + COLLISION_PADDING;
-    }));
+    // 3. Soft, gentle boundary positioning forces:
+    // Scale inverse to nodeDistanceScale so increasing spacing lets nodes spread out widely
+    fg.d3Force('center', null);
+    const softCenterStrength = (nodeCount > 500 ? 0.015 : 0.035) / Math.max(0.4, Math.sqrt(nodeDistanceScale));
+    fg.d3Force('x', forceX(0).strength(softCenterStrength));
+    fg.d3Force('y', forceY(0).strength(softCenterStrength));
+
+    // 4. Node-Aware Collision: Uses actual rendered node radius + padding (disabled on > 1500 nodes for 60 FPS)
+    if (nodeCount <= 1500) {
+      fg.d3Force('collide', forceCollide((node: any) => {
+        const r = getNodeSize(node);
+        const padding = nodeCount > 500 ? 4 : COLLISION_PADDING;
+        return r + padding;
+      }));
+    } else {
+      fg.d3Force('collide', null);
+    }
 
     fg.d3ReheatSimulation?.();
 
-    // 4. Camera Zoom Fix: Only auto-zoom on initial mount or when primary focus node changes
+    // 5. Camera Zoom Fix: Only auto-zoom on initial mount or when primary focus node changes
     const isPrimaryChanged = prevPrimaryNodeIdRef.current !== primaryNodeId;
     if (!hasInitialZoomedRef.current || isPrimaryChanged) {
       hasInitialZoomedRef.current = true;
@@ -201,17 +267,18 @@ export default function GraphCanvas() {
       }, 350);
       return () => clearTimeout(timer);
     }
-  }, [visibleNodes.length, primaryNodeId, zoomInClose, nodeDistanceScale, nodeSizeScale, getNodeSize]);
+  }, [visibleNodes.length, primaryNodeId, activeProvider, zoomInClose, nodeDistanceScale, nodeSizeScale, getNodeSize]);
 
-  // ── Dynamic clean-up when active provider changes ─────────────────────────
+  // ── Dynamic clean-up ONLY when active provider actually changes ─────────────────────────
   useEffect(() => {
-    if (!isImdb && visibleNodes.length > 0) {
+    if (visibleNodes.length > 0) {
       visibleNodes.forEach((n: any) => {
         n.fx = undefined;
         n.fy = undefined;
       });
+      graphRef.current?.d3ReheatSimulation?.();
     }
-  }, [isImdb, visibleNodes]);
+  }, [activeProvider]);
 
   // Smoothly center camera on searched node when highlightedNodeIds is updated to a single node
   useEffect(() => {
@@ -242,8 +309,9 @@ export default function GraphCanvas() {
     return { nodeIds, edgeIds };
   }, [activeSelectedNode, visibleLinks]);
 
-  // ── Bridge nodes ──────────────────────────────────────────────────────────
+  // ── Bridge nodes (O(E) indexed cluster adjacency; skipped on huge graphs) ───────────────────
   const bridgeNodes = useMemo(() => {
+    if (visibleNodes.length > 500) return new Set<string>();
     const bridgeSet = new Set<string>();
     const clusterMap = new Map<string, string>();
     for (const node of visibleNodes) { if (node.cluster) clusterMap.set(node.id, node.cluster); }
@@ -256,8 +324,8 @@ export default function GraphCanvas() {
       if (tgtC) { if (!nodeNeighborClusters.has(src)) nodeNeighborClusters.set(src, new Set()); nodeNeighborClusters.get(src)!.add(tgtC); }
     }
     for (const [nodeId, clusters] of nodeNeighborClusters.entries()) {
-      const node = visibleNodes.find(n => n.id === nodeId);
-      if (node?.cluster) clusters.add(node.cluster);
+      const c = clusterMap.get(nodeId);
+      if (c) clusters.add(c);
       if (clusters.size > 1) bridgeSet.add(nodeId);
     }
     return bridgeSet;
@@ -271,6 +339,73 @@ export default function GraphCanvas() {
     update();
     window.addEventListener('resize', update);
     return () => window.removeEventListener('resize', update);
+  }, []);
+
+  // ── Keyboard Modifier Tracking (Shift / Ctrl / Cmd / Alt for isolated single-node drag) ──
+  useEffect(() => {
+    function onKD(e: KeyboardEvent) {
+      if (e.shiftKey || e.ctrlKey || e.metaKey || e.altKey) {
+        isModifierPressedRef.current = true;
+      }
+    }
+    function onKU(e: KeyboardEvent) {
+      if (!e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        isModifierPressedRef.current = false;
+      }
+    }
+    window.addEventListener('keydown', onKD);
+    window.addEventListener('keyup', onKU);
+    return () => {
+      window.removeEventListener('keydown', onKD);
+      window.removeEventListener('keyup', onKU);
+    };
+  }, []);
+
+  // ── Intercept Mousedown on Canvas to allow Ctrl+Drag and prevent whole-graph panning ──
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    function onMouseDownCapture(e: MouseEvent) {
+      if ((e as any).__hopnetSynthesized) return;
+
+      const isMod = e.shiftKey || e.ctrlKey || e.metaKey || e.altKey;
+      if (isMod) {
+        isModifierPressedRef.current = true;
+      }
+
+      // If user holds Ctrl while clicking on a node:
+      // d3-drag defaultFilter rejects any event with ctrlKey=true (!event.ctrlKey).
+      // We re-dispatch a synthetic mousedown with ctrlKey=false so d3-drag can engage the node,
+      // while keeping isModifierPressedRef.current=true for isolated single-node dragging.
+      if (e.ctrlKey && hoveredNodeRef.current && e.button === 0) {
+        e.stopImmediatePropagation();
+        e.preventDefault();
+        const synthetic = new MouseEvent('mousedown', {
+          bubbles: true,
+          cancelable: true,
+          view: window,
+          detail: e.detail,
+          screenX: e.screenX,
+          screenY: e.screenY,
+          clientX: e.clientX,
+          clientY: e.clientY,
+          ctrlKey: false,
+          shiftKey: e.shiftKey,
+          metaKey: e.metaKey,
+          altKey: e.altKey,
+          button: 0,
+          buttons: e.buttons || 1,
+        });
+        (synthetic as any).__hopnetSynthesized = true;
+        e.target?.dispatchEvent(synthetic);
+      }
+    }
+
+    container.addEventListener('mousedown', onMouseDownCapture, true);
+    return () => {
+      container.removeEventListener('mousedown', onMouseDownCapture, true);
+    };
   }, []);
 
   // ── Mouse tracking (DOM tooltip positioning & graph cursor coordinates) ──
@@ -324,7 +459,7 @@ export default function GraphCanvas() {
     const n = node as GraphNode;
     if (!isFinite(node.x) || !isFinite(node.y)) return;
 
-    const r = getNodeSize(n);
+    const baseR = getNodeSize(n);
     const color = getNodeColor(n);
     const isReal = n.nodeType === 'REAL' || isImdb;
     const isHovered = hoveredNode?.id === n.id;
@@ -333,6 +468,9 @@ export default function GraphCanvas() {
     const isHighlighted = highlightedNodeIds.size === 0 || highlightedNodeIds.has(n.id);
     const isConnectedToSelected = selectedNodeConnections.nodeIds.has(n.id);
     const hasActiveSelection = activeSelectedNode !== null;
+
+    // Hover or select gets a visual scale boost without altering physics simulation
+    const r = (isSelected || isConnectorSource) ? baseR * 1.8 : isHovered ? baseR * 1.6 : baseR;
 
     // Subtle breathing
     const charCode = n.fullName?.charCodeAt(0) ?? n.id?.charCodeAt(0) ?? 0;
@@ -343,16 +481,21 @@ export default function GraphCanvas() {
 
     // Cluster halo
     if (n.cluster && isHighlighted && (!hasActiveSelection || isSelected || isConnectedToSelected)) {
-      const cc = getClusterColor(n.cluster);
-      const glowScale = isSelected ? 5 : isHovered ? 4 : 3;
-      const alpha = isSelected ? 0.4 : isHovered ? 0.25 : 0.10;
-      const grad = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, ar * glowScale);
-      grad.addColorStop(0, hexToRgba(cc, alpha));
-      grad.addColorStop(1, 'transparent');
-      ctx.beginPath();
-      ctx.arc(node.x, node.y, ar * glowScale, 0, 2 * Math.PI);
-      ctx.fillStyle = grad;
-      ctx.fill();
+      if (visibleNodes.length <= 500 || isSelected || isHovered || globalScale >= 1.2) {
+        const cc = getClusterColor(n.cluster);
+        const glowScale = isSelected ? 5 : isHovered ? 4 : 3;
+        const alpha = isSelected ? 0.4 : isHovered ? 0.25 : 0.10;
+        const glowRadius = Math.max(1, ar * glowScale);
+        if (isFinite(glowRadius) && glowRadius > 0 && isFinite(node.x) && isFinite(node.y)) {
+          const grad = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, glowRadius);
+          grad.addColorStop(0, hexToRgba(cc, alpha));
+          grad.addColorStop(1, 'transparent');
+          ctx.beginPath();
+          ctx.arc(node.x, node.y, glowRadius, 0, 2 * Math.PI);
+          ctx.fillStyle = grad;
+          ctx.fill();
+        }
+      }
     }
 
     // Connector ring
@@ -398,7 +541,7 @@ export default function GraphCanvas() {
     if (n.fullName) {
       const isNodeHighlighted = highlightedNodeIds.has(n.id);
       const isTracedEdge = highlightedEdgeIds.size > 0 && Array.from(highlightedEdgeIds).some(edgeId => {
-        const link = visibleLinks.find(l => l.id === edgeId);
+        const link = linkMap.get(edgeId);
         if (!link) return false;
         const s = typeof link.source === 'object' ? (link.source as any).id : link.source;
         const t = typeof link.target === 'object' ? (link.target as any).id : link.target;
@@ -418,7 +561,10 @@ export default function GraphCanvas() {
       let shouldRenderLabel = true;
       let densityAlphaMultiplier = 1.0;
 
-      if (!isImportantNode) {
+      // 1. Check user preference: if hide names toggle is active, only show when hovered or selected
+      if (!showNodeLabels && !isHovered && !isSelected) {
+        shouldRenderLabel = false;
+      } else if (!isImportantNode) {
         if (visibleNodes.length > 60) {
           // Dense graph: hide background labels unless zoomed in close (globalScale >= 1.1)
           if (globalScale < 1.1) {
@@ -451,6 +597,18 @@ export default function GraphCanvas() {
         ctx.textAlign = 'center';
         ctx.textBaseline = 'top';
 
+        // 1. Crisp dark halo outline around names so letters are never obscured by edge lines
+        ctx.save();
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = 'rgba(8, 10, 16, 0.95)';
+        ctx.lineWidth = Math.max(2.2, 3.2 / globalScale);
+        ctx.lineJoin = 'round';
+        ctx.miterLimit = 2;
+        ctx.strokeText(displayName, node.x, node.y + ar + 2.5);
+        ctx.restore();
+
+        // 2. Fill text with appropriate hierarchy
         if (isNodeHighlighted || isSelected || isHovered || isTracedEdge) {
           ctx.shadowColor = 'rgba(0, 0, 0, 0.95)';
           ctx.shadowBlur = 8 / globalScale;
@@ -469,7 +627,7 @@ export default function GraphCanvas() {
     }
 
     ctx.restore();
-  }, [getNodeColor, getNodeSize, hoveredNode, selectedNode, activeSelectedNode, highlightedNodeIds, highlightedEdgeIds, visibleLinks, connectorSourceNode, bridgeNodes, selectedNodeConnections, isImdb, fontSizeScale, visibleNodes.length]);
+  }, [getNodeColor, getNodeSize, hoveredNode, selectedNode, activeSelectedNode, highlightedNodeIds, highlightedEdgeIds, visibleLinks, connectorSourceNode, bridgeNodes, selectedNodeConnections, isImdb, fontSizeScale, visibleNodes.length, showNodeLabels]);
 
   // ── Inject Frontend-Only Invisible Layout Anchors for Isolated/Unreachable Components ─────
   const physicsLinks = useMemo(() => {
@@ -480,29 +638,39 @@ export default function GraphCanvas() {
       target: typeof l.target === 'object' ? (l.target as any).id : l.target,
     }));
 
-    if (visibleNodes.length <= 1) return links;
+    if (visibleNodes.length <= 1 || visibleNodes.length > 300) return links;
 
     // Find the primary node object in visibleNodes (or fallback to Rai Singh, then first node)
-    const primaryNode = (primaryNodeId ? visibleNodes.find(n => n.id === primaryNodeId || n.publicId === primaryNodeId) : null)
-      || visibleNodes.find(n => n.publicId === 'HNP-000001' || n.id === 'f02bb0c5-43e0-4e5e-b54a-033a852f1645' || n.fullName.trim().toLowerCase() === 'rai singh')
+    const primaryNode = (primaryNodeId ? nodeMap.get(primaryNodeId) : null)
+      || nodeMap.get('HNP-000001')
+      || nodeMap.get('f02bb0c5-43e0-4e5e-b54a-033a852f1645')
       || visibleNodes[0];
     if (!primaryNode) return links;
 
-    // 2. Perform BFS from primaryNode to find all nodes reachable via real edges
+    // 2. Perform fast O(V+E) BFS with adjacency list
+    const adj = new Map<string, string[]>();
+    for (const l of links) {
+      const s = typeof l.source === 'object' ? (l.source as any).id : l.source;
+      const t = typeof l.target === 'object' ? (l.target as any).id : l.target;
+      if (!adj.has(s)) adj.set(s, []);
+      if (!adj.has(t)) adj.set(t, []);
+      adj.get(s)!.push(t);
+      adj.get(t)!.push(s);
+    }
+
     const connectedToPrimary = new Set<string>([primaryNode.id]);
     const queue = [primaryNode.id];
-
-    while (queue.length > 0) {
-      const curr = queue.shift()!;
-      for (const l of links) {
-        const s = typeof l.source === 'object' ? (l.source as any).id : l.source;
-        const t = typeof l.target === 'object' ? (l.target as any).id : l.target;
-        if (s === curr && !connectedToPrimary.has(t)) {
-          connectedToPrimary.add(t);
-          queue.push(t);
-        } else if (t === curr && !connectedToPrimary.has(s)) {
-          connectedToPrimary.add(s);
-          queue.push(s);
+    let head = 0;
+    while (head < queue.length) {
+      const curr = queue[head++];
+      const neighbors = adj.get(curr);
+      if (neighbors) {
+        for (let i = 0; i < neighbors.length; i++) {
+          const nbr = neighbors[i];
+          if (!connectedToPrimary.has(nbr)) {
+            connectedToPrimary.add(nbr);
+            queue.push(nbr);
+          }
         }
       }
     }
@@ -545,6 +713,7 @@ export default function GraphCanvas() {
   // ── Link color ────────────────────────────────────────────────────────────
   const getLinkColor = useCallback((link: any) => {
     if (link.isLayoutAnchor || (link.edgeKind as any) === 'LAYOUT_ANCHOR') return 'transparent';
+    if (edgeOpacity <= 0.001) return 'transparent';
     const e = link as GraphEdge;
     const src = typeof link.source === 'string' ? link.source : (link.source as any).id;
     const tgt = typeof link.target === 'string' ? link.target : (link.target as any).id;
@@ -555,10 +724,14 @@ export default function GraphCanvas() {
     if (isTraced) return '#60a5fa'; // Bright glowing sky blue for traced optimal route
     if (isHovered || isConnectedToSelected) return 'rgba(255,255,255,0.95)';
     if (e.edgeType === 'REAL_EDGE' || e.edgeKind === 'REAL_EDGE') {
-      return `rgba(255,255,255,${0.25 + e.weight * 0.35})`;
+      const baseAlpha = visibleNodes.length > 500 ? 0.20 : (visibleNodes.length > 100 ? 0.35 : 0.50);
+      const alpha = Math.min(1.0, (baseAlpha + e.weight * 0.30) * edgeOpacity);
+      return `rgba(255,255,255,${alpha.toFixed(2)})`;
     }
-    return `rgba(148,163,184,${0.35 + e.weight * 0.20})`;
-  }, [highlightedEdgeIds, highlightedNodeIds, hoveredEdge, selectedNodeConnections]);
+    const baseAlpha = 0.25 + e.weight * 0.25;
+    const alpha = Math.min(1.0, baseAlpha * edgeOpacity);
+    return `rgba(148,163,184,${alpha.toFixed(2)})`;
+  }, [highlightedEdgeIds, highlightedNodeIds, hoveredEdge, selectedNodeConnections, visibleNodes.length, edgeOpacity]);
 
   const getLinkWidth = useCallback((link: any) => {
     if (link.isLayoutAnchor || (link.edgeKind as any) === 'LAYOUT_ANCHOR') return 0;
@@ -586,8 +759,8 @@ export default function GraphCanvas() {
     const n = node as GraphNode;
     if (!isFinite(node.x) || !isFinite(node.y)) return;
     const r = getNodeSize(n);
-    // Generous hit radius (at least 14 screen pixels or 2.2x node size) so cursor clicks never miss
-    const hitRadius = Math.max(14 / globalScale, r * 2.2);
+    // Generous hit radius clamped between reasonable bounds so zoomed out shadow canvas doesn't explode
+    const hitRadius = Math.min(24, Math.max(8 / globalScale, r * 1.6));
     ctx.fillStyle = color;
     ctx.beginPath();
     ctx.arc(node.x, node.y, hitRadius, 0, 2 * Math.PI);
@@ -642,11 +815,12 @@ export default function GraphCanvas() {
     links: physicsLinks as any,
   }), [visibleNodes, physicsLinks]);
 
-  // Memoize particle accessors with stable function identity
+  // Memoize particle accessors with stable function identity (disabled for large graphs to guarantee 60 FPS)
   const getLinkDirectionalParticles = useCallback((link: any) => {
+    if (visibleLinks.length > 300) return 0;
     const e = link as GraphEdge;
     return e.edgeType === 'REAL_EDGE' ? 2 : 0;
-  }, []);
+  }, [visibleLinks.length]);
 
   const getLinkDirectionalParticleColor = useCallback(() => {
     return isImdb ? accentColor : 'rgba(255, 255, 255, 0.92)';
@@ -685,11 +859,11 @@ export default function GraphCanvas() {
           linkDirectionalParticleWidth={1.4}
           linkDirectionalParticleColor={getLinkDirectionalParticleColor}
           linkDirectionalParticleSpeed={0.002}
-          warmupTicks={60}
-          cooldownTicks={100}
-          cooldownTime={1500}
-          d3AlphaDecay={0.018}
-          d3VelocityDecay={0.40}
+          warmupTicks={visibleNodes.length > 1000 ? 0 : 35}
+          cooldownTicks={visibleNodes.length > 1000 ? 60 : 120}
+          cooldownTime={visibleNodes.length > 1000 ? 3500 : 2500}
+          d3AlphaDecay={0.028}
+          d3VelocityDecay={0.45}
           onNodeClick={(node: any) => {
             const n = node as GraphNode;
             if (visualConnectMode) {
@@ -729,18 +903,110 @@ export default function GraphCanvas() {
             }
           }}
           onNodeHover={(node: any) => {
+            hoveredNodeRef.current = node ? (node as GraphNode) : null;
             setHoveredNode(node ? (node as GraphNode) : null);
             document.body.style.cursor = node ? 'pointer' : 'default';
           }}
           onNodeDrag={(node: any) => {
-            node.fx = node.x;
-            node.fy = node.y;
+            const isIsolated = isModifierPressedRef.current || isIsolatedDragRef.current;
+
+            if (isIsolated) {
+              isIsolatedDragRef.current = true;
+
+              // 1. Keep simulation alpha target at 0 so no kinetic energy is pumped into the network
+              graphRef.current?.d3AlphaTarget?.(0);
+
+              // 2. Temporarily set link force strength to 0 so no connected nodes (even 1st-hop) are pulled
+              const linkForce = graphRef.current?.d3Force?.('link');
+              if (linkForce && prevLinkStrengthRef.current === null) {
+                prevLinkStrengthRef.current = linkForce.strength();
+                linkForce.strength(0);
+              }
+
+              // 3. Fix ALL other nodes at their exact coordinates so not even 1st-hop neighbors move
+              const internalData = graphRef.current?.graphData?.();
+              const allNodes = internalData?.nodes || visibleNodes;
+              for (let i = 0; i < allNodes.length; i++) {
+                const n = allNodes[i] as any;
+                if (n.id !== node.id && typeof n.x === 'number' && typeof n.y === 'number') {
+                  n.fx = n.x;
+                  n.fy = n.y;
+                  n.vx = 0;
+                  n.vy = 0;
+                }
+              }
+
+              // 4. Move ONLY the dragged node with the cursor
+              node.fx = node.x;
+              node.fy = node.y;
+              node.vx = 0;
+              node.vy = 0;
+            } else {
+              // Elastic move (Normal spring drag without modifier keys):
+              // Dragging this node pulls connected nodes with spring physics
+              isIsolatedDragRef.current = false;
+
+              // Restore link strength if returning to normal spring drag
+              if (prevLinkStrengthRef.current !== null) {
+                const linkForce = graphRef.current?.d3Force?.('link');
+                linkForce?.strength?.(prevLinkStrengthRef.current);
+                prevLinkStrengthRef.current = null;
+              }
+
+              // Unpin nodes that aren't permanently pinned
+              const internalData = graphRef.current?.graphData?.();
+              const allNodes = internalData?.nodes || visibleNodes;
+              for (let i = 0; i < allNodes.length; i++) {
+                const n = allNodes[i] as any;
+                if (n.id !== node.id && !n.__userPinned) {
+                  n.fx = undefined;
+                  n.fy = undefined;
+                }
+              }
+              node.fx = node.x;
+              node.fy = node.y;
+            }
           }}
           onNodeDragEnd={(node: any) => {
-            // Unpin node so spring/repulsion forces pull it back elastically & auto-correct layout
-            node.fx = undefined;
-            node.fy = undefined;
-            graphRef.current?.d3ReheatSimulation?.();
+            const isIsolated = isIsolatedDragRef.current;
+
+            // Restore link force if it was zeroed
+            if (prevLinkStrengthRef.current !== null) {
+              const linkForce = graphRef.current?.d3Force?.('link');
+              linkForce?.strength?.(prevLinkStrengthRef.current);
+              prevLinkStrengthRef.current = null;
+            }
+
+            if (isIsolated) {
+              // Isolated single node move finished:
+              // Keep this node pinned at its newly placed location!
+              node.fx = node.x;
+              node.fy = node.y;
+              node.vx = 0;
+              node.vy = 0;
+              node.__userPinned = true;
+
+              // Release other nodes so future normal drags can move them
+              const internalData = graphRef.current?.graphData?.();
+              const allNodes = internalData?.nodes || visibleNodes;
+              for (let i = 0; i < allNodes.length; i++) {
+                const n = allNodes[i] as any;
+                if (n.id !== node.id && !n.__userPinned) {
+                  n.fx = undefined;
+                  n.fy = undefined;
+                }
+              }
+            } else {
+              // Normal spring drag: unpin dragged node so it settles naturally with the network
+              if (!node.__userPinned) {
+                node.fx = undefined;
+                node.fy = undefined;
+              }
+            }
+
+            graphRef.current?.d3AlphaTarget?.(0);
+            isIsolatedDragRef.current = false;
+            isModifierPressedRef.current = false;
           }}
           onLinkClick={(link: any) => setEditingEdge(link as GraphEdge)}
           onLinkHover={(link: any) => {
@@ -749,7 +1015,15 @@ export default function GraphCanvas() {
           }}
           enableNodeDrag={!visualConnectMode}
           enableZoomInteraction
-          enablePanInteraction
+          enablePanInteraction={(ev: any) => {
+            // When any modifier key is held, NEVER pan canvas (user intends single-node move)
+            if (ev.shiftKey || ev.ctrlKey || ev.metaKey || ev.altKey || isModifierPressedRef.current) {
+              return false;
+            }
+            // When mouse is over a node, NEVER pan canvas
+            if (hoveredNodeRef.current) return false;
+            return true;
+          }}
           minZoom={0.15}
           maxZoom={10}
         />
