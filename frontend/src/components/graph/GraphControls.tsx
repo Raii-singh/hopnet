@@ -21,6 +21,8 @@ export default function GraphControls() {
     excludedNodeIds, excludeNode, includeNode, clearExcludedNodes,
     fontSizeScale, nodeSizeScale, nodeDistanceScale,
     setFontSizeScale, setNodeSizeScale, setNodeDistanceScale,
+    showNodeLabels, edgeOpacity,
+    setShowNodeLabels, setEdgeOpacity,
   } = useGraphStore();
 
   const RELATIONSHIP_TYPES = ['colleague', 'mentor', 'friend', 'cofounder', 'investor'];
@@ -391,53 +393,18 @@ export default function GraphControls() {
           paddingRight: '2px',
         }}
       >
-        {/* ── CARD 1: GRAPH CONTROLS ── */}
-        <div className="glass-panel" style={{ padding: '14px 16px' }}>
-          {/* Header */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px' }}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2">
-              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-            </svg>
-            <span className="text-label" style={{ color: '#ffffff', fontSize: '11px', fontWeight: 700 }}>GRAPH CONTROLS</span>
-            <span style={{
-              marginLeft: 'auto', fontSize: '8px', padding: '1px 6px', borderRadius: '100px',
-              background: 'rgba(255, 255, 255, 0.08)', color: '#ffffff',
-              border: '1px solid rgba(255, 255, 255, 0.2)', fontWeight: 700, letterSpacing: '0.04em',
-            }}>
-              {providerCapabilities.icon} {isAdmin ? 'LIVE GRAPH' : 'RAI NETWORK'}
-            </span>
-          </div>
+        {/* ── BOX 1: GRAPH CONTROLS HEADER ── */}
+        <div className="glass-panel" style={{ padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2" style={{ flexShrink: 0 }}>
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+          </svg>
+          <span className="text-label" style={{ color: '#ffffff', fontSize: '11px', fontWeight: 700, letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
+            GRAPH CONTROLS
+          </span>
+        </div>
 
-          {/* Hop Depth Slider */}
-          <div style={{ marginBottom: '14px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-              <span className="text-label" style={{ fontSize: '10px' }}>Hop Depth</span>
-              <span className="text-mono" style={{ fontSize: '13px', fontWeight: 700, color: '#ffffff' }}>
-                {hopDepth}
-              </span>
-            </div>
-            <input
-              type="range"
-              min={1} max={3} step={1}
-              value={hopDepth}
-              onChange={e => setHopDepth(Number(e.target.value))}
-              className="hop-slider"
-              id="hop-depth-slider"
-              style={{
-                background: `linear-gradient(to right, #ffffff 0%, #ffffff ${((hopDepth - 1) / 2) * 100}%, rgba(255,255,255,0.06) ${((hopDepth - 1) / 2) * 100}%, rgba(255,255,255,0.06) 100%)`,
-              }}
-            />
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-              {[1, 2, 3].map(d => (
-                <span key={d} className="text-label" style={{ color: hopDepth >= d ? '#ffffff' : 'var(--silver-700)', fontSize: '9px' }}>
-                  {d}
-                </span>
-              ))}
-            </div>
-          </div>
-
-          <div className="divider" style={{ margin: '8px 0' }} />
-
+        {/* ── BOX 2: ACTION BUTTONS (DEMO, SEARCH, RESET) ── */}
+        <div className="glass-panel" style={{ padding: '10px 12px' }}>
           {/* Toggle Demo Nodes */}
           {providerCapabilities.hasDemoNodes && (
             <button
@@ -470,7 +437,7 @@ export default function GraphControls() {
             id="search-node-btn"
             className={`glass-button ${showSearch ? 'active' : ''}`}
             onClick={() => setShowSearch(s => !s)}
-            style={{ width: '100%', marginBottom: '6px', padding: '6px 10px', fontSize: '11px' }}
+            style={{ width: '100%', marginBottom: showSearch ? '6px' : '6px', padding: '6px 10px', fontSize: '11px' }}
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
@@ -542,6 +509,61 @@ export default function GraphControls() {
             </svg>
             Reset Graph
           </button>
+        </div>
+
+        {/* ── BOX 3: HOP DEPTH EXPANSION ── */}
+        <div className="glass-panel" style={{ padding: '12px 14px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <span className="text-label" style={{ fontSize: '10px' }}>Hop Depth</span>
+            <span className="text-mono" style={{ fontSize: '11px', fontWeight: 700, color: '#ffffff' }}>
+              {hopDepth >= 7 ? 'Full Graph' : `${hopDepth} ${hopDepth === 1 ? 'hop' : 'hops'}`}
+            </span>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+            {[
+              { label: '1 hop', desc: 'Direct connections', depth: 1 },
+              { label: '2 hops', desc: 'Second degree', depth: 2 },
+              { label: '3 hops', desc: 'Third degree', depth: 3 },
+              { label: '4 hops', desc: 'Fourth degree', depth: 4 },
+              { label: '5 hops', desc: 'Fifth degree', depth: 5 },
+              { label: '6 hops', desc: 'Sixth degree', depth: 6 },
+              { label: 'Full Graph', desc: 'All nodes & edges', depth: 7 },
+            ].map(item => (
+              <div
+                key={item.depth}
+                onClick={() => setHopDepth(item.depth)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '8px',
+                  padding: '3px 6px', borderRadius: '5px', cursor: 'pointer',
+                  background: hopDepth === item.depth ? 'rgba(255, 255, 255, 0.10)' : 'transparent',
+                  border: hopDepth === item.depth ? '1px solid rgba(255, 255, 255, 0.20)' : '1px solid transparent',
+                  transition: 'all 0.15s',
+                }}
+                onMouseEnter={e => {
+                  if (hopDepth !== item.depth) e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
+                }}
+                onMouseLeave={e => {
+                  if (hopDepth !== item.depth) e.currentTarget.style.background = 'transparent';
+                }}
+              >
+                <span style={{
+                  width: 14, height: 2, borderRadius: 1,
+                  background: hopDepth >= item.depth ? '#ffffff' : 'var(--silver-800)',
+                  transition: 'background 0.3s',
+                }} />
+                <span style={{
+                  color: hopDepth >= item.depth ? '#ffffff' : 'var(--silver-500)',
+                  fontSize: '10.5px',
+                  fontWeight: hopDepth === item.depth ? 700 : (item.depth === 7 ? 600 : 400),
+                }}>
+                  {item.label}
+                </span>
+                <span style={{ color: 'var(--silver-700)', fontSize: '9px', marginLeft: 'auto' }}>
+                  {item.desc}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* ── CARD 2: ADVANCED FILTERS (INLINE EXPANDABLE SIDEBAR CARD) ── */}
@@ -628,8 +650,74 @@ export default function GraphControls() {
 
               {/* Visual Layout Sliders */}
               <span className="text-label" style={{ color: '#ffffff', display: 'block', fontSize: '10px', fontWeight: 700 }}>
-                Canvas Layout & Scaling
+                Canvas Layout & Filters
               </span>
+
+              {/* 1. Hide / Show Node Names Toggle */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <span className="text-label" style={{ color: '#ffffff', fontSize: '10px' }}>Show Node Names</span>
+                  <div style={{ fontSize: '8.5px', color: 'var(--silver-500)' }}>
+                    {showNodeLabels ? 'Showing names' : 'Hidden (circles only)'}
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowNodeLabels(!showNodeLabels)}
+                  style={{
+                    fontSize: '9.5px',
+                    fontWeight: 600,
+                    padding: '2px 8px',
+                    borderRadius: '100px',
+                    background: showNodeLabels ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.03)',
+                    color: showNodeLabels ? '#ffffff' : 'var(--silver-500)',
+                    border: `1px solid ${showNodeLabels ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.08)'}`,
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  {showNodeLabels ? 'ON' : 'OFF'}
+                </button>
+              </div>
+
+              {/* 2. Edge Opacity Slider */}
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                  <span className="text-label" style={{ color: 'var(--silver-300)', fontSize: '9.5px' }}>Edge Opacity (Visibility)</span>
+                  <span className="text-mono" style={{ fontSize: '10px', color: '#ffffff', fontWeight: 700 }}>
+                    {Math.round(edgeOpacity * 100)}%
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min={0.0} max={1.0} step={0.05}
+                  value={edgeOpacity}
+                  onChange={e => setEdgeOpacity(parseFloat(e.target.value))}
+                  className="hop-slider"
+                  style={{
+                    background: `linear-gradient(to right, #ffffff 0%, #ffffff ${edgeOpacity * 100}%, rgba(255,255,255,0.06) ${edgeOpacity * 100}%, rgba(255,255,255,0.06) 100%)`,
+                  }}
+                />
+              </div>
+
+              {/* 3. Gravity & Spacing Slider */}
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                  <span className="text-label" style={{ color: 'var(--silver-300)', fontSize: '9.5px' }}>Gravity & Spacing</span>
+                  <span className="text-mono" style={{ fontSize: '10px', color: '#ffffff', fontWeight: 700 }}>
+                    {Math.round(nodeDistanceScale * 100)}%
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min={0.3} max={2.5} step={0.05}
+                  value={nodeDistanceScale}
+                  onChange={e => setNodeDistanceScale(parseFloat(e.target.value))}
+                  className="hop-slider"
+                  style={{
+                    background: `linear-gradient(to right, #ffffff 0%, #ffffff ${((nodeDistanceScale - 0.3) / 2.2) * 100}%, rgba(255,255,255,0.06) ${((nodeDistanceScale - 0.3) / 2.2) * 100}%, rgba(255,255,255,0.06) 100%)`,
+                  }}
+                />
+              </div>
 
               {/* Text Font Size */}
               <div>
@@ -671,32 +759,14 @@ export default function GraphControls() {
                 />
               </div>
 
-              {/* Node Distance Spacing */}
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                  <span className="text-label" style={{ color: 'var(--silver-300)', fontSize: '9.5px' }}>Node Distance Spacing</span>
-                  <span className="text-mono" style={{ fontSize: '10px', color: '#ffffff', fontWeight: 700 }}>
-                    {Math.round(nodeDistanceScale * 100)}%
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min={0.4} max={1.8} step={0.05}
-                  value={nodeDistanceScale}
-                  onChange={e => setNodeDistanceScale(parseFloat(e.target.value))}
-                  className="hop-slider"
-                  style={{
-                    background: `linear-gradient(to right, #ffffff 0%, #ffffff ${((nodeDistanceScale - 0.4) / 1.4) * 100}%, rgba(255,255,255,0.06) ${((nodeDistanceScale - 0.4) / 1.4) * 100}%, rgba(255,255,255,0.06) 100%)`,
-                  }}
-                />
-              </div>
-
               <button
                 onClick={() => {
                   setGraphFilters([], 0);
-                  setFontSizeScale(1.0);
+                  setFontSizeScale(1.7);
                   setNodeSizeScale(1.0);
-                  setNodeDistanceScale(1.0);
+                  setNodeDistanceScale(0.75);
+                  setShowNodeLabels(true);
+                  setEdgeOpacity(0.5);
                 }}
                 className="glass-button"
                 style={{ fontSize: '9.5px', padding: '4px 8px', width: '100%', justifyContent: 'center', marginTop: '4px', color: 'var(--silver-400)' }}
@@ -1067,39 +1137,6 @@ export default function GraphControls() {
               ) : null}
             </div>
           )}
-        </div>
-
-        {/* ── CARD 4: EXPANSION LEGEND ── */}
-        <div className="glass-panel" style={{ padding: '10px 14px' }}>
-          <div className="text-label" style={{ marginBottom: '8px' }}>Expansion</div>
-          {[
-            { label: '1 hop', desc: isImdb ? 'Direct co-stars' : 'Direct connections', depth: 1 },
-            { label: '2 hops', desc: isImdb ? 'Friends of co-stars' : 'Second degree', depth: 2 },
-            { label: '3 hops', desc: isImdb ? 'Full network' : 'Full network', depth: 3 },
-          ].map(item => (
-            <div
-              key={item.depth}
-              onClick={() => setHopDepth(item.depth)}
-              style={{
-                display: 'flex', alignItems: 'center', gap: '8px',
-                padding: '4px 6px', borderRadius: '6px', cursor: 'pointer',
-                background: hopDepth === item.depth ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
-                transition: 'background 0.15s',
-              }}
-            >
-              <span style={{
-                width: 16, height: 2, borderRadius: 1,
-                background: hopDepth >= item.depth ? '#ffffff' : 'var(--silver-800)',
-                transition: 'background 0.3s',
-              }} />
-              <span style={{ color: hopDepth >= item.depth ? 'var(--silver-300)' : 'var(--silver-600)', fontSize: '11px' }}>
-                {item.label}
-              </span>
-              <span style={{ color: 'var(--silver-700)', fontSize: '10px', marginLeft: 'auto' }}>
-                {item.desc}
-              </span>
-            </div>
-          ))}
         </div>
       </div>
     </>
