@@ -122,7 +122,7 @@ export default function GraphCanvas() {
     setConnectorSourceNode, setVisualConnectMode, createNewEdge,
     rootNodeId, primaryNodeId, setPrimaryNode,
     fontSizeScale, nodeSizeScale, nodeDistanceScale,
-    showNodeLabels, edgeOpacity,
+    showNodeLabels, edgeOpacity, autoFreezeLayout,
   } = useGraphStore();
 
   const tooltipContainerRef = useRef<HTMLDivElement>(null);
@@ -248,7 +248,7 @@ export default function GraphCanvas() {
     if (nodeCount <= 1500) {
       fg.d3Force('collide', forceCollide((node: any) => {
         const r = getNodeSize(node);
-        const padding = nodeCount > 500 ? 4 : COLLISION_PADDING;
+        const padding = (nodeCount > 500 ? 4 : COLLISION_PADDING) * Math.min(1.5, Math.max(0.8, nodeDistanceScale));
         return r + padding;
       }));
     } else {
@@ -279,6 +279,16 @@ export default function GraphCanvas() {
       graphRef.current?.d3ReheatSimulation?.();
     }
   }, [activeProvider]);
+
+  // ── Dynamic live simulation physics when autoFreezeLayout is toggled ───
+  useEffect(() => {
+    if (!autoFreezeLayout && graphRef.current) {
+      graphRef.current.d3AlphaTarget?.(0.015);
+      graphRef.current.d3ReheatSimulation?.();
+    } else if (autoFreezeLayout && graphRef.current) {
+      graphRef.current.d3AlphaTarget?.(0);
+    }
+  }, [autoFreezeLayout]);
 
   // Smoothly center camera on searched node when highlightedNodeIds is updated to a single node
   useEffect(() => {
@@ -860,10 +870,10 @@ export default function GraphCanvas() {
           linkDirectionalParticleColor={getLinkDirectionalParticleColor}
           linkDirectionalParticleSpeed={0.002}
           warmupTicks={visibleNodes.length > 1000 ? 0 : 35}
-          cooldownTicks={visibleNodes.length > 1000 ? 60 : 120}
-          cooldownTime={visibleNodes.length > 1000 ? 3500 : 2500}
-          d3AlphaDecay={0.028}
-          d3VelocityDecay={0.45}
+          cooldownTicks={autoFreezeLayout ? (visibleNodes.length > 1000 ? 60 : 120) : Infinity}
+          cooldownTime={autoFreezeLayout ? (visibleNodes.length > 1000 ? 3500 : 2500) : Infinity}
+          d3AlphaDecay={autoFreezeLayout ? 0.028 : 0.005}
+          d3VelocityDecay={autoFreezeLayout ? 0.45 : 0.35}
           onNodeClick={(node: any) => {
             const n = node as GraphNode;
             if (visualConnectMode) {
@@ -1004,7 +1014,12 @@ export default function GraphCanvas() {
               }
             }
 
-            graphRef.current?.d3AlphaTarget?.(0);
+            if (!autoFreezeLayout) {
+              graphRef.current?.d3AlphaTarget?.(0.015);
+              graphRef.current?.d3ReheatSimulation?.();
+            } else {
+              graphRef.current?.d3AlphaTarget?.(0);
+            }
             isIsolatedDragRef.current = false;
             isModifierPressedRef.current = false;
           }}

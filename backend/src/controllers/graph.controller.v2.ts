@@ -28,8 +28,12 @@ import type { GraphFilters } from '../repositories/graph.repository';
 function parseFilters(req: Request): GraphFilters | undefined {
   const filters: GraphFilters = {};
   
+  const autoTrustRaw = req.query['autoTrust'];
   const minTrustRaw = req.query['minTrust'];
-  if (minTrustRaw !== undefined) {
+
+  if (autoTrustRaw === 'true' || minTrustRaw === 'auto') {
+    filters.autoTrust = true;
+  } else if (minTrustRaw !== undefined) {
     const minTrust = parseFloat(minTrustRaw as string);
     if (isNaN(minTrust) || minTrust < 0 || minTrust > 1) {
       throw validationError('minTrust must be a number between 0 and 1');
@@ -53,7 +57,7 @@ function parseFilters(req: Request): GraphFilters | undefined {
     }
   }
 
-  return (filters.minTrustScore !== undefined || filters.relationshipTypes !== undefined || filters.excludedNodeIds !== undefined) ? filters : undefined;
+  return (filters.autoTrust || filters.minTrustScore !== undefined || filters.relationshipTypes !== undefined || filters.excludedNodeIds !== undefined) ? filters : undefined;
 }
 
 // ── GET /api/v2/graph ──────────────────────────────────────────────────────

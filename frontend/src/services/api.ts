@@ -430,6 +430,8 @@ export interface ApiGraphMetaV2 {
   demoEdges: number;
   avgHopCount: number;
   constraintActive: boolean;
+  appliedMinTrust?: number;
+  rawTotalNodes?: number;
 }
 
 export interface ApiGraphDataV2 {
@@ -544,7 +546,7 @@ export async function fetchGraphV2(
   centerId: string,
   depth: number,
   includeDemo: boolean,
-  filters?: { types: string[]; minTrust: number }
+  filters?: { types?: string[]; minTrust?: number; autoTrust?: boolean }
 ): Promise<ApiGraphDataV2> {
   const params = new URLSearchParams({
     centerId,
@@ -554,7 +556,9 @@ export async function fetchGraphV2(
   if (filters?.types && filters.types.length > 0) {
     params.set('types', filters.types.join(','));
   }
-  if (filters?.minTrust !== undefined) {
+  if (filters?.autoTrust) {
+    params.set('autoTrust', 'true');
+  } else if (filters?.minTrust !== undefined) {
     params.set('minTrust', String(filters.minTrust));
   }
   return apiFetchV2<ApiGraphDataV2>(`/graph?${params}`);

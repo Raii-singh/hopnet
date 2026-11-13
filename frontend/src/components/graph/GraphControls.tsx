@@ -21,8 +21,9 @@ export default function GraphControls() {
     excludedNodeIds, excludeNode, includeNode, clearExcludedNodes,
     fontSizeScale, nodeSizeScale, nodeDistanceScale,
     setFontSizeScale, setNodeSizeScale, setNodeDistanceScale,
-    showNodeLabels, edgeOpacity,
-    setShowNodeLabels, setEdgeOpacity,
+    showNodeLabels, edgeOpacity, autoFreezeLayout,
+    setShowNodeLabels, setEdgeOpacity, setAutoFreezeLayout,
+    isAutoTrustFilter, setIsAutoTrustFilter, refreshSubgraph,
   } = useGraphStore();
 
   const RELATIONSHIP_TYPES = ['colleague', 'mentor', 'friend', 'cofounder', 'investor'];
@@ -596,7 +597,29 @@ export default function GraphControls() {
               {/* Min Trust Score */}
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                  <span className="text-label" style={{ color: '#ffffff', fontSize: '10px' }}>Min Trust Score</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span className="text-label" style={{ color: '#ffffff', fontSize: '10px' }}>Min Trust Score</span>
+                    <button
+                      onClick={() => {
+                        const nextAuto = !isAutoTrustFilter;
+                        setIsAutoTrustFilter(nextAuto);
+                      }}
+                      style={{
+                        fontSize: '8px',
+                        fontWeight: 700,
+                        padding: '1px 5px',
+                        borderRadius: '4px',
+                        background: isAutoTrustFilter ? 'rgba(52, 211, 153, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+                        color: isAutoTrustFilter ? '#34d399' : 'var(--silver-500)',
+                        border: `1px solid ${isAutoTrustFilter ? 'rgba(52, 211, 153, 0.4)' : 'rgba(255, 255, 255, 0.1)'}`,
+                        cursor: 'pointer',
+                        letterSpacing: '0.04em',
+                      }}
+                      title={isAutoTrustFilter ? 'Dynamic auto-set active (100+: 0.2, 1k: 0.7, 2k+: 0.9)' : 'Click to enable dynamic auto trust'}
+                    >
+                      {isAutoTrustFilter ? 'AUTO DYNAMIC' : 'MANUAL'}
+                    </button>
+                  </div>
                   <span className="text-mono" style={{ fontSize: '11px', color: '#ffffff', fontWeight: 700 }}>
                     {minTrustFilter.toFixed(1)}
                   </span>
@@ -605,7 +628,10 @@ export default function GraphControls() {
                   type="range"
                   min={0} max={1} step={0.1}
                   value={minTrustFilter}
-                  onChange={e => setGraphFilters(activeEdgeTypes, parseFloat(e.target.value))}
+                  onChange={e => {
+                    setIsAutoTrustFilter(false);
+                    setGraphFilters(activeEdgeTypes, parseFloat(e.target.value));
+                  }}
                   className="hop-slider"
                   style={{
                     background: `linear-gradient(to right, #ffffff 0%, #ffffff ${minTrustFilter * 100}%, rgba(255,255,255,0.06) ${minTrustFilter * 100}%, rgba(255,255,255,0.06) 100%)`,
@@ -759,14 +785,42 @@ export default function GraphControls() {
                 />
               </div>
 
+              {/* Auto-Freeze Layout */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <span className="text-label" style={{ color: '#ffffff', fontSize: '10px' }}>Auto-Freeze Layout</span>
+                  <div style={{ fontSize: '8.5px', color: 'var(--silver-500)' }}>
+                    {autoFreezeLayout ? 'Freezes layout after settling' : 'Continuous live float & auto-adjustment'}
+                  </div>
+                </div>
+                <button
+                  onClick={() => setAutoFreezeLayout(!autoFreezeLayout)}
+                  style={{
+                    fontSize: '9.5px',
+                    fontWeight: 600,
+                    padding: '2px 8px',
+                    borderRadius: '100px',
+                    background: autoFreezeLayout ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.03)',
+                    color: autoFreezeLayout ? '#ffffff' : 'var(--silver-500)',
+                    border: `1px solid ${autoFreezeLayout ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.08)'}`,
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  {autoFreezeLayout ? 'ON' : 'OFF'}
+                </button>
+              </div>
+
               <button
                 onClick={() => {
+                  setIsAutoTrustFilter(true);
                   setGraphFilters([], 0);
                   setFontSizeScale(1.7);
                   setNodeSizeScale(1.0);
-                  setNodeDistanceScale(0.75);
+                  setNodeDistanceScale(1.5);
                   setShowNodeLabels(true);
                   setEdgeOpacity(0.5);
+                  setAutoFreezeLayout(true);
                 }}
                 className="glass-button"
                 style={{ fontSize: '9.5px', padding: '4px 8px', width: '100%', justifyContent: 'center', marginTop: '4px', color: 'var(--silver-400)' }}

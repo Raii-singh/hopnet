@@ -184,6 +184,8 @@ interface GraphState {
   // Filters (Step 18)
   activeEdgeTypes: string[];
   minTrustFilter: number;
+  isAutoTrustFilter: boolean;
+  setIsAutoTrustFilter: (val: boolean) => void;
 
   // WORKSPACE MODE (V2.5) — only available for providers with hasCRUD
   workspaceMode: boolean;
@@ -218,11 +220,13 @@ interface GraphState {
   nodeDistanceScale: number;
   showNodeLabels: boolean;
   edgeOpacity: number;
+  autoFreezeLayout: boolean;
   setFontSizeScale: (scale: number) => void;
   setNodeSizeScale: (scale: number) => void;
   setNodeDistanceScale: (scale: number) => void;
   setShowNodeLabels: (show: boolean) => void;
   setEdgeOpacity: (opacity: number) => void;
+  setAutoFreezeLayout: (val: boolean) => void;
 
   // WORKSPACE ACTIONS (V2.5)
   toggleWorkspaceMode: () => void;
@@ -354,13 +358,15 @@ export const useGraphStore = create<GraphState>((set, get) => ({
 
   activeEdgeTypes: [],
   minTrustFilter: 0,
+  isAutoTrustFilter: true,
 
-  // Visual customization defaults (Font 170%, node distance 3/4)
+  // Visual customization defaults (Font 170%, node distance 150%)
   fontSizeScale: 1.7,
   nodeSizeScale: 1.0,
-  nodeDistanceScale: 0.75,
+  nodeDistanceScale: 1.5,
   showNodeLabels: true,
   edgeOpacity: 0.5,
+  autoFreezeLayout: true,
 
   // Workspace default states
   workspaceMode: false,
@@ -549,7 +555,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
 
   // ── Refresh subgraph from API or dummy ──────────────────────
   refreshSubgraph: async () => {
-    const { rootNodeId, hopDepth, showDemoNodes, dataSource, activeProvider, activeEdgeTypes, minTrustFilter } = get();
+    const { rootNodeId, hopDepth, showDemoNodes, dataSource, activeProvider, activeEdgeTypes, minTrustFilter, isAutoTrustFilter } = get();
     set({ isLoading: true });
 
     try {
@@ -574,7 +580,21 @@ export const useGraphStore = create<GraphState>((set, get) => ({
 
         const existingPosMap = new Map(get().visibleNodes.map(n => [n.id, { x: (n as any).x, y: (n as any).y, vx: (n as any).vx, vy: (n as any).vy }]));
 
-        const data = await fetchGraphV2(rootNodeId, hopDepth, showDemoNodes, { types: activeEdgeTypes, minTrust: minTrustFilter });
+        const filterOptions: { types: string[]; minTrust?: number; autoTrust?: boolean } = {
+          types: activeEdgeTypes,
+        };
+        if (isAutoTrustFilter) {
+          filterOptions.autoTrust = true;
+        } else {
+          filterOptions.minTrust = minTrustFilter;
+        }
+
+        const data = await fetchGraphV2(rootNodeId, hopDepth, showDemoNodes, filterOptions);
+
+        if (isAutoTrustFilter && typeof data.meta.appliedMinTrust === 'number') {
+          set({ minTrustFilter: data.meta.appliedMinTrust });
+        }
+
         let visibleNodes = data.nodes.map(n => {
           const gNode = apiNodeV2ToGraph(n);
           const pos = existingPosMap.get(gNode.id);
@@ -635,6 +655,14 @@ export const useGraphStore = create<GraphState>((set, get) => ({
         set({ visibleNodes, visibleLinks, meta });
       } else {
         const { nodes, links, meta } = buildDummySubgraph(rootNodeId, hopDepth, showDemoNodes, get().allNodes, get().allEdges);
+        if (isAutoTrustFilter) {
+          const rawCount = nodes.length;
+          let dynamicTrust = 0.0;
+          if (rawCount >= 2000) dynamicTrust = 0.9;
+          else if (rawCount >= 1000) dynamicTrust = 0.7;
+          else if (rawCount >= 100) dynamicTrust = 0.2;
+          set({ minTrustFilter: dynamicTrust });
+        }
         set({ visibleNodes: nodes, visibleLinks: links, meta });
       }
     } catch (err) {
@@ -684,7 +712,11 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   setHoveredEdge: (edge) => set({ hoveredEdge: edge }),
   setSearchQuery: (q) => set({ searchQuery: q }),
   setGraphFilters: (types, minTrust) => {
-    set({ activeEdgeTypes: types, minTrustFilter: minTrust });
+    set({ activeEdgeTypes: types, minTrustFilter: minTrust, isAutoTrustFilter: false });
+    get().refreshSubgraph();
+  },
+  setIsAutoTrustFilter: (val) => {
+    set({ isAutoTrustFilter: val });
     get().refreshSubgraph();
   },
 
@@ -693,6 +725,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   setNodeDistanceScale: (scale) => set({ nodeDistanceScale: scale }),
   setShowNodeLabels: (show) => set({ showNodeLabels: show }),
   setEdgeOpacity: (opacity) => set({ edgeOpacity: opacity }),
+  setAutoFreezeLayout: (val) => set({ autoFreezeLayout: val }),
 
   resetGraph: () => {
     const { dataSource, allNodes, databaseNodes, primaryNodeId, activeProvider } = get();
@@ -719,9 +752,13 @@ export const useGraphStore = create<GraphState>((set, get) => ({
       highlightedEdgeIds: new Set(),
       fontSizeScale: 1.7,
       nodeSizeScale: 1.0,
-      nodeDistanceScale: 0.75,
+      nodeDistanceScale: 1.5,
       showNodeLabels: true,
       edgeOpacity: 0.5,
+      autoFreezeLayout: true,
+      isAutoTrustFilter: true,
+      minTrustFilter: 0,
+      activeEdgeTypes: [],
     });
     get().refreshSubgraph();
   },

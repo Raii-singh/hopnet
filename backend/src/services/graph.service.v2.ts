@@ -145,6 +145,8 @@ export interface GraphMeta {
    */
   constraintActive: true;
   includeDemo: boolean;
+  rawTotalNodes?: number;
+  appliedMinTrust?: number;
 }
 
 /** Full graph subgraph response returned to the HTTP layer. */
@@ -375,6 +377,8 @@ export async function getSubgraph(
     avgHopCount: Math.round(avgHopCount * 100) / 100,
     constraintActive: true,
     includeDemo,
+    rawTotalNodes: raw.rawTotalNodes,
+    appliedMinTrust: raw.appliedMinTrust,
   };
 
   return { nodes, links, meta };

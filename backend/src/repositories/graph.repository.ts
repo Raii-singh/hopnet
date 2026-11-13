@@ -95,6 +95,10 @@ export interface RawSubgraph {
    * No weight field — the service layer computes weight via computeWeight().
    */
   relationships: Relationship[];
+  /** Total raw reachable nodes before dynamic trust/type filters were applied. */
+  rawTotalNodes?: number;
+  /** Effective minTrust score applied (e.g. dynamically determined). */
+  appliedMinTrust?: number;
 }
 
 /** Degree breakdown for a single node. */
@@ -111,6 +115,7 @@ export interface GraphFilters {
   relationshipTypes?: string[];
   minTrustScore?: number;
   excludedNodeIds?: Set<string>;
+  autoTrust?: boolean;
 }
 
 /** Options for neighbourhood queries. */
@@ -174,52 +179,100 @@ export async function getNeighbourhood(
     
     // Construct dynamic path filters ensuring all edges in path satisfy conditions
     let pathTypeFilter = '';
-    let pathTrustFilter = '';
     let nodeExcludeFilter = '';
     const hasTypes = filters?.relationshipTypes && filters.relationshipTypes.length > 0;
-    const hasMinTrust = filters?.minTrustScore !== undefined;
     const hasExclude = filters?.excludedNodeIds && filters.excludedNodeIds.size > 0;
 
     if (hasTypes) {
       pathTypeFilter = 'AND ALL(r IN rels WHERE r.relationshipType IN $types)';
     }
-    if (hasMinTrust) {
-      pathTrustFilter = 'AND ALL(r IN rels WHERE r.trustScore >= $minTrustScore)';
-    }
     if (hasExclude) {
       nodeExcludeFilter = 'AND NOT n.id IN $excludeIds AND NOT n.publicId IN $excludeIds';
     }
 
-    const relsVar = (hasTypes || hasMinTrust) ? 'rels:' : '';
-    const q1 = `
-      MATCH (root:Person)
-      WHERE (root.id = $rootId OR root.publicId = $rootId) AND root.deletedAt IS NULL
-      OPTIONAL MATCH (root)-[${relsVar}CONNECTED*1..${clampedDepth}]-(n:Person)
-      WHERE n.deletedAt IS NULL ${demoFilter} ${nodeExcludeFilter} ${pathTypeFilter} ${pathTrustFilter}
-      RETURN root.id AS rootId, COLLECT(DISTINCT n.id) AS neighbourIds
-    `;
+    let activeMinTrust = filters?.minTrustScore;
+    let rawTotalNodes: number | undefined = undefined;
+    let neighbourIds: string[] = [];
+    let actualRootId = rootId;
 
-    const q1Params: Record<string, any> = { rootId };
-    if (hasTypes) q1Params.types = filters.relationshipTypes;
-    if (hasMinTrust) q1Params.minTrustScore = filters.minTrustScore;
-    if (hasExclude) q1Params.excludeIds = Array.from(filters.excludedNodeIds!);
+    if (filters?.autoTrust && activeMinTrust === undefined) {
+      // Step A: Probe raw reachable node count without trust filter to determine dynamic trust threshold
+      const qRawProbe = `
+        MATCH (root:Person)
+        WHERE (root.id = $rootId OR root.publicId = $rootId) AND root.deletedAt IS NULL
+        OPTIONAL MATCH (root)-[CONNECTED*1..${clampedDepth}]-(n:Person)
+        WHERE n.deletedAt IS NULL ${demoFilter} ${nodeExcludeFilter}
+        RETURN root.id AS rootId, COLLECT(DISTINCT n.id) AS rawNeighbourIds
+      `;
+      const rawParams: Record<string, any> = { rootId };
+      if (hasExclude) rawParams.excludeIds = Array.from(filters.excludedNodeIds!);
+      const rawRes = await session.run(qRawProbe, rawParams);
+      if (rawRes.records.length === 0) {
+        return { nodes: [], relationships: [] };
+      }
+      const rawRec = rawRes.records[0];
+      const fetchedId = rawRec.get('rootId') as string | null;
+      if (!fetchedId) return { nodes: [], relationships: [] };
+      actualRootId = fetchedId;
+      const rawNeighbourIds = (rawRec.get('rawNeighbourIds') as string[]) || [];
+      const rawCount = rawNeighbourIds.length + 1;
+      rawTotalNodes = rawCount;
 
-    const q1Result = await session.run(q1, q1Params);
+      // Dynamic Auto Set Rules:
+      // - 100+ nodes  => 0.2
+      // - ~1k nodes   => 0.7
+      // - >2k nodes   => 0.9
+      // - < 100 nodes => 0.0
+      if (rawCount >= 2000) {
+        activeMinTrust = 0.9;
+      } else if (rawCount >= 1000) {
+        activeMinTrust = 0.7;
+      } else if (rawCount >= 100) {
+        activeMinTrust = 0.2;
+      } else {
+        activeMinTrust = 0.0;
+      }
 
-    if (q1Result.records.length === 0) {
-      // Root node not found or soft-deleted
-      return { nodes: [], relationships: [] };
+      if (activeMinTrust === 0.0 && !hasTypes) {
+        neighbourIds = rawNeighbourIds;
+      }
     }
 
-    const q1Rec = q1Result.records[0];
-    const fetchedRootId = q1Rec.get('rootId') as string | null;
+    if (neighbourIds.length === 0) {
+      const hasActiveMinTrust = activeMinTrust !== undefined && activeMinTrust > 0;
+      const pathTrustFilter = hasActiveMinTrust ? 'AND ALL(r IN rels WHERE r.trustScore >= $minTrustScore)' : '';
+      const relsVar = (hasTypes || hasActiveMinTrust) ? 'rels:' : '';
 
-    if (!fetchedRootId) {
-      return { nodes: [], relationships: [] };
+      const q1 = `
+        MATCH (root:Person)
+        WHERE (root.id = $rootId OR root.publicId = $rootId) AND root.deletedAt IS NULL
+        OPTIONAL MATCH (root)-[${relsVar}CONNECTED*1..${clampedDepth}]-(n:Person)
+        WHERE n.deletedAt IS NULL ${demoFilter} ${nodeExcludeFilter} ${pathTypeFilter} ${pathTrustFilter}
+        RETURN root.id AS rootId, COLLECT(DISTINCT n.id) AS neighbourIds
+      `;
+
+      const q1Params: Record<string, any> = { rootId };
+      if (hasTypes) q1Params.types = filters.relationshipTypes;
+      if (hasActiveMinTrust) q1Params.minTrustScore = activeMinTrust;
+      if (hasExclude) q1Params.excludeIds = Array.from(filters.excludedNodeIds!);
+
+      const q1Result = await session.run(q1, q1Params);
+
+      if (q1Result.records.length === 0) {
+        // Root node not found or soft-deleted
+        return { nodes: [], relationships: [] };
+      }
+
+      const q1Rec = q1Result.records[0];
+      const fetchedRootId = q1Rec.get('rootId') as string | null;
+
+      if (!fetchedRootId) {
+        return { nodes: [], relationships: [] };
+      }
+
+      neighbourIds = q1Rec.get('neighbourIds') as string[];
+      actualRootId = fetchedRootId || rootId;
     }
-
-    const neighbourIds = q1Rec.get('neighbourIds') as string[];
-    const actualRootId = fetchedRootId || rootId;
     // Build complete list: root first, then all distinct neighbours
     const allIds: string[] = [actualRootId];
     for (const id of neighbourIds) {
@@ -242,10 +295,11 @@ export async function getNeighbourhood(
     let relTypeFilter = '';
     let relTrustFilter = '';
     let relExcludeFilter = '';
+    const hasActiveMinTrust = activeMinTrust !== undefined && activeMinTrust > 0;
     if (hasTypes) {
       relTypeFilter = 'AND r.relationshipType IN $types';
     }
-    if (hasMinTrust) {
+    if (hasActiveMinTrust) {
       relTrustFilter = 'AND r.trustScore >= $minTrustScore';
     }
     if (hasExclude) {
@@ -265,13 +319,13 @@ export async function getNeighbourhood(
 
     const q3Params: Record<string, any> = { ids: allIds };
     if (hasTypes) q3Params.types = filters.relationshipTypes;
-    if (hasMinTrust) q3Params.minTrustScore = filters.minTrustScore;
+    if (hasActiveMinTrust) q3Params.minTrustScore = activeMinTrust;
     if (hasExclude) q3Params.excludeIds = Array.from(filters.excludedNodeIds!);
 
     const q3Result = await session.run(q3, q3Params);
     const relationships = q3Result.records.map(r => recordToRelationship(r, 'r'));
 
-    return { nodes, relationships };
+    return { nodes, relationships, rawTotalNodes, appliedMinTrust: activeMinTrust ?? 0 };
   } finally {
     await session.close();
   }
@@ -332,13 +386,28 @@ export async function getFullDatasetNeighbourhood(
 
     // 3. Fetch all active relationships between nodes in this dataset
     const hasTypes = filters?.relationshipTypes && filters.relationshipTypes.length > 0;
-    const hasMinTrust = filters?.minTrustScore !== undefined;
+    let activeMinTrust = filters?.minTrustScore;
+    const rawTotalNodes = nodes.length;
+
+    if (filters?.autoTrust && activeMinTrust === undefined) {
+      if (rawTotalNodes >= 2000) {
+        activeMinTrust = 0.9;
+      } else if (rawTotalNodes >= 1000) {
+        activeMinTrust = 0.7;
+      } else if (rawTotalNodes >= 100) {
+        activeMinTrust = 0.2;
+      } else {
+        activeMinTrust = 0.0;
+      }
+    }
+
+    const hasActiveMinTrust = activeMinTrust !== undefined && activeMinTrust > 0;
 
     let relTypeFilter = '';
     let relTrustFilter = '';
     let relExcludeFilter = '';
     if (hasTypes) relTypeFilter = 'AND r.relationshipType IN $types';
-    if (hasMinTrust) relTrustFilter = 'AND r.trustScore >= $minTrustScore';
+    if (hasActiveMinTrust) relTrustFilter = 'AND r.trustScore >= $minTrustScore';
     if (hasExclude) relExcludeFilter = 'AND NOT a.id IN $excludeIds AND NOT b.id IN $excludeIds';
 
     let relDatasetCondition = '';
@@ -358,13 +427,25 @@ export async function getFullDatasetNeighbourhood(
     `;
     const relParams: Record<string, any> = {};
     if (hasTypes) relParams.types = filters.relationshipTypes;
-    if (hasMinTrust) relParams.minTrustScore = filters.minTrustScore;
+    if (hasActiveMinTrust) relParams.minTrustScore = activeMinTrust;
     if (hasExclude) relParams.excludeIds = Array.from(filters.excludedNodeIds!);
 
     const relResult = await session.run(qRels, relParams);
     const relationships = relResult.records.map(r => recordToRelationship(r, 'r'));
 
-    return { nodes, relationships };
+    let finalNodes = nodes;
+    if (hasActiveMinTrust || hasTypes) {
+      const connectedNodeIds = new Set<string>();
+      const rootIdActual = rootRec.get('id') as string;
+      if (rootIdActual) connectedNodeIds.add(rootIdActual);
+      for (const r of relationships) {
+        connectedNodeIds.add(r.sourceId);
+        connectedNodeIds.add(r.targetId);
+      }
+      finalNodes = nodes.filter(n => connectedNodeIds.has(n.id));
+    }
+
+    return { nodes: finalNodes, relationships, rawTotalNodes, appliedMinTrust: activeMinTrust ?? 0 };
   } finally {
     await session.close();
   }
