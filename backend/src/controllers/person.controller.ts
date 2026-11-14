@@ -72,11 +72,12 @@ export async function searchPersons(
   try {
     const query = (req.query['q'] as string) ?? '';
     const nodeType = req.query['nodeType'] as NodeType | undefined;
+    const dataset = req.query['dataset'] as string | undefined;
     const limit = req.query['limit'] !== undefined
       ? Math.max(1, Math.min(100, parseInt(req.query['limit'] as string, 10) || 20))
       : 20;
 
-    const persons = await personSvc.searchPersons({ query, nodeType, limit });
+    const persons = await personSvc.searchPersons({ query, nodeType, limit, dataset });
     res.json({ data: persons, count: persons.length });
   } catch (err) {
     next(err);

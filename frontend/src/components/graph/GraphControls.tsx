@@ -54,28 +54,46 @@ export default function GraphControls() {
 
   // Pathfinder exclude search
   useEffect(() => {
-    if (excludeQuery.trim().length < 2) {
+    const q = excludeQuery.trim();
+    if (q.length < 2) {
       setExcludeResults([]);
       return;
     }
+    const { dataSource, allNodes, visibleNodes, databaseNodes, excludedNodeIds, activeProvider } = useGraphStore.getState();
+    const dataset = activeProvider === 'raj' ? 'raj' : 'live';
+    const pool = [...visibleNodes, ...databaseNodes, ...allNodes];
+    const localFiltered = pool.filter(n =>
+      !excludedNodeIds.has(n.id) &&
+      n.id !== selectedStart?.id &&
+      n.id !== selectedTarget?.id &&
+      (n.fullName.toLowerCase().includes(q.toLowerCase()) || n.publicId.toLowerCase().includes(q.toLowerCase()))
+    ).slice(0, 5);
+
+    if (localFiltered.length > 0) setExcludeResults(localFiltered);
+
     const timer = setTimeout(async () => {
-      const { dataSource, allNodes, visibleNodes, databaseNodes, excludedNodeIds } = useGraphStore.getState();
       if (dataSource === 'api-v2' || dataSource === 'api') {
-        searchPersonsV2(excludeQuery).then(res => {
-          setExcludeResults(res.data.filter(n => !excludedNodeIds.has(n.id)).slice(0, 5));
-        }).catch(() => setExcludeResults([]));
-      } else {
-        const pool = [...visibleNodes, ...databaseNodes, ...allNodes];
-        const results = pool.filter(n =>
-          !excludedNodeIds.has(n.id) &&
-          (n.fullName.toLowerCase().includes(excludeQuery.toLowerCase()) ||
-            n.publicId.toLowerCase().includes(excludeQuery.toLowerCase()))
-        ).slice(0, 5);
-        setExcludeResults(results);
+        try {
+          const res = await searchPersonsV2(q, 8, dataset);
+          const seen = new Set<string>(excludedNodeIds);
+          if (selectedStart?.id) seen.add(selectedStart.id);
+          if (selectedTarget?.id) seen.add(selectedTarget.id);
+          const combined: any[] = [];
+          for (const item of [...localFiltered, ...res.data]) {
+            if (!seen.has(item.id)) {
+              seen.add(item.id);
+              combined.push(item);
+            }
+          }
+          setExcludeResults(combined.slice(0, 5));
+        } catch {
+          // Keep local results
+        }
       }
-    }, 300);
+    }, 200);
+
     return () => clearTimeout(timer);
-  }, [excludeQuery]);
+  }, [excludeQuery, selectedStart, selectedTarget]);
 
   // Auto-set start node to primaryNode / rootNode / first visible node
   useEffect(() => {
@@ -91,48 +109,117 @@ export default function GraphControls() {
     }
   }, [visibleNodes, primaryNodeId, rootNodeId, selectedStart]);
 
-  // Pathfinder start search
+  // Pathfinder start search with instant local ranking + remote dataset search
   useEffect(() => {
-    if (startQuery.trim().length < 2) {
+    const q = startQuery.trim();
+    if (q.length < 2) {
       setStartResults([]);
       return;
     }
+    // Guard: Do not search if the query already matches the currently selected node
+    if (selectedStart && selectedStart.fullName.toLowerCase().trim() === q.toLowerCase()) {
+      setStartResults([]);
+      return;
+    }
+
+    const { dataSource, allNodes, visibleNodes, activeProvider } = useGraphStore.getState();
+    const dataset = activeProvider === 'raj' ? 'raj' : 'live';
+
+    // Instant local candidate lookup
+    const pool = [...visibleNodes, ...allNodes];
+    const qLower = q.toLowerCase();
+    const localFiltered = pool.filter(n =>
+      n.fullName.toLowerCase().includes(qLower) ||
+      n.publicId.toLowerCase().includes(qLower)
+    ).sort((a, b) => {
+      const aLower = a.fullName.toLowerCase();
+      const bLower = b.fullName.toLowerCase();
+      const aScore = aLower === qLower ? 0 : (aLower === 'rai' || aLower === 'rai singh') ? 1 : aLower.startsWith(qLower) ? 2 : 3;
+      const bScore = bLower === qLower ? 0 : (bLower === 'rai' || bLower === 'rai singh') ? 1 : bLower.startsWith(qLower) ? 2 : 3;
+      return aScore - bScore;
+    });
+
+    if (localFiltered.length > 0) {
+      setStartResults(localFiltered.slice(0, 6));
+    }
+
     const timer = setTimeout(async () => {
       if (dataSource === 'api-v2' || dataSource === 'api') {
-        searchPersonsV2(startQuery).then(res => setStartResults(res.data.slice(0, 5))).catch(() => setStartResults([]));
-      } else {
-        const results = allNodes.filter(n =>
-          n.fullName.toLowerCase().includes(startQuery.toLowerCase()) ||
-          n.publicId.toLowerCase().includes(startQuery.toLowerCase())
-        ).slice(0, 5);
-        setStartResults(results);
+        try {
+          const res = await searchPersonsV2(q, 8, dataset);
+          const seen = new Set<string>();
+          const combined: any[] = [];
+          for (const item of [...localFiltered, ...res.data]) {
+            if (!seen.has(item.id)) {
+              seen.add(item.id);
+              combined.push(item);
+            }
+          }
+          setStartResults(combined.slice(0, 6));
+        } catch {
+          // Keep local results
+        }
       }
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [startQuery, dataSource, allNodes]);
+    }, 200);
 
-  // Pathfinder target search
+    return () => clearTimeout(timer);
+  }, [startQuery, selectedStart]);
+
+  // Pathfinder target search with instant local ranking + remote dataset search
   useEffect(() => {
-    if (targetQuery.trim().length < 2) {
+    const q = targetQuery.trim();
+    if (q.length < 2) {
       setTargetResults([]);
       return;
     }
+    // Guard: Do not search if the query already matches the currently selected target
+    if (selectedTarget && selectedTarget.fullName.toLowerCase().trim() === q.toLowerCase()) {
+      setTargetResults([]);
+      return;
+    }
+
+    const { dataSource, allNodes, visibleNodes, activeProvider } = useGraphStore.getState();
+    const dataset = activeProvider === 'raj' ? 'raj' : 'live';
+
+    const pool = [...visibleNodes, ...allNodes];
+    const qLower = q.toLowerCase();
+    const localFiltered = pool.filter(n =>
+      n.id !== selectedStart?.id &&
+      (n.fullName.toLowerCase().includes(qLower) || n.publicId.toLowerCase().includes(qLower))
+    ).sort((a, b) => {
+      const aLower = a.fullName.toLowerCase();
+      const bLower = b.fullName.toLowerCase();
+      const aScore = aLower === qLower ? 0 : (aLower === 'rai' || aLower === 'rai singh') ? 1 : aLower.startsWith(qLower) ? 2 : 3;
+      const bScore = bLower === qLower ? 0 : (bLower === 'rai' || bLower === 'rai singh') ? 1 : bLower.startsWith(qLower) ? 2 : 3;
+      return aScore - bScore;
+    });
+
+    if (localFiltered.length > 0) {
+      setTargetResults(localFiltered.slice(0, 6));
+    }
+
     const timer = setTimeout(async () => {
       if (dataSource === 'api-v2' || dataSource === 'api') {
-        searchPersonsV2(targetQuery).then(res => {
-          setTargetResults(res.data.filter(n => n.id !== selectedStart?.id).slice(0, 5));
-        }).catch(() => setTargetResults([]));
-      } else {
-        const results = allNodes.filter(n =>
-          n.id !== selectedStart?.id &&
-          (n.fullName.toLowerCase().includes(targetQuery.toLowerCase()) ||
-            n.publicId.toLowerCase().includes(targetQuery.toLowerCase()))
-        ).slice(0, 5);
-        setTargetResults(results);
+        try {
+          const res = await searchPersonsV2(q, 8, dataset);
+          const seen = new Set<string>();
+          if (selectedStart?.id) seen.add(selectedStart.id);
+          const combined: any[] = [];
+          for (const item of [...localFiltered, ...res.data]) {
+            if (!seen.has(item.id)) {
+              seen.add(item.id);
+              combined.push(item);
+            }
+          }
+          setTargetResults(combined.slice(0, 6));
+        } catch {
+          // Keep local results
+        }
       }
-    }, 300);
+    }, 200);
+
     return () => clearTimeout(timer);
-  }, [targetQuery, selectedStart, dataSource, allNodes]);
+  }, [targetQuery, selectedTarget, selectedStart]);
 
   useEffect(() => {
     if (!showSearch) {
@@ -141,7 +228,8 @@ export default function GraphControls() {
       return;
     }
 
-    if (searchQuery.trim().length < 2) {
+    const q = searchQuery.trim();
+    if (q.length < 2) {
       setSearchResults([]);
       setIsSearching(false);
       return;
@@ -150,32 +238,43 @@ export default function GraphControls() {
     let active = true;
     setIsSearching(true);
 
+    const { dataSource, allNodes, visibleNodes, activeProvider } = useGraphStore.getState();
+    const dataset = activeProvider === 'raj' ? 'raj' : 'live';
+
+    const pool = [...visibleNodes, ...allNodes];
+    const q2 = q.toLowerCase();
+    const localMatches = pool.filter(n => {
+      const name = n.fullName?.toLowerCase() ?? '';
+      const cluster = n.cluster?.toLowerCase() ?? '';
+      return name.includes(q2) || cluster.includes(q2);
+    }).slice(0, 8);
+
+    if (localMatches.length > 0) {
+      setSearchResults(localMatches.map(n => ({ id: n.id, fullName: n.fullName, cluster: n.cluster })));
+    }
+
     const timer = setTimeout(async () => {
       try {
         if (dataSource === 'api-v2') {
-          const res = await searchPersonsV2(searchQuery);
+          const res = await searchPersonsV2(q, 8, dataset);
           if (active) {
-            setSearchResults(res.data.map(n => ({
-              id: n.id,
-              fullName: n.fullName,
-              cluster: n.cluster || undefined
-            })).slice(0, 8));
+            const seen = new Set<string>();
+            const combined: any[] = [];
+            for (const item of [...localMatches, ...res.data]) {
+              if (!seen.has(item.id)) {
+                seen.add(item.id);
+                combined.push({ id: item.id, fullName: item.fullName, cluster: item.cluster || undefined });
+              }
+            }
+            setSearchResults(combined.slice(0, 8));
           }
-        } else {
-          const results = allNodes.filter(n => {
-            const name = n.fullName?.toLowerCase() ?? '';
-            const cluster = n.cluster?.toLowerCase() ?? '';
-            const q2 = searchQuery.toLowerCase();
-            return name.includes(q2) || cluster.includes(q2);
-          }).slice(0, 8);
-          if (active) setSearchResults(results.map(n => ({ id: n.id, fullName: n.fullName, cluster: n.cluster })));
         }
       } catch (err) {
         console.warn('Search failed:', err);
       } finally {
         if (active) setIsSearching(false);
       }
-    }, 300);
+    }, 200);
 
     return () => {
       active = false;
@@ -247,6 +346,8 @@ export default function GraphControls() {
     setStartQuery(targetQuery);
     setSelectedTarget(tempStartNode);
     setTargetQuery(tempStartQuery);
+    setStartResults([]);
+    setTargetResults([]);
   }
 
   function handleResetPath() {
@@ -434,103 +535,216 @@ export default function GraphControls() {
           )}
         </div>
 
-        {/* COMPACT QUICK DOCK (When Filters or Pathfinder is in focus: moves content upwards) */}
+        {/* COMPACT QUICK DOCK (When Filters or Pathfinder is in focus) */}
         {activePanel !== 'none' ? (
           <div className="glass-panel animate-fade-in" style={{ padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            {/* Quick Actions row */}
-            <div style={{ display: 'flex', gap: '4px' }}>
-              {providerCapabilities.hasDemoNodes && (
-                <button
-                  id="toggle-demo-btn"
-                  className={`glass-button ${showDemoNodes ? 'active' : ''}`}
-                  onClick={toggleDemoNodes}
-                  style={{
-                    flex: 1, padding: '4px 6px', fontSize: '9.5px', justifyContent: 'center',
-                    background: showDemoNodes ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.03)',
-                    borderColor: showDemoNodes ? 'rgba(255, 255, 255, 0.3)' : 'rgba(255, 255, 255, 0.08)',
-                  }}
-                  title="Toggle Demo Nodes"
-                >
-                  Demo: {showDemoNodes ? 'ON' : 'OFF'}
-                </button>
-              )}
-              <button
-                id="search-node-btn"
-                className={`glass-button ${showSearch ? 'active' : ''}`}
-                onClick={() => setShowSearch(s => !s)}
-                style={{ flex: 1, padding: '4px 6px', fontSize: '9.5px', justifyContent: 'center' }}
-                title="Search Person"
-              >
-                🔍 Search
-              </button>
-              <button
-                id="reset-graph-btn"
-                className="glass-button"
-                onClick={resetGraph}
-                style={{ flex: 1, padding: '4px 6px', fontSize: '9.5px', justifyContent: 'center' }}
-                title="Reset Graph"
-              >
-                ↺ Reset
-              </button>
-            </div>
-
-            {/* If search is open in compact mode */}
-            {showSearch && (
-              <div style={{ marginTop: '2px' }}>
+            {/* Quick Actions Bar or Inline Search takeover */}
+            {showSearch ? (
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                 <input
                   autoFocus
                   className="glass-input"
-                  placeholder="Search name…"
+                  placeholder="Search person in network…"
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
-                  style={{ padding: '4px 8px', fontSize: '10px', width: '100%' }}
+                  style={{ width: '100%', padding: '4px 22px 4px 8px', fontSize: '10.5px', height: '26px' }}
                 />
-                {searchResults.length > 0 && (
-                  <div className="glass-panel" style={{ padding: '2px', maxHeight: 120, overflowY: 'auto', background: 'var(--bg-surface)', marginTop: '2px' }}>
-                    {searchResults.map(node => (
-                      <button
-                        key={node.id}
-                        onClick={() => selectSearchResult(node.id)}
-                        style={{
-                          width: '100%', padding: '4px 6px', background: 'transparent',
-                          border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center',
-                          gap: '6px', borderRadius: '4px', textAlign: 'left',
-                        }}
-                      >
-                        <span style={{ color: 'var(--silver-200)', fontSize: '10px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {node.fullName}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
+                <button
+                  onClick={() => { setShowSearch(false); setSearchQuery(''); setSearchResults([]); }}
+                  style={{
+                    position: 'absolute', right: 6, background: 'transparent',
+                    border: 'none', color: 'var(--silver-400)', cursor: 'pointer', fontSize: '11px', padding: 0
+                  }}
+                  title="Close search"
+                >
+                  ✕
+                </button>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
+                {providerCapabilities.hasDemoNodes && (
+                  <button
+                    id="toggle-demo-btn"
+                    onClick={toggleDemoNodes}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '5px',
+                      padding: '4px 8px', borderRadius: '6px',
+                      fontSize: '10px', fontWeight: 600,
+                      background: showDemoNodes ? 'rgba(255, 255, 255, 0.14)' : 'rgba(255, 255, 255, 0.03)',
+                      border: `1px solid ${showDemoNodes ? 'rgba(255, 255, 255, 0.28)' : 'rgba(255, 255, 255, 0.08)'}`,
+                      color: showDemoNodes ? '#ffffff' : 'var(--silver-400)',
+                      cursor: 'pointer', transition: 'all 0.15s ease',
+                    }}
+                    title="Toggle Demo Nodes"
+                  >
+                    <span style={{
+                      width: 6, height: 6, borderRadius: '50%',
+                      background: showDemoNodes ? '#ffffff' : 'var(--silver-700)',
+                      boxShadow: showDemoNodes ? '0 0 5px rgba(255,255,255,0.8)' : 'none',
+                    }} />
+                    Demo
+                  </button>
                 )}
+                <button
+                  id="search-node-btn"
+                  onClick={() => setShowSearch(true)}
+                  style={{
+                    flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px',
+                    padding: '4px 8px', borderRadius: '6px',
+                    fontSize: '10px', fontWeight: 500,
+                    background: 'rgba(255, 255, 255, 0.04)',
+                    border: '1px solid rgba(255, 255, 255, 0.09)',
+                    color: 'var(--silver-300)',
+                    cursor: 'pointer', transition: 'all 0.15s ease',
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                    e.currentTarget.style.color = '#ffffff';
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)';
+                    e.currentTarget.style.color = 'var(--silver-300)';
+                  }}
+                  title="Search Person"
+                >
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                  </svg>
+                  Search
+                </button>
+                <button
+                  id="reset-graph-btn"
+                  onClick={resetGraph}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
+                    padding: '4px 8px', borderRadius: '6px',
+                    fontSize: '10px', fontWeight: 500,
+                    background: 'rgba(255, 255, 255, 0.04)',
+                    border: '1px solid rgba(255, 255, 255, 0.09)',
+                    color: 'var(--silver-300)',
+                    cursor: 'pointer', transition: 'all 0.15s ease',
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                    e.currentTarget.style.color = '#ffffff';
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)';
+                    e.currentTarget.style.color = 'var(--silver-300)';
+                  }}
+                  title="Reset Graph Zoom & Position"
+                >
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                    <polyline points="1 4 1 10 7 10"/>
+                    <path d="M3.51 15a9 9 0 1 0 .49-4.5"/>
+                  </svg>
+                  Reset
+                </button>
               </div>
             )}
 
-            {/* Compact Hop Depth pills */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
-              <span style={{ fontSize: '8.5px', fontWeight: 700, color: 'var(--silver-500)', letterSpacing: '0.04em', marginRight: '2px' }}>HOP:</span>
-              {[1, 2, 3, 4, 5, 6, 7].map(d => (
-                <button
-                  key={d}
-                  onClick={() => setHopDepth(d)}
-                  style={{
-                    flex: 1,
-                    padding: '2px 0',
-                    fontSize: '9px',
-                    fontWeight: hopDepth === d ? 700 : 500,
-                    borderRadius: '4px',
-                    border: hopDepth === d ? '1px solid rgba(255,255,255,0.35)' : '1px solid rgba(255,255,255,0.06)',
-                    background: hopDepth === d ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.02)',
-                    color: hopDepth === d ? '#ffffff' : 'var(--silver-500)',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease',
-                  }}
-                  title={d === 7 ? 'Full Graph (All nodes & edges)' : `${d} hop${d > 1 ? 's' : ''}`}
-                >
-                  {d === 7 ? 'ALL' : d}
-                </button>
-              ))}
+            {/* Elevated Search Results Popover */}
+            {showSearch && searchResults.length > 0 && (
+              <div style={{
+                position: 'relative',
+                maxHeight: 140,
+                overflowY: 'auto',
+                background: '#121316',
+                border: '1px solid rgba(255, 255, 255, 0.16)',
+                borderRadius: '6px',
+                padding: '3px',
+                boxShadow: '0 8px 24px rgba(0, 0, 0, 0.85)',
+              }}>
+                {searchResults.map(node => (
+                  <button
+                    key={node.id}
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      selectSearchResult(node.id);
+                      setShowSearch(false);
+                      setSearchQuery('');
+                      setSearchResults([]);
+                    }}
+                    style={{
+                      width: '100%', padding: '5px 8px', background: 'transparent',
+                      border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center',
+                      justifyContent: 'space-between', gap: '6px', borderRadius: '4px', textAlign: 'left',
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.07)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                  >
+                    <span style={{ color: '#ffffff', fontSize: '10.5px', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {node.fullName}
+                    </span>
+                    {node.cluster && (
+                      <span style={{ fontSize: '8.5px', color: 'var(--silver-500)', flexShrink: 0 }}>
+                        {node.cluster}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Sleek Segmented Hop Depth Control */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 2px' }}>
+                <span style={{ fontSize: '8.5px', fontWeight: 700, color: 'var(--silver-500)', letterSpacing: '0.05em' }}>
+                  HOP DEPTH
+                </span>
+                <span style={{ fontSize: '9px', fontWeight: 600, color: 'var(--silver-300)' }}>
+                  {hopDepth >= 7 ? 'Full Graph' : `${hopDepth} ${hopDepth === 1 ? 'hop' : 'hops'}`}
+                </span>
+              </div>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                background: 'rgba(255, 255, 255, 0.03)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                borderRadius: '6px',
+                padding: '2px',
+                gap: '1px',
+              }}>
+                {[
+                  { depth: 1, label: '1' },
+                  { depth: 2, label: '2' },
+                  { depth: 3, label: '3' },
+                  { depth: 4, label: '4' },
+                  { depth: 5, label: '5' },
+                  { depth: 6, label: '6' },
+                  { depth: 7, label: 'ALL' },
+                ].map(item => {
+                  const isActive = hopDepth === item.depth;
+                  return (
+                    <button
+                      key={item.depth}
+                      onClick={() => setHopDepth(item.depth)}
+                      style={{
+                        flex: 1,
+                        padding: '3px 0',
+                        fontSize: '9.5px',
+                        fontWeight: isActive ? 700 : 500,
+                        borderRadius: '4px',
+                        border: 'none',
+                        background: isActive ? 'rgba(255, 255, 255, 0.18)' : 'transparent',
+                        color: isActive ? '#ffffff' : 'var(--silver-500)',
+                        boxShadow: isActive ? '0 1px 3px rgba(0,0,0,0.4)' : 'none',
+                        cursor: 'pointer',
+                        transition: 'all 0.12s ease',
+                      }}
+                      onMouseEnter={e => {
+                        if (!isActive) e.currentTarget.style.color = '#ffffff';
+                      }}
+                      onMouseLeave={e => {
+                        if (!isActive) e.currentTarget.style.color = 'var(--silver-500)';
+                      }}
+                      title={item.depth === 7 ? 'Full Graph (All nodes & edges)' : `${item.depth} hop${item.depth > 1 ? 's' : ''}`}
+                    >
+                      {item.label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
         ) : (
@@ -994,26 +1208,59 @@ export default function GraphControls() {
             <div className="animate-fade-in" style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {/* Start Node Input */}
               <div style={{ position: 'relative' }}>
-                <label className="text-label" style={{ fontSize: '8.5px', marginBottom: '3px', display: 'block' }}>
-                  Traverse Start Node
-                </label>
-                <input
-                  className="glass-input"
-                  style={{ padding: '4px 8px', fontSize: '11px' }}
-                  placeholder="Start person name..."
-                  value={startQuery}
-                  onChange={e => setStartQuery(e.target.value)}
-                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3px' }}>
+                  <label className="text-label" style={{ fontSize: '8.5px', color: 'var(--silver-400)' }}>
+                    TRAVERSE START NODE
+                  </label>
+                  {selectedStart && (
+                    <span style={{ fontSize: '8px', color: selectedStart.nodeType === 'REAL' ? '#ffffff' : 'var(--silver-400)' }}>
+                      {selectedStart.nodeType === 'REAL' ? '● Real' : '○ Demo'}
+                    </span>
+                  )}
+                </div>
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                  <input
+                    className="glass-input"
+                    style={{ padding: '5px 24px 5px 8px', fontSize: '11px', width: '100%' }}
+                    placeholder="Start person name..."
+                    value={startQuery}
+                    onChange={e => {
+                      setStartQuery(e.target.value);
+                      if (selectedStart && e.target.value !== selectedStart.fullName) {
+                        setSelectedStart(null);
+                      }
+                    }}
+                  />
+                  {startQuery && (
+                    <button
+                      onClick={() => {
+                        setSelectedStart(null);
+                        setStartQuery('');
+                        setStartResults([]);
+                      }}
+                      style={{
+                        position: 'absolute', right: 6,
+                        background: 'transparent', border: 'none',
+                        color: 'var(--silver-400)', cursor: 'pointer', fontSize: '11px', padding: 0
+                      }}
+                      title="Clear start person"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
                 {startResults.length > 0 && (
-                  <div className="glass-panel" style={{
-                    position: 'absolute', top: '100%', left: 0, right: 0,
-                    maxHeight: 120, overflowY: 'auto', zIndex: 500, padding: 3,
-                    background: 'var(--bg-surface)', marginTop: '2px'
+                  <div style={{
+                    position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0,
+                    maxHeight: 160, overflowY: 'auto', zIndex: 1000, padding: '4px',
+                    background: '#121316', border: '1px solid rgba(255, 255, 255, 0.18)',
+                    borderRadius: '8px', boxShadow: '0 12px 32px rgba(0, 0, 0, 0.9)',
                   }}>
                     {startResults.map(node => (
                       <button
                         key={node.id}
-                        onClick={() => {
+                        onMouseDown={(e) => {
+                          e.preventDefault();
                           setSelectedStart(node);
                           setStartQuery(node.fullName);
                           setStartResults([]);
@@ -1021,15 +1268,22 @@ export default function GraphControls() {
                         style={{
                           width: '100%', padding: '5px 8px', background: 'transparent',
                           border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center',
-                          gap: '6px', borderRadius: '4px', textAlign: 'left',
+                          justifyContent: 'space-between', gap: '6px', borderRadius: '4px', textAlign: 'left',
                         }}
-                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
+                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
                         onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                       >
-                        <span style={{ width: 5, height: 5, borderRadius: '50%', background: node.nodeType === 'REAL' ? '#ffffff' : 'var(--silver-500)' }} />
-                        <span style={{ fontSize: '10px', color: 'var(--silver-200)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {node.fullName}
-                        </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0 }}>
+                          <span style={{ width: 5, height: 5, borderRadius: '50%', background: node.nodeType === 'REAL' ? '#ffffff' : 'var(--silver-500)', flexShrink: 0 }} />
+                          <span style={{ fontSize: '10.5px', color: '#ffffff', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {node.fullName}
+                          </span>
+                        </div>
+                        {node.cluster && (
+                          <span style={{ fontSize: '8.5px', color: 'var(--silver-500)', flexShrink: 0 }}>
+                            {node.cluster}
+                          </span>
+                        )}
                       </button>
                     ))}
                   </div>
@@ -1059,26 +1313,59 @@ export default function GraphControls() {
 
               {/* Target Node Input */}
               <div style={{ position: 'relative' }}>
-                <label className="text-label" style={{ fontSize: '8.5px', marginBottom: '3px', display: 'block' }}>
-                  Traverse Target Node
-                </label>
-                <input
-                  className="glass-input"
-                  style={{ padding: '4px 8px', fontSize: '11px' }}
-                  placeholder="Target person name..."
-                  value={targetQuery}
-                  onChange={e => setTargetQuery(e.target.value)}
-                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3px' }}>
+                  <label className="text-label" style={{ fontSize: '8.5px', color: 'var(--silver-400)' }}>
+                    TRAVERSE TARGET NODE
+                  </label>
+                  {selectedTarget && (
+                    <span style={{ fontSize: '8px', color: selectedTarget.nodeType === 'REAL' ? '#ffffff' : 'var(--silver-400)' }}>
+                      {selectedTarget.nodeType === 'REAL' ? '● Real' : '○ Demo'}
+                    </span>
+                  )}
+                </div>
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                  <input
+                    className="glass-input"
+                    style={{ padding: '5px 24px 5px 8px', fontSize: '11px', width: '100%' }}
+                    placeholder="Target person name..."
+                    value={targetQuery}
+                    onChange={e => {
+                      setTargetQuery(e.target.value);
+                      if (selectedTarget && e.target.value !== selectedTarget.fullName) {
+                        setSelectedTarget(null);
+                      }
+                    }}
+                  />
+                  {targetQuery && (
+                    <button
+                      onClick={() => {
+                        setSelectedTarget(null);
+                        setTargetQuery('');
+                        setTargetResults([]);
+                      }}
+                      style={{
+                        position: 'absolute', right: 6,
+                        background: 'transparent', border: 'none',
+                        color: 'var(--silver-400)', cursor: 'pointer', fontSize: '11px', padding: 0
+                      }}
+                      title="Clear target person"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
                 {targetResults.length > 0 && (
-                  <div className="glass-panel" style={{
-                    position: 'absolute', top: '100%', left: 0, right: 0,
-                    maxHeight: 120, overflowY: 'auto', zIndex: 500, padding: 3,
-                    background: 'var(--bg-surface)', marginTop: '2px'
+                  <div style={{
+                    position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0,
+                    maxHeight: 160, overflowY: 'auto', zIndex: 1000, padding: '4px',
+                    background: '#121316', border: '1px solid rgba(255, 255, 255, 0.18)',
+                    borderRadius: '8px', boxShadow: '0 12px 32px rgba(0, 0, 0, 0.9)',
                   }}>
                     {targetResults.map(node => (
                       <button
                         key={node.id}
-                        onClick={() => {
+                        onMouseDown={(e) => {
+                          e.preventDefault();
                           setSelectedTarget(node);
                           setTargetQuery(node.fullName);
                           setTargetResults([]);
@@ -1086,15 +1373,22 @@ export default function GraphControls() {
                         style={{
                           width: '100%', padding: '5px 8px', background: 'transparent',
                           border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center',
-                          gap: '6px', borderRadius: '4px', textAlign: 'left',
+                          justifyContent: 'space-between', gap: '6px', borderRadius: '4px', textAlign: 'left',
                         }}
-                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
+                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
                         onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                       >
-                        <span style={{ width: 5, height: 5, borderRadius: '50%', background: node.nodeType === 'REAL' ? '#ffffff' : 'var(--silver-500)' }} />
-                        <span style={{ fontSize: '10px', color: 'var(--silver-200)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {node.fullName}
-                        </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0 }}>
+                          <span style={{ width: 5, height: 5, borderRadius: '50%', background: node.nodeType === 'REAL' ? '#ffffff' : 'var(--silver-500)', flexShrink: 0 }} />
+                          <span style={{ fontSize: '10.5px', color: '#ffffff', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {node.fullName}
+                          </span>
+                        </div>
+                        {node.cluster && (
+                          <span style={{ fontSize: '8.5px', color: 'var(--silver-500)', flexShrink: 0 }}>
+                            {node.cluster}
+                          </span>
+                        )}
                       </button>
                     ))}
                   </div>
@@ -1145,23 +1439,43 @@ export default function GraphControls() {
                   </div>
                 )}
 
-                <input
-                  className="glass-input"
-                  style={{ padding: '4px 8px', fontSize: '11px' }}
-                  placeholder="Search node to exclude..."
-                  value={excludeQuery}
-                  onChange={e => setExcludeQuery(e.target.value)}
-                />
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                  <input
+                    className="glass-input"
+                    style={{ padding: '5px 24px 5px 8px', fontSize: '11px', width: '100%' }}
+                    placeholder="Search node to exclude..."
+                    value={excludeQuery}
+                    onChange={e => setExcludeQuery(e.target.value)}
+                  />
+                  {excludeQuery && (
+                    <button
+                      onClick={() => {
+                        setExcludeQuery('');
+                        setExcludeResults([]);
+                      }}
+                      style={{
+                        position: 'absolute', right: 6,
+                        background: 'transparent', border: 'none',
+                        color: 'var(--silver-400)', cursor: 'pointer', fontSize: '11px', padding: 0
+                      }}
+                      title="Clear"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
                 {excludeResults.length > 0 && (
-                  <div className="glass-panel" style={{
-                    position: 'absolute', top: '100%', left: 0, right: 0,
-                    maxHeight: 110, overflowY: 'auto', zIndex: 500, padding: 3,
-                    background: 'var(--bg-surface)', marginTop: '2px'
+                  <div style={{
+                    position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0,
+                    maxHeight: 140, overflowY: 'auto', zIndex: 1000, padding: '4px',
+                    background: '#121316', border: '1px solid rgba(255, 255, 255, 0.18)',
+                    borderRadius: '8px', boxShadow: '0 12px 32px rgba(0, 0, 0, 0.9)',
                   }}>
                     {excludeResults.map(node => (
                       <button
                         key={node.id}
-                        onClick={() => {
+                        onMouseDown={(e) => {
+                          e.preventDefault();
                           if (selectedStart?.id === node.id || selectedTarget?.id === node.id) {
                             alert('Source or target node cannot be in the excluded list.');
                             return;
@@ -1171,16 +1485,24 @@ export default function GraphControls() {
                           setExcludeResults([]);
                         }}
                         style={{
-                          width: '100%', padding: '4px 6px', background: 'transparent',
+                          width: '100%', padding: '5px 8px', background: 'transparent',
                           border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center',
-                          gap: '6px', borderRadius: '4px', textAlign: 'left',
+                          justifyContent: 'space-between', gap: '6px', borderRadius: '4px', textAlign: 'left',
                         }}
-                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
+                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
                         onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                       >
-                        <span style={{ fontSize: '10px', color: 'var(--silver-200)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {node.fullName}
-                        </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0 }}>
+                          <span style={{ width: 5, height: 5, borderRadius: '50%', background: node.nodeType === 'REAL' ? '#ffffff' : 'var(--silver-500)', flexShrink: 0 }} />
+                          <span style={{ fontSize: '10.5px', color: '#ffffff', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {node.fullName}
+                          </span>
+                        </div>
+                        {node.cluster && (
+                          <span style={{ fontSize: '8.5px', color: 'var(--silver-500)', flexShrink: 0 }}>
+                            {node.cluster}
+                          </span>
+                        )}
                       </button>
                     ))}
                   </div>

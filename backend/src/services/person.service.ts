@@ -80,6 +80,7 @@ export interface SearchPersonsOptions {
   query: string;
   nodeType?: NodeType;
   limit?: number;
+  dataset?: string;
 }
 
 // ── Internal helpers ──────────────────────────────────────────────────────
@@ -213,11 +214,11 @@ export async function listPersons(opts: ListPersonsOptions = {}): Promise<Person
  * Returns an empty array when no match is found.
  */
 export async function searchPersons(opts: SearchPersonsOptions): Promise<PersonNode[]> {
-  const { query, nodeType, limit = 20 } = opts;
+  const { query, nodeType, limit = 20, dataset } = opts;
   if (typeof query !== 'string') throw validationError('query must be a string');
   if (nodeType && !VALID_NODE_TYPES.has(nodeType)) throw invalidNodeType(nodeType);
   if (!query.trim()) return [];
-  return repoCall(() => personRepo.searchPersons(query, nodeType, limit));
+  return repoCall(() => personRepo.searchPersons(query, nodeType, limit, dataset));
 }
 
 /**

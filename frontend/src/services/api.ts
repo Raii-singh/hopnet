@@ -583,10 +583,12 @@ export async function fetchPersonsV2(limit = 500, skip = 0, dataset?: string): P
  */
 export async function searchPersonsV2(
   query: string,
-  limit = 10
+  limit = 10,
+  dataset?: string
 ): Promise<ApiSearchResultV2> {
   if (!query.trim()) return { data: [], count: 0 };
   const params = new URLSearchParams({ q: query, limit: String(limit) });
+  if (dataset) params.set('dataset', dataset);
   return apiFetchV2<ApiSearchResultV2>(`/persons/search?${params}`);
 }
 

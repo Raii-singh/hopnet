@@ -303,7 +303,8 @@ export async function listPersons(
 export async function searchPersons(
   query: string,
   nodeType?: NodeType,
-  limit = 50
+  limit = 50,
+  dataset?: string
 ): Promise<PersonNode[]> {
   if (!query || query.trim().length === 0) return [];
 
@@ -311,23 +312,40 @@ export async function searchPersons(
   try {
     const q = query.toLowerCase().trim();
     const typeFilter = nodeType ? 'AND p.nodeType = $nodeType' : '';
+
+    let datasetFilter = '';
+    if (dataset === 'raj') {
+      datasetFilter = "AND p.sourceDataset = 'raj'";
+    } else if (dataset === 'live' || dataset === 'live_authentic') {
+      datasetFilter = "AND (p.sourceDataset = 'live_authentic' OR p.sourceDataset IS NULL OR p.sourceDataset <> 'raj')";
+    }
+
     const result = await session.run(
       `MATCH (p:Person)
-       WHERE p.deletedAt IS NULL ${typeFilter}
+       WHERE p.deletedAt IS NULL ${typeFilter} ${datasetFilter}
          AND (
            toLower(p.fullName)   CONTAINS $q
            OR toLower(p.email)   CONTAINS $q
            OR toLower(p.username) CONTAINS $q
            OR toLower(p.company)  CONTAINS $q
+           OR toLower(p.publicId) CONTAINS $q
          )
        OPTIONAL MATCH (p)-[r:CONNECTED]-(other:Person)
        WHERE r.deletedAt IS NULL AND other.deletedAt IS NULL
        WITH p,
             count(r) AS totalConn,
             sum(CASE WHEN other.nodeType = 'REAL' THEN 1 ELSE 0 END) AS realConn,
-            sum(CASE WHEN other.nodeType = 'DEMO' THEN 1 ELSE 0 END) AS demoConn
+            sum(CASE WHEN other.nodeType = 'DEMO' THEN 1 ELSE 0 END) AS demoConn,
+            CASE
+              WHEN toLower(p.fullName) = $q THEN 0
+              WHEN toLower(p.fullName) = 'rai' OR toLower(p.fullName) = 'rai singh' OR toLower(p.fullName) = 'raj shamani' THEN 1
+              WHEN toLower(p.fullName) STARTS WITH $q THEN 2
+              WHEN toLower(p.fullName) CONTAINS (' ' + $q) THEN 3
+              WHEN toLower(p.publicId) = $q OR toLower(p.publicId) STARTS WITH $q THEN 4
+              ELSE 5
+            END AS relevanceScore
        RETURN p, totalConn, realConn, demoConn
-       ORDER BY p.fullName ASC
+       ORDER BY relevanceScore ASC, totalConn DESC, p.fullName ASC
        LIMIT $limit`,
       { q, nodeType: nodeType ?? null, limit: neo4j.int(limit) }
     );
