@@ -32,9 +32,10 @@ export default function GraphControls() {
   const [showSearch, setShowSearch] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
 
-  // Accordion expansion states inside the right sidebar stack
-  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
-  const [isPathfinderOpen, setIsPathfinderOpen] = useState(false);
+  // Focus panel mode: 'none' (standard overview) | 'filters' | 'pathfinder'
+  const [activePanel, setActivePanel] = useState<'none' | 'filters' | 'pathfinder'>('none');
+  const isFiltersOpen = activePanel === 'filters';
+  const isPathfinderOpen = activePanel === 'pathfinder';
 
   // Pathfinder inputs & state
   const [startQuery, setStartQuery] = useState('');
@@ -345,7 +346,7 @@ export default function GraphControls() {
 
           {/* Open full panel button */}
           <button
-            onClick={() => setIsPathfinderOpen(true)}
+            onClick={() => setActivePanel('pathfinder')}
             style={{
               background: 'rgba(255,255,255,0.08)',
               border: '1px solid rgba(255,255,255,0.2)',
@@ -395,182 +396,314 @@ export default function GraphControls() {
         }}
       >
         {/* ── BOX 1: GRAPH CONTROLS HEADER ── */}
-        <div className="glass-panel" style={{ padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2" style={{ flexShrink: 0 }}>
-            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-          </svg>
-          <span className="text-label" style={{ color: '#ffffff', fontSize: '11px', fontWeight: 700, letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
-            GRAPH CONTROLS
-          </span>
-        </div>
-
-        {/* ── BOX 2: ACTION BUTTONS (DEMO, SEARCH, RESET) ── */}
-        <div className="glass-panel" style={{ padding: '10px 12px' }}>
-          {/* Toggle Demo Nodes */}
-          {providerCapabilities.hasDemoNodes && (
-            <button
-              id="toggle-demo-btn"
-              className={`glass-button ${showDemoNodes ? 'active' : ''}`}
-              onClick={toggleDemoNodes}
-              style={{ width: '100%', justifyContent: 'space-between', marginBottom: '6px', padding: '6px 10px', fontSize: '11px' }}
-            >
-              <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="12" cy="12" r="3"/>
-                  <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
-                </svg>
-                Demo Nodes
-              </span>
-              <span style={{
-                fontSize: '9px', fontWeight: 600,
-                padding: '1px 5px', borderRadius: '100px',
-                background: showDemoNodes ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.03)',
-                color: showDemoNodes ? '#ffffff' : 'var(--silver-500)',
-                border: `1px solid ${showDemoNodes ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.06)'}`
-              }}>
-                {showDemoNodes ? 'ON' : 'OFF'}
-              </span>
-            </button>
-          )}
-
-          {/* Search Node */}
-          <button
-            id="search-node-btn"
-            className={`glass-button ${showSearch ? 'active' : ''}`}
-            onClick={() => setShowSearch(s => !s)}
-            style={{ width: '100%', marginBottom: showSearch ? '6px' : '6px', padding: '6px 10px', fontSize: '11px' }}
-          >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        <div className="glass-panel" style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2" style={{ flexShrink: 0 }}>
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
             </svg>
-            Search Person
-          </button>
-
-          {/* Search panel */}
-          {showSearch && (
-            <div style={{ marginBottom: '6px' }}>
-              <input
-                autoFocus
-                className="glass-input"
-                placeholder="Search name or cluster…"
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                style={{ marginBottom: '4px', padding: '5px 8px', fontSize: '11px' }}
-              />
-              {searchResults.length > 0 && (
-                <div className="glass-panel" style={{
-                  padding: '3px',
-                  maxHeight: 180,
-                  overflowY: 'auto',
-                  background: 'var(--bg-surface)',
-                }}>
-                  {searchResults.map(node => (
-                    <button
-                      key={node.id}
-                      onClick={() => selectSearchResult(node.id)}
-                      style={{
-                        width: '100%',
-                        padding: '6px 8px',
-                        background: 'transparent',
-                        border: 'none',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        borderRadius: '4px',
-                        textAlign: 'left',
-                      }}
-                      onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
-                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-                    >
-                      <span style={{
-                        width: 5, height: 5, borderRadius: '50%', flexShrink: 0,
-                        background: '#ffffff',
-                      }} />
-                      <span style={{ color: 'var(--silver-200)', fontSize: '11px', fontWeight: 500, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {node.fullName}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Reset Graph */}
-          <button
-            id="reset-graph-btn"
-            className="glass-button"
-            onClick={resetGraph}
-            style={{ width: '100%', padding: '6px 10px', fontSize: '11px' }}
-          >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <polyline points="1 4 1 10 7 10"/>
-              <path d="M3.51 15a9 9 0 1 0 .49-4.5"/>
-            </svg>
-            Reset Graph
-          </button>
-        </div>
-
-        {/* ── BOX 3: HOP DEPTH EXPANSION ── */}
-        <div className="glass-panel" style={{ padding: '12px 14px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-            <span className="text-label" style={{ fontSize: '10px' }}>Hop Depth</span>
-            <span className="text-mono" style={{ fontSize: '11px', fontWeight: 700, color: '#ffffff' }}>
-              {hopDepth >= 7 ? 'Full Graph' : `${hopDepth} ${hopDepth === 1 ? 'hop' : 'hops'}`}
+            <span className="text-label" style={{ color: '#ffffff', fontSize: '11px', fontWeight: 700, letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
+              GRAPH CONTROLS
             </span>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-            {[
-              { label: '1 hop', desc: 'Direct connections', depth: 1 },
-              { label: '2 hops', desc: 'Second degree', depth: 2 },
-              { label: '3 hops', desc: 'Third degree', depth: 3 },
-              { label: '4 hops', desc: 'Fourth degree', depth: 4 },
-              { label: '5 hops', desc: 'Fifth degree', depth: 5 },
-              { label: '6 hops', desc: 'Sixth degree', depth: 6 },
-              { label: 'Full Graph', desc: 'All nodes & edges', depth: 7 },
-            ].map(item => (
-              <div
-                key={item.depth}
-                onClick={() => setHopDepth(item.depth)}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '8px',
-                  padding: '3px 6px', borderRadius: '5px', cursor: 'pointer',
-                  background: hopDepth === item.depth ? 'rgba(255, 255, 255, 0.10)' : 'transparent',
-                  border: hopDepth === item.depth ? '1px solid rgba(255, 255, 255, 0.20)' : '1px solid transparent',
-                  transition: 'all 0.15s',
-                }}
-                onMouseEnter={e => {
-                  if (hopDepth !== item.depth) e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
-                }}
-                onMouseLeave={e => {
-                  if (hopDepth !== item.depth) e.currentTarget.style.background = 'transparent';
-                }}
+          {activePanel !== 'none' && (
+            <button
+              onClick={() => setActivePanel('none')}
+              style={{
+                fontSize: '9px',
+                fontWeight: 600,
+                padding: '2px 8px',
+                borderRadius: '100px',
+                background: 'rgba(255, 255, 255, 0.08)',
+                border: '1px solid rgba(255, 255, 255, 0.18)',
+                color: 'var(--silver-300)',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.18)';
+                e.currentTarget.style.color = '#ffffff';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                e.currentTarget.style.color = 'var(--silver-300)';
+              }}
+              title="Return to standard 5-box overview"
+            >
+              Overview ✕
+            </button>
+          )}
+        </div>
+
+        {/* COMPACT QUICK DOCK (When Filters or Pathfinder is in focus: moves content upwards) */}
+        {activePanel !== 'none' ? (
+          <div className="glass-panel animate-fade-in" style={{ padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            {/* Quick Actions row */}
+            <div style={{ display: 'flex', gap: '4px' }}>
+              {providerCapabilities.hasDemoNodes && (
+                <button
+                  id="toggle-demo-btn"
+                  className={`glass-button ${showDemoNodes ? 'active' : ''}`}
+                  onClick={toggleDemoNodes}
+                  style={{
+                    flex: 1, padding: '4px 6px', fontSize: '9.5px', justifyContent: 'center',
+                    background: showDemoNodes ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.03)',
+                    borderColor: showDemoNodes ? 'rgba(255, 255, 255, 0.3)' : 'rgba(255, 255, 255, 0.08)',
+                  }}
+                  title="Toggle Demo Nodes"
+                >
+                  Demo: {showDemoNodes ? 'ON' : 'OFF'}
+                </button>
+              )}
+              <button
+                id="search-node-btn"
+                className={`glass-button ${showSearch ? 'active' : ''}`}
+                onClick={() => setShowSearch(s => !s)}
+                style={{ flex: 1, padding: '4px 6px', fontSize: '9.5px', justifyContent: 'center' }}
+                title="Search Person"
               >
-                <span style={{
-                  width: 14, height: 2, borderRadius: 1,
-                  background: hopDepth >= item.depth ? '#ffffff' : 'var(--silver-800)',
-                  transition: 'background 0.3s',
-                }} />
-                <span style={{
-                  color: hopDepth >= item.depth ? '#ffffff' : 'var(--silver-500)',
-                  fontSize: '10.5px',
-                  fontWeight: hopDepth === item.depth ? 700 : (item.depth === 7 ? 600 : 400),
-                }}>
-                  {item.label}
-                </span>
-                <span style={{ color: 'var(--silver-700)', fontSize: '9px', marginLeft: 'auto' }}>
-                  {item.desc}
+                🔍 Search
+              </button>
+              <button
+                id="reset-graph-btn"
+                className="glass-button"
+                onClick={resetGraph}
+                style={{ flex: 1, padding: '4px 6px', fontSize: '9.5px', justifyContent: 'center' }}
+                title="Reset Graph"
+              >
+                ↺ Reset
+              </button>
+            </div>
+
+            {/* If search is open in compact mode */}
+            {showSearch && (
+              <div style={{ marginTop: '2px' }}>
+                <input
+                  autoFocus
+                  className="glass-input"
+                  placeholder="Search name…"
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  style={{ padding: '4px 8px', fontSize: '10px', width: '100%' }}
+                />
+                {searchResults.length > 0 && (
+                  <div className="glass-panel" style={{ padding: '2px', maxHeight: 120, overflowY: 'auto', background: 'var(--bg-surface)', marginTop: '2px' }}>
+                    {searchResults.map(node => (
+                      <button
+                        key={node.id}
+                        onClick={() => selectSearchResult(node.id)}
+                        style={{
+                          width: '100%', padding: '4px 6px', background: 'transparent',
+                          border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center',
+                          gap: '6px', borderRadius: '4px', textAlign: 'left',
+                        }}
+                      >
+                        <span style={{ color: 'var(--silver-200)', fontSize: '10px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {node.fullName}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Compact Hop Depth pills */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+              <span style={{ fontSize: '8.5px', fontWeight: 700, color: 'var(--silver-500)', letterSpacing: '0.04em', marginRight: '2px' }}>HOP:</span>
+              {[1, 2, 3, 4, 5, 6, 7].map(d => (
+                <button
+                  key={d}
+                  onClick={() => setHopDepth(d)}
+                  style={{
+                    flex: 1,
+                    padding: '2px 0',
+                    fontSize: '9px',
+                    fontWeight: hopDepth === d ? 700 : 500,
+                    borderRadius: '4px',
+                    border: hopDepth === d ? '1px solid rgba(255,255,255,0.35)' : '1px solid rgba(255,255,255,0.06)',
+                    background: hopDepth === d ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.02)',
+                    color: hopDepth === d ? '#ffffff' : 'var(--silver-500)',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
+                  }}
+                  title={d === 7 ? 'Full Graph (All nodes & edges)' : `${d} hop${d > 1 ? 's' : ''}`}
+                >
+                  {d === 7 ? 'ALL' : d}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* ── BOX 2: ACTION BUTTONS (DEMO, SEARCH, RESET) ── */}
+            <div className="glass-panel" style={{ padding: '10px 12px' }}>
+              {/* Toggle Demo Nodes */}
+              {providerCapabilities.hasDemoNodes && (
+                <button
+                  id="toggle-demo-btn"
+                  className={`glass-button ${showDemoNodes ? 'active' : ''}`}
+                  onClick={toggleDemoNodes}
+                  style={{ width: '100%', justifyContent: 'space-between', marginBottom: '6px', padding: '6px 10px', fontSize: '11px' }}
+                >
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="12" cy="12" r="3"/>
+                      <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
+                    </svg>
+                    Demo Nodes
+                  </span>
+                  <span style={{
+                    fontSize: '9px', fontWeight: 600,
+                    padding: '1px 5px', borderRadius: '100px',
+                    background: showDemoNodes ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.03)',
+                    color: showDemoNodes ? '#ffffff' : 'var(--silver-500)',
+                    border: `1px solid ${showDemoNodes ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.06)'}`
+                  }}>
+                    {showDemoNodes ? 'ON' : 'OFF'}
+                  </span>
+                </button>
+              )}
+
+              {/* Search Node */}
+              <button
+                id="search-node-btn"
+                className={`glass-button ${showSearch ? 'active' : ''}`}
+                onClick={() => setShowSearch(s => !s)}
+                style={{ width: '100%', marginBottom: showSearch ? '6px' : '6px', padding: '6px 10px', fontSize: '11px' }}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                Search Person
+              </button>
+
+              {/* Search panel */}
+              {showSearch && (
+                <div style={{ marginBottom: '6px' }}>
+                  <input
+                    autoFocus
+                    className="glass-input"
+                    placeholder="Search name or cluster…"
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    style={{ marginBottom: '4px', padding: '5px 8px', fontSize: '11px' }}
+                  />
+                  {searchResults.length > 0 && (
+                    <div className="glass-panel" style={{
+                      padding: '3px',
+                      maxHeight: 180,
+                      overflowY: 'auto',
+                      background: 'var(--bg-surface)',
+                    }}>
+                      {searchResults.map(node => (
+                        <button
+                          key={node.id}
+                          onClick={() => selectSearchResult(node.id)}
+                          style={{
+                            width: '100%',
+                            padding: '6px 8px',
+                            background: 'transparent',
+                            border: 'none',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            borderRadius: '4px',
+                            textAlign: 'left',
+                          }}
+                          onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
+                          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                        >
+                          <span style={{
+                            width: 5, height: 5, borderRadius: '50%', flexShrink: 0,
+                            background: '#ffffff',
+                          }} />
+                          <span style={{ color: 'var(--silver-200)', fontSize: '11px', fontWeight: 500, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {node.fullName}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Reset Graph */}
+              <button
+                id="reset-graph-btn"
+                className="glass-button"
+                onClick={resetGraph}
+                style={{ width: '100%', padding: '6px 10px', fontSize: '11px' }}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polyline points="1 4 1 10 7 10"/>
+                  <path d="M3.51 15a9 9 0 1 0 .49-4.5"/>
+                </svg>
+                Reset Graph
+              </button>
+            </div>
+
+            {/* ── BOX 3: HOP DEPTH EXPANSION ── */}
+            <div className="glass-panel" style={{ padding: '12px 14px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <span className="text-label" style={{ fontSize: '10px' }}>Hop Depth</span>
+                <span className="text-mono" style={{ fontSize: '11px', fontWeight: 700, color: '#ffffff' }}>
+                  {hopDepth >= 7 ? 'Full Graph' : `${hopDepth} ${hopDepth === 1 ? 'hop' : 'hops'}`}
                 </span>
               </div>
-            ))}
-          </div>
-        </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                {[
+                  { label: '1 hop', desc: 'Direct connections', depth: 1 },
+                  { label: '2 hops', desc: 'Second degree', depth: 2 },
+                  { label: '3 hops', desc: 'Third degree', depth: 3 },
+                  { label: '4 hops', desc: 'Fourth degree', depth: 4 },
+                  { label: '5 hops', desc: 'Fifth degree', depth: 5 },
+                  { label: '6 hops', desc: 'Sixth degree', depth: 6 },
+                  { label: 'Full Graph', desc: 'All nodes & edges', depth: 7 },
+                ].map(item => (
+                  <div
+                    key={item.depth}
+                    onClick={() => setHopDepth(item.depth)}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '8px',
+                      padding: '3px 6px', borderRadius: '5px', cursor: 'pointer',
+                      background: hopDepth === item.depth ? 'rgba(255, 255, 255, 0.10)' : 'transparent',
+                      border: hopDepth === item.depth ? '1px solid rgba(255, 255, 255, 0.20)' : '1px solid transparent',
+                      transition: 'all 0.15s',
+                    }}
+                    onMouseEnter={e => {
+                      if (hopDepth !== item.depth) e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
+                    }}
+                    onMouseLeave={e => {
+                      if (hopDepth !== item.depth) e.currentTarget.style.background = 'transparent';
+                    }}
+                  >
+                    <span style={{
+                      width: 14, height: 2, borderRadius: 1,
+                      background: hopDepth >= item.depth ? '#ffffff' : 'var(--silver-800)',
+                      transition: 'background 0.3s',
+                    }} />
+                    <span style={{
+                      color: hopDepth >= item.depth ? '#ffffff' : 'var(--silver-500)',
+                      fontSize: '10.5px',
+                      fontWeight: hopDepth === item.depth ? 700 : (item.depth === 7 ? 600 : 400),
+                    }}>
+                      {item.label}
+                    </span>
+                    <span style={{ color: 'var(--silver-700)', fontSize: '9px', marginLeft: 'auto' }}>
+                      {item.desc}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
 
         {/* ── CARD 2: ADVANCED FILTERS (INLINE EXPANDABLE SIDEBAR CARD) ── */}
         <div className="glass-panel" style={{ padding: '12px 14px' }}>
           <div
-            onClick={() => setIsFiltersOpen(!isFiltersOpen)}
+            onClick={() => setActivePanel(activePanel === 'filters' ? 'none' : 'filters')}
             style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -587,7 +720,7 @@ export default function GraphControls() {
               </div>
             </div>
             <span style={{ fontSize: '10px', color: 'var(--silver-400)' }}>
-              {isFiltersOpen ? '▼' : '▲'}
+              {isFiltersOpen ? '▲' : '▼'}
             </span>
           </div>
 
@@ -834,7 +967,7 @@ export default function GraphControls() {
         {/* ── CARD 3: PATHFINDER ENGINE (INLINE EXPANDABLE SIDEBAR CARD) ── */}
         <div className="glass-panel" style={{ padding: '12px 14px' }}>
           <div
-            onClick={() => setIsPathfinderOpen(!isPathfinderOpen)}
+            onClick={() => setActivePanel(activePanel === 'pathfinder' ? 'none' : 'pathfinder')}
             style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -852,7 +985,7 @@ export default function GraphControls() {
               </div>
             </div>
             <span style={{ fontSize: '10px', color: 'var(--silver-400)' }}>
-              {isPathfinderOpen ? '▼' : '▲'}
+              {isPathfinderOpen ? '▲' : '▼'}
             </span>
           </div>
 
