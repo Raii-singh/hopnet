@@ -159,10 +159,22 @@ export default function GraphCanvas() {
   const nodeMap = useMemo(() => new Map<string, GraphNode>(visibleNodes.map(n => [n.id, n])), [visibleNodes]);
   const linkMap = useMemo(() => new Map<string, GraphEdge>(visibleLinks.map(l => [l.id, l])), [visibleLinks]);
 
+  // Pre-calculate visible degree map for connection-proportional physics & rendering
+  const degreeMap = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const link of visibleLinks) {
+      const srcId = typeof link.source === 'string' ? link.source : (link.source as any)?.id;
+      const tgtId = typeof link.target === 'string' ? link.target : (link.target as any)?.id;
+      if (srcId) map.set(srcId, (map.get(srcId) || 0) + 1);
+      if (tgtId) map.set(tgtId, (map.get(tgtId) || 0) + 1);
+    }
+    return map;
+  }, [visibleLinks]);
+
   // ── Node size: Connection- & Influence-based hierarchy (STABLE: independent of hover/selection so physics never restarts on cursor movement) ──
   const getNodeSize = useCallback((node: any) => {
     const n = node as GraphNode;
-    const conns = Math.max(1, n.connectionCount ?? (n as any).realConnections ?? (n as any).subgraphDegree ?? 1);
+    const conns = Math.max(1, degreeMap.get(n.id) || n.connectionCount || (n as any).realConnections || (n as any).subgraphDegree || 1);
 
     // For large networks, scale gracefully by degree so leaf nodes stay delicate and hubs stand out
     let base: number;
@@ -181,7 +193,7 @@ export default function GraphCanvas() {
     }
 
     return base * nodeSizeScale;
-  }, [visibleNodes.length, nodeSizeScale]);
+  }, [visibleNodes.length, nodeSizeScale, degreeMap]);
 
   // ── Auto-center, configure connection-based physics forces, and fit graph on updates ──
   useEffect(() => {
@@ -190,15 +202,17 @@ export default function GraphCanvas() {
 
     // Unpin fixed coordinates so force simulation can naturally adjust and untangle initially
     visibleNodes.forEach((n: any) => {
-      n.fx = undefined;
-      n.fy = undefined;
+      if (!n.__userPinned) {
+        n.fx = undefined;
+        n.fy = undefined;
+      }
     });
 
     const nodeCount = visibleNodes.length;
     const densityFactor = calculateDensityFactor(nodeCount);
 
-    // 1. Connection-Aware Link Distance:
-    // Hub-to-Hub bridges need breathing room; local connections remain compact
+    // 1. Connection-Aware Link Distance & Adaptive Spring Tension:
+    // Hub-to-Hub bridges need expansive breathing room; high-degree springs are softened to let repulsion spread them out
     const adaptiveLinkDistance = (BASE_LINK_DISTANCE / Math.sqrt(densityFactor)) * nodeDistanceScale;
     const layoutAnchorDistance = adaptiveLinkDistance * 1.8;
 
@@ -207,50 +221,72 @@ export default function GraphCanvas() {
         if (link.isLayoutAnchor || link.edgeType === 'LAYOUT_ANCHOR') return layoutAnchorDistance;
         const srcNode = typeof link.source === 'object' ? link.source : nodeMap.get(link.source);
         const tgtNode = typeof link.target === 'object' ? link.target : nodeMap.get(link.target);
-        const srcConns = Math.max(1, srcNode?.connectionCount ?? srcNode?.realConnections ?? 1);
-        const tgtConns = Math.max(1, tgtNode?.connectionCount ?? tgtNode?.realConnections ?? 1);
+        const srcConns = Math.max(1, degreeMap.get(srcNode?.id) || srcNode?.connectionCount || srcNode?.realConnections || 1);
+        const tgtConns = Math.max(1, degreeMap.get(tgtNode?.id) || tgtNode?.connectionCount || tgtNode?.realConnections || 1);
+        const maxConns = Math.max(srcConns, tgtConns);
+        const minConns = Math.min(srcConns, tgtConns);
 
-        if (srcConns >= 15 && tgtConns >= 15) {
-          return Math.max(adaptiveLinkDistance * 1.8, 80 * nodeDistanceScale);
+        // Major hub-to-hub bridges (between prominent nodes) need generous spacing so distinct communities separate cleanly
+        if (minConns >= 10) {
+          return Math.max(adaptiveLinkDistance * 2.2, 110 * nodeDistanceScale);
         }
-        if (srcConns >= 8 && tgtConns >= 8) {
-          return Math.max(adaptiveLinkDistance * 1.3, 55 * nodeDistanceScale);
+        if (minConns >= 5) {
+          return Math.max(adaptiveLinkDistance * 1.6, 80 * nodeDistanceScale);
         }
-        return adaptiveLinkDistance;
+        // Hub-to-leaf / peripheral nodes: scale slightly with the hub's connection count so they fan out around the hub
+        const hubDegreeBonus = Math.min(60, Math.sqrt(maxConns) * 4.5);
+        return (adaptiveLinkDistance + hubDegreeBonus) * (nodeCount > 1000 ? 0.9 : 1.0);
       })
       ?.strength((link: any) => {
         if (link.isLayoutAnchor || link.edgeType === 'LAYOUT_ANCHOR') return 0.08;
-        return 0.65;
+        const srcNode = typeof link.source === 'object' ? link.source : nodeMap.get(link.source);
+        const tgtNode = typeof link.target === 'object' ? link.target : nodeMap.get(link.target);
+        const srcConns = Math.max(1, degreeMap.get(srcNode?.id) || srcNode?.connectionCount || srcNode?.realConnections || 1);
+        const tgtConns = Math.max(1, degreeMap.get(tgtNode?.id) || tgtNode?.connectionCount || tgtNode?.realConnections || 1);
+        const maxConns = Math.max(srcConns, tgtConns);
+        // Soften spring tension on high-degree nodes so repulsion forces can spread them out into open space
+        return Math.max(0.08, Math.min(0.65, 1.8 / Math.sqrt(maxConns)));
       });
 
     // 2. Connection-Based Repulsion (Gravity):
-    // Higher-degree hubs repel strongly to let nodes take their space without central clumping
+    // Higher the connections, higher the repulsive force so the graph takes proper space without clumping
     fg.d3Force('charge')
       ?.strength((node: any) => {
-        const conns = Math.max(1, node.connectionCount ?? node.realConnections ?? node.subgraphDegree ?? 1);
-        if (nodeCount > 500) {
-          return (-26 - Math.min(conns * 4.0, 320)) * nodeDistanceScale;
+        const visibleDeg = degreeMap.get(node.id) || 0;
+        const dbConns = node.connectionCount ?? node.realConnections ?? 0;
+        const conns = Math.max(1, visibleDeg, dbConns);
+
+        if (nodeCount > 1500) {
+          const hubBoost = Math.min(conns * 14, 1400);
+          return (-45 - hubBoost) * nodeDistanceScale;
+        } else if (nodeCount > 500) {
+          const hubBoost = Math.min(conns * 18, 1200);
+          return (-65 - hubBoost) * nodeDistanceScale;
         } else if (nodeCount > 100) {
-          return (-32 - Math.min(conns * 2.8, 180)) * nodeDistanceScale;
+          const hubBoost = Math.min(conns * 22, 950);
+          return (-90 - hubBoost) * nodeDistanceScale;
+        } else {
+          const hubBoost = Math.min(conns * 28, 700);
+          return (-140 - hubBoost) * nodeDistanceScale;
         }
-        return BASE_CHARGE_STRENGTH * nodeDistanceScale;
       })
-      ?.distanceMax(nodeCount > 500 ? 900 * nodeDistanceScale : 500 * nodeDistanceScale);
+      ?.distanceMax(Math.max(1400, 2000 * nodeDistanceScale))
+      ?.distanceMin(10);
 
     // 3. Soft, gentle boundary positioning forces:
-    // Scale inverse to nodeDistanceScale so increasing spacing lets nodes spread out widely
+    // Scale inverse to nodeDistanceScale so increasing spacing lets nodes spread out widely without centripetal compression
     fg.d3Force('center', null);
-    const softCenterStrength = (nodeCount > 500 ? 0.015 : 0.035) / Math.max(0.4, Math.sqrt(nodeDistanceScale));
+    const softCenterStrength = (nodeCount > 1500 ? 0.003 : nodeCount > 500 ? 0.008 : 0.025) / Math.max(0.4, Math.sqrt(nodeDistanceScale));
     fg.d3Force('x', forceX(0).strength(softCenterStrength));
     fg.d3Force('y', forceY(0).strength(softCenterStrength));
 
-    // 4. Node-Aware Collision: Uses actual rendered node radius + padding (disabled on > 1500 nodes for 60 FPS)
-    if (nodeCount <= 1500) {
+    // 4. Node-Aware Collision: Uses actual rendered node radius + padding (disabled on > 1200 nodes for 60 FPS)
+    if (nodeCount <= 1200) {
       fg.d3Force('collide', forceCollide((node: any) => {
         const r = getNodeSize(node);
-        const padding = (nodeCount > 500 ? 4 : COLLISION_PADDING) * Math.min(1.5, Math.max(0.8, nodeDistanceScale));
+        const padding = (nodeCount > 400 ? 3 : COLLISION_PADDING) * Math.min(1.5, Math.max(0.8, nodeDistanceScale));
         return r + padding;
-      }));
+      }).iterations(2));
     } else {
       fg.d3Force('collide', null);
     }
@@ -267,7 +303,7 @@ export default function GraphCanvas() {
       }, 350);
       return () => clearTimeout(timer);
     }
-  }, [visibleNodes.length, primaryNodeId, activeProvider, zoomInClose, nodeDistanceScale, nodeSizeScale, getNodeSize]);
+  }, [visibleNodes.length, visibleLinks.length, primaryNodeId, activeProvider, zoomInClose, nodeDistanceScale, nodeSizeScale, getNodeSize, degreeMap, nodeMap]);
 
   // ── Dynamic clean-up ONLY when active provider actually changes ─────────────────────────
   useEffect(() => {
@@ -650,12 +686,8 @@ export default function GraphCanvas() {
 
     if (visibleNodes.length <= 1 || visibleNodes.length > 300) return links;
 
-    // Find the primary node object in visibleNodes (or fallback to Rai Singh, then first node)
-    const primaryNode = (primaryNodeId ? nodeMap.get(primaryNodeId) : null)
-      || nodeMap.get('HNP-000001')
-      || nodeMap.get('ba81e688-04a2-401a-8ede-9059f4a030fa')
-      || nodeMap.get('f02bb0c5-43e0-4e5e-b54a-033a852f1645')
-      || visibleNodes[0];
+    // Find the primary node object in visibleNodes (or fallback to first visible node)
+    const primaryNode = (primaryNodeId ? nodeMap.get(primaryNodeId) : null) || visibleNodes[0];
     if (!primaryNode) return links;
 
     // 2. Perform fast O(V+E) BFS with adjacency list
@@ -837,6 +869,55 @@ export default function GraphCanvas() {
     return isImdb ? accentColor : 'rgba(255, 255, 255, 0.92)';
   }, [isImdb, accentColor]);
 
+  // ── Dynamic Auto-Freeze Simulation Parameters based on node count ───────────────
+  const simulationParams = useMemo(() => {
+    const n = visibleNodes.length;
+    if (!autoFreezeLayout) {
+      return {
+        warmupTicks: n > 1000 ? 10 : 30,
+        cooldownTicks: Infinity,
+        cooldownTime: Infinity,
+        d3AlphaDecay: 0.003,
+        d3VelocityDecay: 0.28,
+      };
+    }
+
+    if (n <= 300) {
+      return {
+        warmupTicks: 30,
+        cooldownTicks: 160,
+        cooldownTime: 3500,
+        d3AlphaDecay: 0.020,
+        d3VelocityDecay: 0.38,
+      };
+    } else if (n <= 1000) {
+      return {
+        warmupTicks: 20,
+        cooldownTicks: 280,
+        cooldownTime: 7000,
+        d3AlphaDecay: 0.012,
+        d3VelocityDecay: 0.35,
+      };
+    } else if (n <= 2000) {
+      return {
+        warmupTicks: 15,
+        cooldownTicks: 420,
+        cooldownTime: 11000,
+        d3AlphaDecay: 0.007,
+        d3VelocityDecay: 0.31,
+      };
+    } else {
+      // Massive graphs (2000+ nodes): ample time & low velocity friction to untangle and glide into equilibrium
+      return {
+        warmupTicks: 10,
+        cooldownTicks: 600,
+        cooldownTime: 16000,
+        d3AlphaDecay: 0.0045,
+        d3VelocityDecay: 0.26,
+      };
+    }
+  }, [visibleNodes.length, autoFreezeLayout]);
+
   return (
     <div ref={containerRef} className="graph-container" onClick={() => clearHighlights()}>
       <div className="graph-canvas-bg" />
@@ -870,11 +951,11 @@ export default function GraphCanvas() {
           linkDirectionalParticleWidth={1.4}
           linkDirectionalParticleColor={getLinkDirectionalParticleColor}
           linkDirectionalParticleSpeed={0.002}
-          warmupTicks={visibleNodes.length > 1000 ? 0 : 35}
-          cooldownTicks={autoFreezeLayout ? (visibleNodes.length > 1000 ? 60 : 120) : Infinity}
-          cooldownTime={autoFreezeLayout ? (visibleNodes.length > 1000 ? 3500 : 2500) : Infinity}
-          d3AlphaDecay={autoFreezeLayout ? 0.028 : 0.005}
-          d3VelocityDecay={autoFreezeLayout ? 0.45 : 0.35}
+          warmupTicks={simulationParams.warmupTicks}
+          cooldownTicks={simulationParams.cooldownTicks}
+          cooldownTime={simulationParams.cooldownTime}
+          d3AlphaDecay={simulationParams.d3AlphaDecay}
+          d3VelocityDecay={simulationParams.d3VelocityDecay}
           onNodeClick={(node: any) => {
             const n = node as GraphNode;
             if (visualConnectMode) {
