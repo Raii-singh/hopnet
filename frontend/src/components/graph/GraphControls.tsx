@@ -3,7 +3,7 @@
 import { useGraphStore } from '@/store/graphStore';
 import { useAuthStore } from '@/store/authStore';
 import { GraphNode } from '@/types/graph';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { searchPersonsV2 } from '@/services/api';
 
 export default function GraphControls() {
@@ -95,19 +95,21 @@ export default function GraphControls() {
     return () => clearTimeout(timer);
   }, [excludeQuery, selectedStart, selectedTarget]);
 
-  // Auto-set start node to primaryNode / rootNode / first visible node
+  // Set initial default start node on provider load (does not overwrite user changes)
+  const initializedProviderRef = useRef<string | null>(null);
+
   useEffect(() => {
-    if (visibleNodes.length > 0 && !selectedStart) {
+    if (visibleNodes.length > 0 && initializedProviderRef.current !== activeProvider) {
       const activePrimary = visibleNodes.find(n => n.id === primaryNodeId || n.publicId === primaryNodeId)
-        || visibleNodes.find(n => n.publicId === 'HNP-000001' || n.id === 'ba81e688-04a2-401a-8ede-9059f4a030fa' || n.id === 'f02bb0c5-43e0-4e5e-b54a-033a852f1645' || n.fullName.trim().toLowerCase() === 'rai' || n.fullName.trim().toLowerCase() === 'rai singh')
         || visibleNodes.find(n => n.id === rootNodeId)
         || visibleNodes[0];
       if (activePrimary) {
         setSelectedStart(activePrimary);
         setStartQuery(activePrimary.fullName);
+        initializedProviderRef.current = activeProvider;
       }
     }
-  }, [visibleNodes, primaryNodeId, rootNodeId, selectedStart]);
+  }, [visibleNodes, primaryNodeId, rootNodeId, activeProvider]);
 
   // Pathfinder start search with instant local ranking + remote dataset search
   useEffect(() => {
@@ -134,8 +136,8 @@ export default function GraphControls() {
     ).sort((a, b) => {
       const aLower = a.fullName.toLowerCase();
       const bLower = b.fullName.toLowerCase();
-      const aScore = aLower === qLower ? 0 : (aLower === 'rai' || aLower === 'rai singh') ? 1 : aLower.startsWith(qLower) ? 2 : 3;
-      const bScore = bLower === qLower ? 0 : (bLower === 'rai' || bLower === 'rai singh') ? 1 : bLower.startsWith(qLower) ? 2 : 3;
+      const aScore = aLower === qLower ? 0 : aLower.startsWith(qLower) ? 1 : aLower.includes(' ' + qLower) ? 2 : 3;
+      const bScore = bLower === qLower ? 0 : bLower.startsWith(qLower) ? 1 : bLower.includes(' ' + qLower) ? 2 : 3;
       return aScore - bScore;
     });
 
@@ -189,8 +191,8 @@ export default function GraphControls() {
     ).sort((a, b) => {
       const aLower = a.fullName.toLowerCase();
       const bLower = b.fullName.toLowerCase();
-      const aScore = aLower === qLower ? 0 : (aLower === 'rai' || aLower === 'rai singh') ? 1 : aLower.startsWith(qLower) ? 2 : 3;
-      const bScore = bLower === qLower ? 0 : (bLower === 'rai' || bLower === 'rai singh') ? 1 : bLower.startsWith(qLower) ? 2 : 3;
+      const aScore = aLower === qLower ? 0 : aLower.startsWith(qLower) ? 1 : aLower.includes(' ' + qLower) ? 2 : 3;
+      const bScore = bLower === qLower ? 0 : bLower.startsWith(qLower) ? 1 : bLower.includes(' ' + qLower) ? 2 : 3;
       return aScore - bScore;
     });
 

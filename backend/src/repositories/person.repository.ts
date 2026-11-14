@@ -264,14 +264,12 @@ export async function listPersons(
   try {
     const typeFilter = nodeType ? 'AND p.nodeType = $nodeType' : '';
     let datasetFilter = '';
-    let orderByClause = "CASE WHEN p.publicId = 'HNP-000001' OR toLower(p.fullName) = 'rai singh' THEN 0 ELSE 1 END, p.createdAt DESC";
+    let orderByClause = "p.influenceScore DESC, p.createdAt DESC";
     
     if (dataset === 'raj') {
       datasetFilter = "AND p.sourceDataset = 'raj'";
-      orderByClause = "CASE WHEN p.publicId = 'HNP-RS000001' OR toLower(p.fullName) = 'raj shamani' THEN 0 ELSE 1 END, p.influenceScore DESC";
-    } else if (dataset === 'live') {
+    } else if (dataset === 'live' || dataset === 'live_authentic') {
       datasetFilter = "AND (p.sourceDataset = 'live_authentic' OR p.sourceDataset IS NULL OR p.sourceDataset <> 'raj')";
-      orderByClause = "CASE WHEN p.publicId = 'HNP-000001' OR toLower(p.fullName) = 'rai singh' THEN 0 ELSE 1 END, p.createdAt DESC";
     }
 
     const result = await session.run(
@@ -338,11 +336,10 @@ export async function searchPersons(
             sum(CASE WHEN other.nodeType = 'DEMO' THEN 1 ELSE 0 END) AS demoConn,
             CASE
               WHEN toLower(p.fullName) = $q THEN 0
-              WHEN toLower(p.fullName) = 'rai' OR toLower(p.fullName) = 'rai singh' OR toLower(p.fullName) = 'raj shamani' THEN 1
-              WHEN toLower(p.fullName) STARTS WITH $q THEN 2
-              WHEN toLower(p.fullName) CONTAINS (' ' + $q) THEN 3
-              WHEN toLower(p.publicId) = $q OR toLower(p.publicId) STARTS WITH $q THEN 4
-              ELSE 5
+              WHEN toLower(p.fullName) STARTS WITH $q THEN 1
+              WHEN toLower(p.fullName) CONTAINS (' ' + $q) THEN 2
+              WHEN toLower(p.publicId) = $q OR toLower(p.publicId) STARTS WITH $q THEN 3
+              ELSE 4
             END AS relevanceScore
        RETURN p, totalConn, realConn, demoConn
        ORDER BY relevanceScore ASC, totalConn DESC, p.fullName ASC
